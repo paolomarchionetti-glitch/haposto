@@ -29,7 +29,7 @@ Tempo realistico la prima volta: **60–90 minuti**, quasi tutti di attesa (down
 Ti servono:
 
 - **Android Studio** aggiornato, con Android SDK installato;
-- **JDK 17** (obbligatorio per Gradle/AGP di questo progetto);
+- **JDK 21** (richiesto dal daemon Gradle, vedi `gradle/gradle-daemon-jvm.properties`; la JBR inclusa in Android Studio va bene);
 - connessione internet stabile;
 - un **account Supabase**;
 - il progetto HAPOSTO estratto in una cartella **scrivibile** (non dentro lo ZIP, non in una cartella di sistema).
@@ -39,7 +39,7 @@ Versioni di riferimento del progetto (non cambiarle a caso):
 ```
 AGP              9.3.0
 Gradle target    9.5.0
-JDK              17
+JDK              21
 Kotlin           2.4.10
 Supabase Kotlin  3.7.0
 Ktor             3.5.2
@@ -179,24 +179,16 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_LA_TUA_CHIAVE
 
 ---
 
-## 8. Genera il Gradle Wrapper
+## 8. Gradle Wrapper
 
-Il pacchetto include `gradle-wrapper.properties` ma **non** il binario `gradle-wrapper.jar` (limite dell'ambiente che genera gli ZIP, **non** un errore del codice).
-
-**Percorso consigliato:** installa Gradle 9.5.0 sul PC, apri un terminale nella root del progetto ed esegui **una volta**:
-
-```
-gradle wrapper --gradle-version 9.5.0
-```
-
-Devono comparire: `gradle/wrapper/gradle-wrapper.jar`, `gradle/wrapper/gradle-wrapper.properties`, `gradlew`, `gradlew.bat`. Da qui in poi usa il wrapper standard.
+Il repository include già il wrapper standard: `gradle/wrapper/gradle-wrapper.jar`, `gradle/wrapper/gradle-wrapper.properties` (Gradle 9.5.0), `gradlew`, `gradlew.bat`. Non serve generarlo: usa `./gradlew` (o `gradlew.bat` su Windows).
 
 ---
 
 ## 9. Sync, build, test
 
 1. **Apri** in Android Studio la cartella del modulo app (non lo ZIP, non una cartella superiore con altri step).
-2. **Gradle JDK 17**: *Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK = 17*.
+2. **Gradle JDK 21**: *Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK* = la JBR 21 inclusa in Android Studio (o un JDK 21).
 3. **Sync**: *File → Sync Project with Gradle Files*. Al primo sync scarica `supabase-kt 3.7.0`, `postgrest-kt`, `Ktor OkHttp 3.5.2`. Atteso: nessun errore rosso. Se fallisce, **non abbassare le versioni**: copia il primo errore e vai alla sezione 11.
 4. **Build**: *Build → Make Project*. Per l'APK debug: *Build → Build APK(s)* oppure `./gradlew assembleDebug` (`gradlew.bat assembleDebug` su Windows).
 5. **Unit test**: `app/src/test` → Run Tests (o `gradlew.bat testDebugUnitTest`). Devono restare verdi TTL, Haversine, search/filter, contratto repository locale, access shell, acceptance pre-backend, AvailabilityRules e configurazione Supabase.
@@ -222,9 +214,9 @@ Consigliato: device/emulatore moderno (API 35+), rete attiva, localizzazione dis
 
 ## 11. Problemi comuni e soluzioni
 
-**`Gradle executable not found`** — manca `gradle-wrapper.jar`. Installa Gradle 9.5.0 e lancia `gradle wrapper --gradle-version 9.5.0`, poi usa `gradlew`.
+**`./gradlew: Permission denied`** (Linux/macOS) — `chmod +x gradlew`. Il file è già tracciato come eseguibile nel repository.
 
-**Sync fallisce su Supabase/Ktor** — controlla internet, Maven Central non bloccato, JDK 17, nessun proxy aziendale che intercetti TLS, version catalog non modificato. Non abbassare le versioni prima di salvare il messaggio originale.
+**Sync fallisce su Supabase/Ktor** — controlla internet, Maven Central e Google Maven non bloccati, JDK 21, nessun proxy aziendale che intercetti TLS, version catalog non modificato. Non abbassare le versioni prima di salvare il messaggio originale.
 
 **Home mostra `fallback locale`** — il build non ha ricevuto le due proprietà. Verifica che `local.properties` sia nella stessa root di `settings.gradle.kts`/`build.gradle.kts`/`app/`, poi Sync + Clean + Rebuild.
 

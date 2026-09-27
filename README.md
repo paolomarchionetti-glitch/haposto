@@ -176,15 +176,24 @@ minSdk          26
 
 ---
 
-# Gradle Wrapper
+# Gradle Wrapper, build e test
 
-Il pacchetto contiene `gradle-wrapper.properties` ma non il binario ufficiale `gradle-wrapper.jar`, che non è stato recuperabile nell'ambiente di generazione.
-
-Prima del primo build CLI/Sync affidabile, genera il wrapper standard una volta con Gradle 9.5.0:
+Il repository contiene il wrapper Gradle standard (`gradlew`, `gradlew.bat`,
+`gradle/wrapper/gradle-wrapper.jar`, distribuzione 9.5.0): non serve generarlo.
+Il daemon Gradle usa Java 21 (`gradle/gradle-daemon-jvm.properties`); la JBR inclusa
+in Android Studio va bene.
 
 ```text
-gradle wrapper --gradle-version 9.5.0
+./gradlew testDebugUnitTest            # unit test JVM (dominio, dati, ViewModel)
+./gradlew assembleDebug                # APK debug
+./gradlew lintDebug                    # Android lint
+./gradlew connectedDebugAndroidTest    # test Compose su device/emulatore collegato
 ```
+
+Su Windows usa `gradlew.bat` al posto di `./gradlew`.
+
+La CI GitHub (`.github/workflows/android-ci.yml`) esegue unit test, build di app e APK
+di test strumentali e lint a ogni push/PR, senza credenziali Supabase (fallback demo).
 
 Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
 
@@ -200,5 +209,3 @@ Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
 - `docs/V1_CONTRACT_FREEZE.md`
 - `docs/ROADMAP.md`
 - `docs/ARCHITECTURE.md`
-- `PROJECT_TREE.txt`
-- `FILE_MANIFEST_SHA256.txt`
