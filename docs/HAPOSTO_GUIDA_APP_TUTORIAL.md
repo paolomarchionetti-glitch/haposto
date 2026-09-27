@@ -46,7 +46,7 @@ Dall'alto in basso:
 | **📍 Pesaro centro · Cambia** | il punto da cui si calcolano le distanze. **Cambia** apre la scelta |
 | **Cerca ristorante o cucina** | scrivi un nome o un tipo di cucina, es. "pizza" |
 | **Mostra solo dove c'è posto** | un tocco e restano solo i locali ✓; ritocca per vedere tutti |
-| **Lista dei locali** | dal più vicino; ogni riga ha nome, cucina, distanza, stato e da quanto tempo |
+| **Lista dei locali** | dal più vicino; ogni riga ha nome, cucina, distanza, stato e **Valido ancora ~N min** |
 | **ⓘ Come funziona HAPOSTO** | spiegazione breve, si apre e si chiude |
 
 ### 3.2 Scegliere la zona
@@ -64,7 +64,7 @@ Se hai negato il permesso e vuoi riattivarlo: **Apri impostazioni app** → Auto
 
 Tocca un locale nella lista:
 
-- **Disponibilità adesso** con simbolo grande, da quanto è aggiornato e **Valido ancora ~N min**;
+- **Disponibilità adesso** con il simbolo e da quanto è aggiornato (es. *Aggiornato 5 min fa*);
 - se il locale li ha indicati: **tavoli liberi**, **attesa** e una **nota** (es. "Solo tavoli esterni");
 - **INDICAZIONI** apre Google Maps (o l'app di mappe che usi) verso il locale;
 - **CHIAMA** apre il telefono con il numero già scritto (solo se il locale ha reso pubblico il numero);
@@ -110,7 +110,7 @@ Nella versione di prova l'identità è fittizia ("Titolare Demo"): nessun login 
 ┌──────────────────────────────────────┐
 │ I clienti adesso vedono              │
 │  ✓  C'è posto                        │
-│  aggiornato 12 min fa                │
+│  Aggiornato 12 min fa                │
 │  ▓▓▓▓▓▓▓▓▓▓░░░░░  Valido ancora ~18 minuti
 │  [ ✓  È ancora così: confermo ]      │
 └──────────────────────────────────────┘
