@@ -81,12 +81,16 @@ jobs:
       PGHOST: localhost
       PGUSER: postgres
       PGPASSWORD: postgres
+      # The postgis image pre-installs PostGIS in "postgres" (schema public): use a clean database,
+      # like a new Supabase project where 0001 installs it in "extensions".
+      PGDATABASE: haposto
     steps:
       - uses: actions/checkout@v5
 
       - name: Emulate a fresh Supabase project, apply migrations and seeds
         run: |
           set -e
+          createdb -T template0 haposto
           run() { echo "== $1"; psql -v ON_ERROR_STOP=1 -q -f "$1"; }
           run supabase/tests/local_only_supabase_emulation.sql
           for f in 0001_extensions 0002_schema 0003_functions 0004_rls_and_grants \
