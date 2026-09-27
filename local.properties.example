@@ -1,0 +1,8 @@
+# Copia questo file in `local.properties` (che NON viene versionato) e compila i valori.
+# NON toccare la riga sdk.dir: la gestisce Android Studio.
+#
+# sdk.dir=C:\\Users\\TUO_NOME\\AppData\\Local\\Android\\Sdk   (Windows, esempio)
+#
+# Configurazione Supabase (senza virgolette):
+SUPABASE_URL=https://TUO_PROJECT_REF.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_LA_TUA_CHIAVE

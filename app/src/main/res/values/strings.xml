@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">HAPOSTO</string>
+    <string name="app_tagline">Sai dove c\'è posto. Ora.</string>
+
+    <!-- Navigazione -->
+    <string name="nav_nearby">Vicino</string>
+    <string name="nav_favorites">Preferiti</string>
+    <string name="nav_restaurateur">Ristoratore</string>
+
+    <!-- Onboarding (per uso futuro / localizzazione) -->
+    <string name="onb1_title">Scopri dove c\'è posto adesso</string>
+    <string name="onb1_body">Apri, guarda i pallini verdi e vai. Niente telefonate, niente prenotazioni.</string>
+    <string name="onb2_title">Dati freschi, di cui fidarti</string>
+    <string name="onb2_body">Gli stati sono dichiarati dai locali e scadono dopo 30 minuti. Non è una prenotazione: la disponibilità può cambiare.</string>
+    <string name="onb3_title">Vicino a te</string>
+    <string name="onb3_body">Attiva la posizione oppure scegli una zona di Pesaro e provincia.</string>
+    <string name="onb_start">Inizia</string>
+    <string name="onb_next">Avanti</string>
+    <string name="onb_skip">Salta</string>
+</resources>

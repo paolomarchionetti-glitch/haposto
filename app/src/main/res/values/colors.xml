@@ -1,0 +1,4 @@
+<resources>
+    <!-- Sfondo dell'icona adattiva: ink brand per far risaltare pin e dot verde -->
+    <color name="launcher_background">#173A47</color>
+</resources>

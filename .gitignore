@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+.idea/
+.DS_Store
+/build/
+**/build/
+/local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Never commit local service credentials
+secrets.properties
+*.keystore
+*.jks
+
+# HAPOSTO local backend config
+.env
+.env.*
+!local.properties.example
