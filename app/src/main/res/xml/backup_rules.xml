@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- STEP 0: no sensitive app-owned files are persisted. -->
+    <!-- Android 11 e precedenti: le prenotazioni di sala restano sul dispositivo. -->
+    <exclude domain="file" path="reservations" />
 </full-backup-content>
