@@ -24,6 +24,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.haposto.domain.model.Restaurant
@@ -83,6 +84,7 @@ fun RestaurantAccessScreen(
                     body = "La shell locale resta utilizzabile, ma login, claim e approvazione reali richiederanno connessione al backend.",
                 )
             }
+            AccessProgress(phase = uiState.phase)
 
             when (uiState.phase) {
                 RestaurantAccessPhase.SIGNED_OUT -> SignedOutContent(
@@ -121,6 +123,44 @@ fun RestaurantAccessScreen(
 
             BetaDisclosure()
             Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+/** "Passo X di 3": il ristoratore sa sempre dove si trova e quanto manca. */
+@Composable
+private fun AccessProgress(phase: RestaurantAccessPhase) {
+    val (step, title) = when (phase) {
+        RestaurantAccessPhase.SIGNED_OUT -> 1 to "Accedi"
+        RestaurantAccessPhase.SEARCH -> 2 to "Trova il tuo locale"
+        RestaurantAccessPhase.CLAIM_FORM -> 2 to "Conferma che è il tuo locale"
+        RestaurantAccessPhase.PENDING -> 3 to "Verifica in corso"
+        RestaurantAccessPhase.APPROVED -> 3 to "Fatto: puoi gestire il locale"
+    }
+    val done = phase == RestaurantAccessPhase.APPROVED
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = if (done) "✓ $title" else "Passo $step di 3 · $title",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            (1..3).forEach { index ->
+                val reached = index <= step || done
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(6.dp),
+                    color = if (reached) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                    shape = MaterialTheme.shapes.small,
+                ) {}
+            }
         }
     }
 }

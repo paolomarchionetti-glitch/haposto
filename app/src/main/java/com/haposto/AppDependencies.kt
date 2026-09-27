@@ -1,6 +1,7 @@
 package com.haposto
 
 import android.content.Context
+import com.haposto.data.favorites.FavoritesStore
 import com.haposto.data.fake.FakeRestaurantAccessRepository
 import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.data.location.AndroidDeviceLocationProvider
@@ -42,6 +43,15 @@ object AppDependencies {
     val restaurantAccessRepository: RestaurantAccessRepository by lazy {
         FakeRestaurantAccessRepository(restaurantRepository = restaurantRepository)
     }
+
+    @Volatile
+    private var favoritesStore: FavoritesStore? = null
+
+    /** Un solo archivio preferiti per tutta l'app, così dettaglio e tab restano allineati. */
+    fun favorites(context: Context): FavoritesStore =
+        favoritesStore ?: synchronized(this) {
+            favoritesStore ?: FavoritesStore(context.applicationContext).also { favoritesStore = it }
+        }
 
     fun deviceLocationProvider(context: Context): DeviceLocationProvider =
         AndroidDeviceLocationProvider(context.applicationContext)

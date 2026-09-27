@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
@@ -44,9 +45,12 @@ class RestaurantManagerScreenTest {
         }
 
         // The status labels also appear in the "Ora sei" badge: target the one-tap buttons explicitly.
-        composeRule.onNodeWithContentDescription("Imposta stato C'è posto").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Imposta stato Pochi posti").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Imposta stato Completo").assertIsDisplayed()
+        // On small screens the buttons sit below the status card: scroll to each one first.
+        composeRule.onNodeWithContentDescription("Imposta stato C'è posto").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Imposta stato Pochi posti").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Imposta stato Completo").performScrollTo().assertIsDisplayed()
+        // A live status can be re-confirmed with one tap from the status card.
+        composeRule.onNodeWithContentDescription("Conferma lo stato attuale").performScrollTo().assertIsDisplayed()
     }
 
     @Test
