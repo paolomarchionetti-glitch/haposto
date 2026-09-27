@@ -80,10 +80,27 @@ Da questo momento:
 - ogni 5 minuti il simulatore aggiorna i locali di prova come farebbero i titolari;
 - l'app può **scrivere davvero** lo stato dei locali di prova (solo quelli `DEV_SEED`).
 
-Per forzare subito un giro (utile di sera per vedere cambiamenti):
+Per forzare subito un giro (utile di giorno o di sera per vedere cambiamenti):
 
 ```sql
 select public.dev_simulate_live_activity();
+```
+
+Di notte (23:00–10:30) il simulatore non aggiorna nulla, neanche forzandolo. Per provare lo stesso,
+"sveglia" i locali di prova con stati casuali validi 30 minuti (poi il simulatore li lascia stare per
+3 ore e riprende da solo):
+
+```sql
+select count(*) as locali_svegliati
+from (
+  select public.dev_publish_live_status(
+           r.id,
+           (array['AVAILABLE','AVAILABLE','LIMITED','FULL'])[1 + floor(random() * 4)::int]::public.live_status,
+           null, null, null)
+  from public.restaurants r
+  where r.data_source = 'DEV_SEED' and r.partnership_status = 'ACTIVE_PARTNER'
+    and coalesce(r.source_ref, '') not like 'field-test:%'
+) x;
 ```
 
 Il simulatore segue l'**ora italiana**:
@@ -138,8 +155,9 @@ Telefono **A** = ristoratore, telefono **B** = cliente. Entrambi con l'app colle
 3. **A**: tocca il tasto rosso **✕ Completo**.
 4. **B**: entro 1 minuto (o cambiando area avanti e indietro) vede **✕ Completo**, "aggiornato ora".
 5. **A**: tocca **✓ È ancora così: confermo** → su **B** l'orario torna "aggiornato ora".
-6. **A**: apri *Dettagli facoltativi* → tavoli 3, attesa 10 min → *Aggiorna dettagli e riconferma*
-   → **B** vede "3 tavoli liberi · attesa ~10 min".
+6. **A**: tocca **! Pochi posti**, poi apri *Dettagli facoltativi* → tavoli 2, attesa 10 min →
+   *Aggiorna dettagli e riconferma* → **B** vede "! Pochi posti", "2 tavoli liberi" e "attesa ~10 min".
+   (Con **Completo** i tavoli liberi vengono azzerati apposta: completo vuol dire zero tavoli.)
 7. Aspetta: il simulatore **non tocca** per 3 ore un locale aggiornato a mano dall'app.
 
 > Nota: in questo ambiente il login ristoratore è ancora **dimostrativo** (Step 4–7). Il login Google
@@ -154,7 +172,8 @@ Telefono **A** = ristoratore, telefono **B** = cliente. Entrambi con l'app colle
 - Fai le prove alle **20:30** di un venerdì: vedrai molti "Completo" e "Pochi posti".
 - Fai le prove alle **8:00**: quasi tutto "Da aggiornare" (è notte per il simulatore). Realistico:
   la mattina nessuno aggiorna.
-- Vuoi vedere subito un cambio? `select public.dev_simulate_live_activity();` e attendi il refresh.
+- Vuoi vedere subito un cambio? `select public.dev_simulate_live_activity();` e attendi il refresh
+  (di notte usa la query "sveglia" del capitolo 4.2).
 
 ---
 
@@ -190,7 +209,7 @@ order by start_time desc limit 10;
 | "Configurazione Supabase incompleta" | manca una delle due righe | mettile entrambe |
 | Gli stati non cambiano mai | pg_cron non attivo o è notte | attiva pg_cron, riesegui `dev_tools.sql`, prova `select public.dev_simulate_live_activity();` |
 | Il telefono B non vede le modifiche di A | strumenti DEV non installati o spenti | riesegui `dev_tools.sql`; controlla `select value from public.app_config where key='dev_tools_enabled';` → `true` |
-| Tutto "Da aggiornare" | sei di notte (23:00–10:30) | normale; oppure forza un giro del simulatore |
+| Tutto "Da aggiornare" | sei di notte (23:00–10:30) | normale; per provare usa la query "sveglia" del capitolo 4.2 |
 | Errore `NOT_A_DEV_PARTNER` nei log | stai modificando un locale non di prova | si possono pubblicare solo i locali `DEV_SEED` partner |
 
 ---
