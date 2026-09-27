@@ -109,6 +109,17 @@ jobs:
           psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step8_to_17_checks.sql 2>&1 | tee checks.log | grep -E "ok:|FAIL|ERROR|TUTTI"
           grep -q "TUTTI I CONTROLLI SUPERATI" checks.log
 
+      - name: KPI queries run on the final schema
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/ops/kpi_queries.sql > /dev/null
+
+      - name: OpenStreetMap directory import works on a sample
+        run: |
+          sed -e '/^INCOLLA_QUI_IL_JSON_DI_OVERPASS$/{r supabase/tests/fixtures/overpass_sample.json' -e 'd}' \
+            supabase/ops/import_osm_overpass.sql > "$RUNNER_TEMP/import_osm_ready.sql"
+          psql -v ON_ERROR_STOP=1 -v import_file="$RUNNER_TEMP/import_osm_ready.sql" \
+            -f supabase/tests/osm_import_check.sql 2>&1 | tee osm.log
+          grep -q "IMPORT OSM OK" osm.log
+
       - name: DEV purge leaves no test data
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/dev/dev_purge.sql

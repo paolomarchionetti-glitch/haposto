@@ -215,8 +215,9 @@ $$;
 
 -- ---------------------------------------------------------------------------
 -- 3) Import di una directory reale (es. OpenStreetMap) come locali DIRECTORY_ONLY.
---    Carica prima le righe in directory_import_staging (Table Editor → Import CSV),
---    poi esegui: select * from public.admin_import_directory('OSM_IMPORT');
+--    Per OpenStreetMap usa supabase/ops/import_osm_overpass.sql (carica lo staging e importa).
+--    Altre fonti: righe in directory_import_staging (Table Editor → Import CSV), poi
+--    select * from public.admin_import_directory('NOME_FONTE');
 -- ---------------------------------------------------------------------------
 create table if not exists public.directory_import_staging (
     source_ref text primary key,
@@ -285,9 +286,11 @@ begin
     where btrim(st.name) <> ''
       and st.latitude between -90 and 90
       and st.longitude between -180 and 180
+      -- Qualsiasi fonte: un locale importato e poi corretto a mano (data_source = 'MANUAL',
+      -- stesso source_ref) non viene né duplicato né sovrascritto.
       and not exists (
           select 1 from public.restaurants r
-          where r.data_source = p_data_source and r.source_ref = st.source_ref
+          where r.source_ref = st.source_ref
       );
     get diagnostics v_inserted = row_count;
 

@@ -129,6 +129,8 @@ begin
         left join public.restaurant_live_status s on s.restaurant_id = rest.id
         where rest.data_source = 'DEV_SEED'
           and rest.partnership_status = 'ACTIVE_PARTNER'
+          -- I locali per le prove sul campo con un ristoratore vero li aggiorna solo lui dall'app.
+          and coalesce(rest.source_ref, '') not like 'field-test:%'
     loop
         continue when r.updated_via = 'DEV_APP' and r.updated_at > v_now - interval '3 hours';
         continue when r.lazy and random() < 0.85;
