@@ -38,10 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.haposto.R
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.DistanceOrigin
 import com.haposto.domain.model.DistanceOriginType
@@ -198,7 +200,7 @@ private fun HomeHeroHeader(isSupabaseBacked: Boolean) {
                 }
             }
             Text(
-                text = "Sai dove c'è posto. Ora.",
+                text = stringResource(R.string.app_tagline),
                 style = MaterialTheme.typography.labelLarge,
                 color = WarmSurface.copy(alpha = 0.78f),
             )

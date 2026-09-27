@@ -1,6 +1,7 @@
 package com.haposto.ui.screens.onboarding
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,25 +30,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
+import com.haposto.R
 
-private data class OnbPage(val title: String, val body: String)
+private data class OnbPage(@StringRes val title: Int, @StringRes val body: Int)
 
 private val PAGES = listOf(
-    OnbPage(
-        "Scopri dove c'è posto adesso",
-        "Apri, guarda i pallini verdi e vai. Niente telefonate, niente prenotazioni.",
-    ),
-    OnbPage(
-        "Dati freschi, di cui fidarti",
-        "Gli stati sono dichiarati dai locali e scadono dopo 30 minuti. Non è una prenotazione: la disponibilità può cambiare.",
-    ),
-    OnbPage(
-        "Vicino a te",
-        "Attiva la posizione oppure scegli una zona di Pesaro e provincia.",
-    ),
+    OnbPage(R.string.onb1_title, R.string.onb1_body),
+    OnbPage(R.string.onb2_title, R.string.onb2_body),
+    OnbPage(R.string.onb3_title, R.string.onb3_body),
 )
 
 /** Persistenza minima del "già visto" tramite SharedPreferences. */
@@ -59,8 +54,9 @@ object OnboardingPrefs {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_SEEN, false)
 
     fun markSeen(context: Context) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putBoolean(KEY_SEEN, true).apply()
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
+            putBoolean(KEY_SEEN, true)
+        }
     }
 }
 
@@ -80,7 +76,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onFinish) { Text("Salta") }
+                TextButton(onClick = onFinish) { Text(stringResource(R.string.onb_skip)) }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -91,14 +87,14 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             Spacer(Modifier.weight(1f))
 
             Text(
-                text = page.title,
+                text = stringResource(page.title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = page.body,
+                text = stringResource(page.body),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -131,7 +127,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                     .height(54.dp),
             ) {
                 Text(
-                    text = if (isLast) "Inizia" else "Avanti",
+                    text = stringResource(if (isLast) R.string.onb_start else R.string.onb_next),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )

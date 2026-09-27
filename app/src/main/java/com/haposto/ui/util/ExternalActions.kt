@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.core.net.toUri
 import com.haposto.domain.model.Restaurant
 
 object ExternalActions {
@@ -15,7 +16,7 @@ object ExternalActions {
         val label = Uri.encode(restaurant.name)
         val intent = Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("geo:$lat,$lon?q=$lat,$lon($label)"),
+            "geo:$lat,$lon?q=$lat,$lon($label)".toUri(),
         )
         return launchSafely(context, intent)
     }
