@@ -161,7 +161,9 @@ private val LIVE_STATUSES = setOf(
 
 private fun buildLiveDetail(e: com.haposto.domain.model.EffectiveAvailability): String? {
     val parts = mutableListOf<String>()
-    e.availableTables?.let { if (e.status != AvailabilityStatus.FULL) parts += "$it tavoli liberi" }
+    e.availableTables?.let {
+        if (e.status != AvailabilityStatus.FULL) parts += if (it == 1) "1 tavolo libero" else "$it tavoli liberi"
+    }
     e.estimatedWaitMinutes?.let { if (it > 0) parts += "attesa ~$it min" }
     e.note?.takeIf { it.isNotBlank() }?.let { parts += it }
     return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
