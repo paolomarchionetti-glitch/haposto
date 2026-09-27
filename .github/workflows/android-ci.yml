@@ -40,6 +40,20 @@ jobs:
       - name: Android lint
         run: ./gradlew --stacktrace lintDebug
 
+      - name: Lint summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in glob.glob("app/build/reports/lint-results-*.xml"):
+              issues = ET.parse(path).getroot().findall("issue")
+              print(f"{path}: {len(issues)} issue(s)")
+              for issue in issues:
+                  loc = issue.find("location")
+                  where = f"{loc.get('file', '?').split('/app/')[-1]}:{loc.get('line', '?')}" if loc is not None else "?"
+                  print(f"  [{issue.get('severity')}] {issue.get('id')} {where} - {issue.get('message')}")
+          PY
+
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
