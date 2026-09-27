@@ -10,7 +10,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -21,10 +24,17 @@ class ReservationsViewModel(
     private val _items = MutableStateFlow<List<Reservation>>(emptyList())
     val items: StateFlow<List<Reservation>> = _items.asStateFlow()
 
+    /** Serializes file writes so a slower, older save can never overwrite a newer list. */
+    private val saveMutex = Mutex()
+
     init {
         viewModelScope.launch {
             val loaded = withContext(Dispatchers.IO) { store.load() }
-            _items.value = loaded.sortedBy { it.sortKey }
+            // Keep anything added/edited while the file was still loading.
+            _items.update { current ->
+                val editedIds = current.mapTo(HashSet()) { it.id }
+                (loaded.filterNot { it.id in editedIds } + current).sortedBy { it.sortKey }
+            }
         }
     }
 
@@ -41,10 +51,10 @@ class ReservationsViewModel(
             id = editingId ?: UUID.randomUUID().toString(),
             name = cleanName,
             time = time.trim(),
-            partySize = partySize.coerceAtLeast(1),
+            partySize = partySize.coerceIn(1, MAX_PARTY_SIZE),
             table = table?.trim()?.ifBlank { null },
         )
-        val next = if (editingId != null) {
+        val next = if (editingId != null && _items.value.any { it.id == editingId }) {
             _items.value.map { if (it.id == editingId) entry else it }
         } else {
             _items.value + entry
@@ -57,11 +67,18 @@ class ReservationsViewModel(
     }
 
     private fun persist(list: List<Reservation>) {
-        val sorted = list.sortedBy { it.sortKey }
-        _items.value = sorted
+        _items.value = list.sortedBy { it.sortKey }
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { store.save(sorted) }
+            saveMutex.withLock {
+                // Always write the latest list, not the snapshot captured when this save was queued.
+                val latest = _items.value
+                withContext(Dispatchers.IO) { store.save(latest) }
+            }
         }
+    }
+
+    companion object {
+        const val MAX_PARTY_SIZE = 99
     }
 }
 

@@ -26,6 +26,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -136,6 +139,16 @@ class HomeViewModel(
                 .getOrNull()
                 ?.let(locationSession::useManualArea)
         }
+
+        // A failed load ends the repository flow: when the connection comes back, try again
+        // automatically instead of leaving the error panel until the user taps "Riprova".
+        viewModelScope.launch {
+            networkMonitor.isOnline
+                .distinctUntilChanged()
+                .drop(1)
+                .filter { it }
+                .collect { retryIfFailed() }
+        }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -150,10 +163,16 @@ class HomeViewModel(
         savedStateHandle[KEY_MANUAL_AREA] = area.name
         locationSession.useManualArea(area)
         locationNotice.value = null
+        retryIfFailed()
     }
 
     fun retryRestaurantLoad() {
         retryToken.value += 1
+    }
+
+    /** A new origin or a restored connection is a good moment to leave a previous load error. */
+    private fun retryIfFailed() {
+        if (uiState.value.errorMessage != null) retryRestaurantLoad()
     }
 
     fun onLocationRationaleRequired() {
@@ -185,6 +204,7 @@ class HomeViewModel(
                         accuracyMeters = result.accuracyMeters,
                         isPrecise = isPrecisePermission,
                     )
+                    retryIfFailed()
                 }
 
                 DeviceLocationResult.PermissionMissing -> {

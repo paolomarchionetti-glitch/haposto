@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,11 +53,12 @@ fun ReservationsScreen(
     onRemove: (String) -> Unit,
     onBack: () -> Unit,
 ) {
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var name by remember { mutableStateOf("") }
-    var time by remember { mutableStateOf("") }
-    var party by remember { mutableIntStateOf(2) }
-    var table by remember { mutableStateOf("") }
+    // Saveable: a rotation or a trip to the voice-recognition activity must not wipe the form.
+    var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var name by rememberSaveable { mutableStateOf("") }
+    var time by rememberSaveable { mutableStateOf("") }
+    var party by rememberSaveable { mutableIntStateOf(2) }
+    var table by rememberSaveable { mutableStateOf("") }
     var voiceError by remember { mutableStateOf<String?>(null) }
 
     fun resetForm() {
@@ -173,7 +175,10 @@ fun ReservationsScreen(
                                 fontWeight = FontWeight.Bold,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             )
-                            OutlinedButton(onClick = { party++ }, modifier = Modifier.heightIn(min = 48.dp)) { Text("+") }
+                            OutlinedButton(
+                                onClick = { if (party < ReservationsViewModel.MAX_PARTY_SIZE) party++ },
+                                modifier = Modifier.heightIn(min = 48.dp),
+                            ) { Text("+") }
                         }
 
                         voiceError?.let {

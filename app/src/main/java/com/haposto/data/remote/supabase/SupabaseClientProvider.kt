@@ -15,7 +15,8 @@ object SupabaseClientProvider {
 
     val configuration: SupabaseConfiguration
         get() = SupabaseConfiguration(
-            url = BuildConfig.SUPABASE_URL.trim(),
+            // The dashboard URL is sometimes copied with a trailing "/": accept it.
+            url = BuildConfig.SUPABASE_URL.trim().trimEnd('/'),
             publishableKey = BuildConfig.SUPABASE_PUBLISHABLE_KEY.trim(),
         )
 

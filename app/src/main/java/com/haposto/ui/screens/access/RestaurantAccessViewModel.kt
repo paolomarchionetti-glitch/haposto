@@ -14,6 +14,7 @@ import com.haposto.domain.model.RestaurantClaimStatus
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -40,9 +41,14 @@ class RestaurantAccessViewModel(
         DraftState(query, selectedId, contact, busy, messageValue)
     }
 
+    // A failing directory (Supabase unreachable or misconfigured) must not crash the access flow:
+    // the claim search simply shows no candidates while Home reports the error with a retry.
+    private val directory = restaurantRepository.observeRestaurants()
+        .catch { emit(emptyList()) }
+
     val uiState = combine(
         accessRepository.observeState(),
-        restaurantRepository.observeRestaurants(),
+        directory,
         draft,
     ) { access, restaurants, draftState ->
         val claimRestaurant = access.claim?.restaurantId?.let { id ->

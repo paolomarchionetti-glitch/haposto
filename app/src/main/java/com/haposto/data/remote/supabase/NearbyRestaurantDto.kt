@@ -6,16 +6,10 @@ import com.haposto.domain.model.LiveAvailability
 import com.haposto.domain.model.PartnershipStatus
 import com.haposto.domain.model.Restaurant
 import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.format.DateTimeParseException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
-@Serializable
-internal data class NearbyRestaurantsParams(
-    val lat: Double,
-    val long: Double,
-    @SerialName("radius_meters") val radiusMeters: Int,
-    @SerialName("search_text") val searchText: String? = null,
-)
 
 @Serializable
 internal data class NearbyRestaurantDto(
@@ -46,23 +40,7 @@ internal fun NearbyRestaurantDto.toDomain(): Restaurant {
         PartnershipStatus.DIRECTORY_ONLY
     }
 
-    val live = if (
-        partnership == PartnershipStatus.ACTIVE_PARTNER &&
-        liveStatus != null &&
-        liveUpdatedAt != null &&
-        liveValidUntil != null
-    ) {
-        LiveAvailability(
-            status = AvailabilityStatus.valueOf(liveStatus),
-            updatedAt = Instant.parse(liveUpdatedAt),
-            validUntil = Instant.parse(liveValidUntil),
-            availableTables = if (liveStatus == "FULL") null else availableTables,
-            estimatedWaitMinutes = estimatedWaitMinutes,
-            note = note,
-        )
-    } else {
-        null
-    }
+    val live = if (partnership == PartnershipStatus.ACTIVE_PARTNER) toLiveAvailability() else null
 
     return Restaurant(
         id = id,
@@ -77,4 +55,41 @@ internal fun NearbyRestaurantDto.toDomain(): Restaurant {
         phoneNumber = phoneNumber,
         phonePublic = phonePublic && !phoneNumber.isNullOrBlank(),
     )
+}
+
+/**
+ * A malformed or unknown live row must not break the whole directory: the restaurant is still
+ * shown, simply without a LIVE state (the resolver then reports it as "da aggiornare").
+ */
+private fun NearbyRestaurantDto.toLiveAvailability(): LiveAvailability? {
+    val status = PUBLISHED_LIVE_STATUSES.firstOrNull { it.name == liveStatus } ?: return null
+    val updatedAt = liveUpdatedAt?.let(::parseTimestamp) ?: return null
+    val validUntil = liveValidUntil?.let(::parseTimestamp) ?: return null
+    return runCatching {
+        LiveAvailability(
+            status = status,
+            updatedAt = updatedAt,
+            validUntil = validUntil,
+            availableTables = if (status == AvailabilityStatus.FULL) null else availableTables,
+            estimatedWaitMinutes = estimatedWaitMinutes,
+            note = note?.trim()?.takeIf(String::isNotEmpty),
+        )
+    }.getOrNull()
+}
+
+private val PUBLISHED_LIVE_STATUSES = listOf(
+    AvailabilityStatus.AVAILABLE,
+    AvailabilityStatus.LIMITED,
+    AvailabilityStatus.FULL,
+)
+
+/**
+ * PostgREST serializes `timestamptz` with an explicit offset ("2026-08-24T10:00:00.123456+00:00").
+ * `Instant.parse` accepts only the "Z" form on Android 8–13 (java.time based on OpenJDK 8), so the
+ * value is parsed as an ISO offset date-time, which accepts both forms on every API level.
+ */
+internal fun parseTimestamp(value: String): Instant? = try {
+    OffsetDateTime.parse(value.trim()).toInstant()
+} catch (_: DateTimeParseException) {
+    null
 }

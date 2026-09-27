@@ -61,7 +61,16 @@ class SupabaseRestaurantRepository(
             }
 
         return combine(remote, localManagerOverrides) { backendRows, overrides ->
-            backendRows.map { backend -> overrides[backend.id] ?: backend }
+            backendRows.map { backend ->
+                // Only the fields the manager can edit come from the RAM overlay; distance, name,
+                // address and partnership keep following the latest backend row.
+                overrides[backend.id]?.let { local ->
+                    backend.copy(
+                        liveAvailability = local.liveAvailability,
+                        phonePublic = local.phonePublic && !backend.phoneNumber.isNullOrBlank(),
+                    )
+                } ?: backend
+            }
         }.onEach(::cache)
     }
 

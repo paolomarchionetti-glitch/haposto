@@ -1,0 +1,8 @@
+# Keep shell scripts runnable on Linux/macOS/CI and batch files valid on Windows.
+* text=auto
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.ttf binary

@@ -16,6 +16,7 @@ import java.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
@@ -49,7 +50,9 @@ class RestaurantManagerViewModel(
     }
 
     val uiState = combine(
-        repository.observeRestaurants(),
+        // On a backend error keep the last known record so the dashboard stays usable instead of crashing.
+        repository.observeRestaurants()
+            .catch { emit(listOfNotNull(repository.findById(restaurantId))) },
         draft,
         clockTicker(),
     ) { restaurants, draft, now ->

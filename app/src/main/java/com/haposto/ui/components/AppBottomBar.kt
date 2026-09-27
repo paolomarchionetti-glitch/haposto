@@ -5,6 +5,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.haposto.R
 import com.haposto.ui.navigation.AppDestination
 
 /**
@@ -25,19 +27,19 @@ fun AppBottomBar(
             selected = currentRoute == AppDestination.HOME,
             onClick = onSelectNearby,
             icon = { Text("◉", style = MaterialTheme.typography.titleMedium) },
-            label = { Text("Vicino") },
+            label = { Text(stringResource(R.string.nav_nearby)) },
         )
         NavigationBarItem(
             selected = currentRoute == AppDestination.FAVORITES,
             onClick = onSelectFavorites,
             icon = { Text("☆", style = MaterialTheme.typography.titleMedium) },
-            label = { Text("Preferiti") },
+            label = { Text(stringResource(R.string.nav_favorites)) },
         )
         NavigationBarItem(
             selected = false,
             onClick = onSelectRestaurateur,
             icon = { Text("🍴", style = MaterialTheme.typography.titleMedium) },
-            label = { Text("Ristoratore") },
+            label = { Text(stringResource(R.string.nav_restaurateur)) },
         )
     }
 }

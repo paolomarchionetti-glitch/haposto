@@ -2,6 +2,7 @@ package com.haposto.ui.screens.restaurant
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.domain.model.AvailabilityStatus
@@ -42,9 +43,10 @@ class RestaurantManagerScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("C'È POSTO").assertIsDisplayed()
-        composeRule.onNodeWithText("POCHI POSTI").assertIsDisplayed()
-        composeRule.onNodeWithText("COMPLETO").assertIsDisplayed()
+        // The status labels also appear in the "Ora sei" badge: target the one-tap buttons explicitly.
+        composeRule.onNodeWithContentDescription("Imposta stato C'è posto").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Imposta stato Pochi posti").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Imposta stato Completo").assertIsDisplayed()
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.haposto.data.remote.supabase
 
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.PartnershipStatus
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -82,4 +83,54 @@ class NearbyRestaurantDtoTest {
         assertEquals(PartnershipStatus.DIRECTORY_ONLY, restaurant.partnershipStatus)
         assertNull(restaurant.liveAvailability)
     }
+
+    @Test
+    fun postgrestTimestampsWithOffsetAndMicrosecondsAreParsed() {
+        val restaurant = partnerDto(
+            liveStatus = "LIMITED",
+            liveUpdatedAt = "2026-08-24T10:00:00.123456+00:00",
+            liveValidUntil = "2026-08-24T12:30:00.123456+02:00",
+        ).toDomain()
+
+        val live = restaurant.liveAvailability
+        assertEquals(AvailabilityStatus.LIMITED, live?.status)
+        assertEquals(Instant.parse("2026-08-24T10:00:00.123456Z"), live?.updatedAt)
+        assertEquals(Instant.parse("2026-08-24T10:30:00.123456Z"), live?.validUntil)
+    }
+
+    @Test
+    fun unknownLiveStatusKeepsRestaurantWithoutLiveState() {
+        val restaurant = partnerDto(liveStatus = "SOMETHING_NEW").toDomain()
+
+        assertEquals(PartnershipStatus.ACTIVE_PARTNER, restaurant.partnershipStatus)
+        assertNull(restaurant.liveAvailability)
+    }
+
+    @Test
+    fun malformedTimestampKeepsRestaurantWithoutLiveState() {
+        val restaurant = partnerDto(liveUpdatedAt = "not-a-date").toDomain()
+
+        assertNull(restaurant.liveAvailability)
+    }
+
+    private fun partnerDto(
+        liveStatus: String = "AVAILABLE",
+        liveUpdatedAt: String = "2026-08-24T10:00:00Z",
+        liveValidUntil: String = "2026-08-24T10:30:00Z",
+    ) = NearbyRestaurantDto(
+        id = "10000000-0000-0000-0000-000000000010",
+        name = "Partner Demo",
+        category = "Ristorante",
+        address = "Via Demo 10",
+        city = "Pesaro",
+        province = "PU",
+        phonePublic = false,
+        partnershipStatus = "ACTIVE_PARTNER",
+        liveStatus = liveStatus,
+        liveUpdatedAt = liveUpdatedAt,
+        liveValidUntil = liveValidUntil,
+        latitude = 43.91,
+        longitude = 12.91,
+        distanceMeters = 100.0,
+    )
 }

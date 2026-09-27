@@ -1,5 +1,6 @@
 package com.haposto.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -84,7 +85,11 @@ private fun MainNavigation() {
         NavHost(
             navController = navController,
             startDestination = AppDestination.HOME,
-            modifier = Modifier.padding(innerPadding),
+            // Each screen has its own Scaffold: consuming the insets already applied here keeps the
+            // inner Scaffolds from adding the status/navigation bar padding a second time.
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding),
         ) {
             composable(AppDestination.HOME) {
                 HomeRoute(
