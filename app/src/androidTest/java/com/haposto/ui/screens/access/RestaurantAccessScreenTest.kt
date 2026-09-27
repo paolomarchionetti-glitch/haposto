@@ -41,7 +41,8 @@ class RestaurantAccessScreenTest {
 
         composeRule.onNodeWithText("STEP 6 · DEMO PRE-BACKEND").assertIsDisplayed()
         composeRule.onNodeWithText("Sei offline").assertIsDisplayed()
-        composeRule.onNodeWithText("CONTINUA CON GOOGLE · DEMO LOCALE").assertIsDisplayed()
+        composeRule.onNodeWithText("Passo 1 di 3 · Accedi").assertIsDisplayed()
+        composeRule.onNodeWithText("CONTINUA CON GOOGLE · DEMO LOCALE").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -84,6 +85,7 @@ class RestaurantAccessScreenTest {
         }
 
         // On small screens the demo-admin button sits below the fold: scroll to it first.
+        composeRule.onNodeWithText("Passo 3 di 3 · Verifica in corso").assertIsDisplayed()
         composeRule.onNodeWithText("RICHIESTA IN VERIFICA").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("SIMULA APPROVAZIONE ADMIN").performScrollTo().assertIsDisplayed()
     }

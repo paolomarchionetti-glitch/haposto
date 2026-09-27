@@ -1,0 +1,25 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API (esempio per i test: dati inventati)",
+  "osm3s": { "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL." },
+  "elements": [
+    {
+      "type": "node", "id": 9000000001, "lat": 43.9101, "lon": 12.9120,
+      "tags": { "amenity": "restaurant", "name": "Pizzeria Prova OSM", "cuisine": "pizza;italian",
+                "addr:street": "Via di Prova", "addr:housenumber": "1", "addr:city": "Pesaro",
+                "phone": "+39 0721 000001" }
+    },
+    {
+      "type": "way", "id": 9000000002, "center": { "lat": 43.9150, "lon": 12.9200 },
+      "tags": { "amenity": "restaurant", "name": "Trattoria del Test", "cuisine": "seafood" }
+    },
+    {
+      "type": "node", "id": 9000000003, "lat": 43.9110, "lon": 12.9130,
+      "tags": { "amenity": "restaurant" }
+    },
+    {
+      "type": "node", "id": 9000000004, "lat": 43.9120, "lon": 12.9140,
+      "tags": { "disused:amenity": "restaurant", "name": "Locale Chiuso OSM" }
+    }
+  ]
+}

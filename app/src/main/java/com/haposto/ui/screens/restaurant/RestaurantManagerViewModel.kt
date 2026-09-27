@@ -124,7 +124,11 @@ class RestaurantManagerViewModel(
                 note = note.value.trim().takeIf { it.isNotEmpty() },
             )
             isSaving.value = false
-            message.value = if (success) "Stato aggiornato adesso." else "Aggiornamento non riuscito."
+            message.value = if (success) {
+                "✓ Pubblicato adesso: i clienti lo vedono per 30 minuti."
+            } else {
+                "Non è stato possibile pubblicare. Controlla la connessione e riprova."
+            }
         }
     }
 

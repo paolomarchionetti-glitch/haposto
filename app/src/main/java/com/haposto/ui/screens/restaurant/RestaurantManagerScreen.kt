@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -35,16 +37,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
 import com.haposto.ui.components.AdaptiveScrollableContent
-import com.haposto.ui.components.AvailabilityBadge
 import com.haposto.ui.components.InfoDisclosure
 import com.haposto.ui.components.OfflineBanner
+import com.haposto.ui.components.StatusSymbol
 import com.haposto.ui.components.statusPresentation
 import java.time.Duration
 
@@ -107,22 +113,31 @@ fun RestaurantManagerScreen(
 
             if (!isOnline) OfflineBanner()
 
-            // Stato attuale (compatto)
-            CurrentStatusCard(uiState)
+            // Cosa vedono i clienti adesso, con il tasto "è ancora così".
+            StatusHeroCard(
+                uiState = uiState,
+                onConfirmCurrentStatus = onRefreshCurrentStatus,
+            )
 
-            // AZIONE PRINCIPALE: tre tasti grandi
+            // AZIONE PRINCIPALE: tre tasti grandi a semaforo
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = "Come siete messi?",
+                    text = "Come siete messi adesso?",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
-                BigStatusButton(AvailabilityStatus.AVAILABLE, !uiState.isSaving) { onStatusSelected(AvailabilityStatus.AVAILABLE) }
-                BigStatusButton(AvailabilityStatus.LIMITED, !uiState.isSaving) { onStatusSelected(AvailabilityStatus.LIMITED) }
-                BigStatusButton(AvailabilityStatus.FULL, !uiState.isSaving) { onStatusSelected(AvailabilityStatus.FULL) }
+                STATUS_CHOICES.forEach { choice ->
+                    BigStatusButton(
+                        status = choice.status,
+                        hint = choice.hint,
+                        isCurrent = uiState.effectiveAvailability.status == choice.status,
+                        enabled = !uiState.isSaving,
+                        onClick = { onStatusSelected(choice.status) },
+                    )
+                }
                 InfoDisclosure(
                     label = "Come funziona",
-                    text = "Un tap pubblica subito lo stato. Resta valido 30 minuti: dopo, se non lo confermi, torna \u201Cda aggiornare\u201D.",
+                    text = "Un tap pubblica subito lo stato. Resta valido 30 minuti: dopo, se non lo confermi, i clienti vedono \u201Cda aggiornare\u201D.",
                 )
             }
 
@@ -191,70 +206,155 @@ fun RestaurantManagerScreen(
 }
 
 @Composable
-private fun CurrentStatusCard(uiState: RestaurantManagerUiState) {
+private fun StatusHeroCard(
+    uiState: RestaurantManagerUiState,
+    onConfirmCurrentStatus: () -> Unit,
+) {
+    val effective = uiState.effectiveAvailability
+    val presentation = statusPresentation(effective.status)
+    val isLive = effective.status in LIVE
+    val remainingSeconds = effective.validUntil
+        ?.let { Duration.between(uiState.now, it).seconds.coerceAtLeast(0) }
+    val remainingMinutes = remainingSeconds?.let { (it + 59) / 60 }
+    val haptics = LocalHapticFeedback.current
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = presentation.container,
+        contentColor = presentation.foreground,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
-                text = "Ora sei",
+                text = "I clienti adesso vedono",
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            AvailabilityBadge(status = uiState.effectiveAvailability.status)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                StatusSymbol(presentation = presentation, diameter = 40.dp)
+                Text(
+                    text = presentation.label,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                )
+            }
             Text(
-                text = AvailabilityResolver.relativeUpdateLabel(
-                    effective = uiState.effectiveAvailability,
-                    now = uiState.now,
-                ),
+                text = AvailabilityResolver.relativeUpdateLabel(effective, uiState.now),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            uiState.effectiveAvailability.validUntil?.let { validUntil ->
-                if (uiState.effectiveAvailability.status in LIVE) {
-                    val remaining = (Duration.between(uiState.now, validUntil).seconds.coerceAtLeast(0) + 59) / 60
+
+            if (isLive && remainingSeconds != null && remainingMinutes != null) {
+                val total = AvailabilityRules.LIVE_TTL_MINUTES * 60f
+                LinearProgressIndicator(
+                    progress = { (remainingSeconds / total).coerceIn(0f, 1f) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(MaterialTheme.shapes.small),
+                    color = presentation.strong,
+                    trackColor = presentation.strong.copy(alpha = 0.2f),
+                )
+                Text(
+                    text = if (remainingMinutes == 1L) "Valido ancora ~1 minuto" else "Valido ancora ~$remainingMinutes minuti",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Button(
+                    onClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onConfirmCurrentStatus()
+                    },
+                    enabled = !uiState.isSaving,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .semantics { contentDescription = "Conferma lo stato attuale" },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = presentation.strong,
+                        contentColor = presentation.onStrong,
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
                     Text(
-                        text = if (remaining == 1L) "Valido ancora ~1 min" else "Valido ancora ~$remaining min",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
+                        text = "✓  È ancora così: confermo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                     )
                 }
+            } else {
+                Text(
+                    text = if (effective.status == AvailabilityStatus.STALE) {
+                        "Il tuo stato è scaduto. Tocca qui sotto come siete messi: un tap e i clienti lo vedono subito."
+                    } else {
+                        "Non hai ancora pubblicato uno stato. Tocca qui sotto come siete messi."
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }
 }
 
+private data class StatusChoice(val status: AvailabilityStatus, val hint: String)
+
+private val STATUS_CHOICES = listOf(
+    StatusChoice(AvailabilityStatus.AVAILABLE, "Ci sono tavoli liberi adesso"),
+    StatusChoice(AvailabilityStatus.LIMITED, "Ultimi tavoli o breve attesa"),
+    StatusChoice(AvailabilityStatus.FULL, "Niente posto in questo momento"),
+)
+
 @Composable
 private fun BigStatusButton(
     status: AvailabilityStatus,
+    hint: String,
+    isCurrent: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
     val presentation = statusPresentation(status)
+    val haptics = LocalHapticFeedback.current
     Button(
-        onClick = onClick,
+        onClick = {
+            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+            onClick()
+        },
         enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 72.dp)
+            .heightIn(min = 76.dp)
             .semantics { contentDescription = "Imposta stato ${presentation.label}" },
         colors = ButtonDefaults.buttonColors(
-            containerColor = presentation.container,
-            contentColor = presentation.foreground,
+            containerColor = presentation.strong,
+            contentColor = presentation.onStrong,
         ),
+        border = if (isCurrent) BorderStroke(4.dp, MaterialTheme.colorScheme.onSurface) else null,
         shape = MaterialTheme.shapes.large,
+        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
     ) {
-        Text(
-            text = presentation.label,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Black,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            StatusSymbol(presentation = presentation, diameter = 36.dp, inverted = true)
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = presentation.label,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                )
+                Text(
+                    text = if (isCurrent) "Stato attuale · $hint" else hint,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
     }
 }
 

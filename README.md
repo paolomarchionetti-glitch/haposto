@@ -201,6 +201,18 @@ Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
 
 # Documentazione principale
 
+Da dove partire (settembre 2026):
+
+- `docs/HAPOSTO_GUIDA_APP_TUTORIAL.md` — come si usa l'app, per utenti e ristoratori
+- `docs/HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md` — provare l'app con 36 locali che cambiano da soli, anche con due telefoni
+- `docs/HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo
+- `docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
+- `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Basic/Pro e Gratis/Plus, registrazione, acquisti
+- `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
+- `docs/HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa è fatto e l'ordine dei lavori fino al lancio
+
+Riferimenti Step 7 e architettura:
+
 - `docs/STEP_7_SETUP_SUPABASE.md`
 - `docs/STEP_7_BUILD_AND_TEST.md`
 - `docs/STEP_7_TROUBLESHOOTING.md`

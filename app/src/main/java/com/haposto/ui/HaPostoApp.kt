@@ -53,6 +53,7 @@ private fun MainNavigation() {
     val locationSession = AppDependencies.locationSession
     val deviceLocationProvider = remember(context) { AppDependencies.deviceLocationProvider(context) }
     val networkMonitor = remember(context) { AppDependencies.networkMonitor(context) }
+    val favorites = remember(context) { AppDependencies.favorites(context) }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -108,13 +109,21 @@ private fun MainNavigation() {
                 )
             }
             composable(AppDestination.FAVORITES) {
-                FavoritesRoute()
+                FavoritesRoute(
+                    repository = repository,
+                    locationSession = locationSession,
+                    favorites = favorites,
+                    onRestaurantClick = { restaurantId ->
+                        navController.navigate(AppDestination.restaurantDetail(restaurantId))
+                    },
+                )
             }
             composable(AppDestination.RESTAURANT_DETAIL) { entry ->
                 RestaurantDetailRoute(
                     restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
                     repository = repository,
                     locationSession = locationSession,
+                    favorites = favorites,
                     onBack = navController::navigateUp,
                 )
             }

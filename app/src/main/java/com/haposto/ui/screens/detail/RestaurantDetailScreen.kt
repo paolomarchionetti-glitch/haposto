@@ -46,6 +46,8 @@ fun RestaurantDetailScreen(
     restaurant: Restaurant,
     distanceOrigin: DistanceOrigin,
     isSupabaseBacked: Boolean = false,
+    isFavorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -187,6 +189,13 @@ fun RestaurantDetailScreen(
                 ) {
                     Text("CHIAMA")
                 }
+            }
+
+            OutlinedButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(if (isFavorite) "★ Nei preferiti · tocca per togliere" else "☆ Salva nei preferiti")
             }
 
             actionError?.let { message ->

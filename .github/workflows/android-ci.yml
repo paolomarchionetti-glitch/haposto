@@ -64,6 +64,67 @@ jobs:
             app/build/test-results/
           if-no-files-found: ignore
 
+  supabase-sql:
+    name: Supabase SQL (migrations, seed, RLS checks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      # The postgis image pre-installs PostGIS in "postgres" (schema public): use a clean database,
+      # like a new Supabase project where 0001 installs it in "extensions".
+      PGDATABASE: haposto
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Emulate a fresh Supabase project, apply migrations and seeds
+        run: |
+          set -e
+          createdb -T template0 haposto
+          run() { echo "== $1"; psql -v ON_ERROR_STOP=1 -q -f "$1"; }
+          run supabase/tests/local_only_supabase_emulation.sql
+          for f in 0001_extensions 0002_schema 0003_functions 0004_rls_and_grants \
+                   0006_hardening_and_data_source 0007_accounts_and_claims 0008_plans_and_billing \
+                   0009_favorites_alerts_notifications 0010_reservations_cloud 0011_public_page_stats_import; do
+            run supabase/migrations/$f.sql
+          done
+          run supabase/seeds/900_example_fictional_data.sql
+          run supabase/seeds/910_pseudo_realistic_dev_seed.sql
+          run supabase/dev/dev_tools.sql
+          # Re-running every migration must be harmless.
+          for f in supabase/migrations/000[6-9]_*.sql supabase/migrations/001[01]_*.sql; do run "$f"; done
+
+      - name: RLS and business-rule checks
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step8_to_17_checks.sql 2>&1 | tee checks.log | grep -E "ok:|FAIL|ERROR|TUTTI"
+          grep -q "TUTTI I CONTROLLI SUPERATI" checks.log
+
+      - name: KPI queries run on the final schema
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/ops/kpi_queries.sql > /dev/null
+
+      - name: OpenStreetMap directory import works on a sample
+        run: |
+          sed -e '/^INCOLLA_QUI_IL_JSON_DI_OVERPASS$/{r supabase/tests/fixtures/overpass_sample.json' -e 'd}' \
+            supabase/ops/import_osm_overpass.sql > "$RUNNER_TEMP/import_osm_ready.sql"
+          psql -v ON_ERROR_STOP=1 -v import_file="$RUNNER_TEMP/import_osm_ready.sql" \
+            -f supabase/tests/osm_import_check.sql 2>&1 | tee osm.log
+          grep -q "IMPORT OSM OK" osm.log
+
+      - name: DEV purge leaves no test data
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/dev/dev_purge.sql
+          test "$(psql -At -c "select count(*) from public.restaurants where data_source = 'DEV_SEED'")" = "0"
+
   instrumented:
     name: Instrumented tests (emulator)
     needs: build

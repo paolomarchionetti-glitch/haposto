@@ -33,14 +33,18 @@ val InkTextSecondary = Color(0xFFB4C0BC)
 val InkOutline = Color(0xFF44514D)
 
 // --- Availability (light) ---
-val AvailabilityGreen = Color(0xFF1E7A4D)
+val AvailabilityGreen = Color(0xFF1B7348)       // contrasto ≥ 4.5:1 su container e con testo bianco
 val AvailabilityGreenContainer = Color(0xFFD9F3E4)
-val AvailabilityAmber = Color(0xFF9A6500)
+val AvailabilityAmber = Color(0xFF8A5A00)
 val AvailabilityAmberContainer = Color(0xFFFFE8B2)
 val AvailabilityRed = Color(0xFFB43B3B)
 val AvailabilityRedContainer = Color(0xFFFFDEDC)
-val AvailabilityNeutral = Color(0xFF667176)
+val AvailabilityNeutral = Color(0xFF5B6569)
 val AvailabilityNeutralContainer = Color(0xFFE8ECEA)
+
+// Testo su colore di stato pieno (tasti del ristoratore): bianco in chiaro, inchiostro in scuro.
+val OnStatusLight = Color(0xFFFFFFFF)
+val OnStatusDark = Color(0xFF0E1719)
 
 // --- Availability (dark) ---
 val AvailabilityGreenDark = Color(0xFF7FE0AE)
