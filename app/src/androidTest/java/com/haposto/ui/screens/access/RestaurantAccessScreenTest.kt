@@ -3,6 +3,7 @@ package com.haposto.ui.screens.access
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import com.haposto.domain.model.RestaurantClaim
 import com.haposto.domain.model.RestaurantClaimStatus
 import com.haposto.domain.model.RestaurantDemoAccount
@@ -82,7 +83,8 @@ class RestaurantAccessScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("RICHIESTA IN VERIFICA").assertIsDisplayed()
-        composeRule.onNodeWithText("SIMULA APPROVAZIONE ADMIN").assertIsDisplayed()
+        // On small screens the demo-admin button sits below the fold: scroll to it first.
+        composeRule.onNodeWithText("RICHIESTA IN VERIFICA").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("SIMULA APPROVAZIONE ADMIN").performScrollTo().assertIsDisplayed()
     }
 }

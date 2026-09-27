@@ -1,8 +1,11 @@
 package com.haposto.ui.screens.home
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollToNode
 import com.haposto.ui.theme.HaPostoTheme
 import org.junit.Rule
 import org.junit.Test
@@ -81,6 +84,9 @@ class HomeScreenTest {
         }
 
         composeRule.onNodeWithText("Sei offline").assertIsDisplayed()
+        // The empty-state panel follows the search controls: on small screens scroll the list to it.
+        composeRule.onNode(hasScrollToIndexAction())
+            .performScrollToNode(hasText("Directory ancora vuota"))
         composeRule.onNodeWithText("Directory ancora vuota").assertIsDisplayed()
     }
 }
