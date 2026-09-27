@@ -1,5 +1,9 @@
 # HAPOSTO — Roadmap integrativa (settembre 2026)
 
+> **Aggiornamento:** l'elenco completo e dettagliato di tutte le attività fino alla fine del progetto
+> (login reali, termini e privacy, pagamenti, Play Store, pilot, gestione) e il calendario aggiornato
+> sono in **`HAPOSTO_ROADMAP_COMPLETA.md`**. Questo documento resta come riepilogo dello Step 7.9.
+
 Aggiorna `ROADMAP.md` e `HAPOSTO_ROADMAP_TOP_FREEMIUM.md` con quello che è stato fatto in questo
 passaggio e con l'ordine dei lavori da qui al lancio. Dove i due documenti precedenti non coincidono,
 vale questo.
