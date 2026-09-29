@@ -35,8 +35,25 @@ se lo vuoi, un dominio (~10–15 €/anno; senza dominio il sito resta su `*.pag
 ## Parte 1 — Database DEV: migration 0012 e 0013
 
 Prerequisito: 0001–0004 e 0006–0011 già eseguite (vedi `HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md`).
+Controllo di partenza (SQL Editor → **New query** → **Run**):
 
-Supabase (progetto DEV) → **SQL Editor** → **New query** → incolla il file intero → **Run**, uno alla volta:
+```sql
+select
+    exists (select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'restaurants' and column_name = 'slug') as fino_a_0011,
+    to_regclass('public.audit_log') is not null as ha_0012,
+    to_regclass('public.consent_log') is not null as ha_0013;
+```
+
+| fino_a_0011 | ha_0012 | ha_0013 | Cosa fare |
+|---|---|---|---|
+| true | false | false | esegui 0012 e 0013 come sotto |
+| true | true | qualsiasi | già eseguita in parte: rieseguire 0012 e 0013 in ordine è sicuro |
+| false | – | – | prima 0006–0011 (`HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md`) |
+
+Supabase (progetto DEV) → **SQL Editor** → **New query** → incolla il file intero → **Run**, uno alla volta.
+Se compare la finestra *Potential issue detected… destructive operation* è normale (i file
+sostituiscono vecchie versioni di funzioni e regole): premi **Run this query**.
 
 | Ordine | File | Cosa aggiunge | Verifica (nuova query) | Atteso |
 |---|---|---|---|---|
