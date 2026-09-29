@@ -13,8 +13,9 @@ SUPABASE_DEV_PUBLISHABLE_KEY=sb_publishable_CHIAVE_DEV
 # (Le vecchie chiavi SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY valgono ancora per DEV.)
 
 # --- Supabase PRODUZIONE (versione "HAPOSTO", pacchetto com.haposto) ---
-SUPABASE_PROD_URL=https://TUO_PROGETTO_PROD.supabase.co
-SUPABASE_PROD_PUBLISHABLE_KEY=sb_publishable_CHIAVE_PROD
+# Togli il # solo quando il progetto di produzione esiste (Parte 10 della guida).
+# SUPABASE_PROD_URL=https://TUO_PROGETTO_PROD.supabase.co
+# SUPABASE_PROD_PUBLISHABLE_KEY=sb_publishable_CHIAVE_PROD
 
 # --- Accesso con Google: ID client OAuth di tipo "Applicazione web" (Google Cloud) ---
 # Uno solo per entrambe le versioni, oppure uno per ambiente:
@@ -24,14 +25,15 @@ GOOGLE_WEB_CLIENT_ID=123456789-xxxxxxxx.apps.googleusercontent.com
 
 # --- Notifiche push (Firebase, facoltativo: senza, i promemoria locali funzionano lo stesso) ---
 # Valori da Firebase → Impostazioni progetto → Le tue app → app Android.
-FIREBASE_DEV_APP_ID=1:123456789:android:abcdef
-FIREBASE_DEV_API_KEY=AIza_CHIAVE_ANDROID_DEV
-FIREBASE_DEV_PROJECT_ID=haposto-dev
-FIREBASE_DEV_SENDER_ID=123456789
-FIREBASE_PROD_APP_ID=
-FIREBASE_PROD_API_KEY=
-FIREBASE_PROD_PROJECT_ID=
-FIREBASE_PROD_SENDER_ID=
+# Togli il # solo con i valori veri (Parte 5): valori inventati attivano Firebase e lo fanno fallire.
+# FIREBASE_DEV_APP_ID=1:123456789:android:abcdef
+# FIREBASE_DEV_API_KEY=AIza_CHIAVE_ANDROID_DEV
+# FIREBASE_DEV_PROJECT_ID=haposto-dev
+# FIREBASE_DEV_SENDER_ID=123456789
+# FIREBASE_PROD_APP_ID=
+# FIREBASE_PROD_API_KEY=
+# FIREBASE_PROD_PROJECT_ID=
+# FIREBASE_PROD_SENDER_ID=
 
 # --- Sito pubblico (link di condivisione, QR, privacy) ---
 PUBLIC_SITE_URL=https://haposto.app
