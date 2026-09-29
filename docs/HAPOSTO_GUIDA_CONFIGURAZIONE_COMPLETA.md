@@ -226,7 +226,17 @@ Nel pannello: **Panoramica**, **Richieste** (rivendicazioni con codice telefonic
 
 ### 4.3 Prova con due account (la prova più importante)
 
-Ti servono un secondo account Google (il "ristoratore") e, se possibile, un secondo telefono.
+Ti servono un secondo account Google (il "ristoratore", presente nei *Test users* del punto 2.1) e,
+se possibile, un secondo telefono. Sul DEV con il simulatore attivo riesegui prima
+`supabase/dev/dev_tools.sql`: la versione aggiornata non tocca più i locali rivendicati da un
+account vero, così lo stato che pubblichi resta il tuo.
+
+**Un solo telefono?** Il secondo telefono può essere un emulatore di Android Studio (gratis):
+**Tools → Device Manager → +** → un Pixel con immagine **Google Play** (API 34 o 35) → avvialo →
+Impostazioni → *Google* / *Account* → aggiungi l'account del ristoratore → in alto scegli
+l'emulatore accanto a ▶ e premi **Run** con `devDebug` (stessa firma di debug del PC: il client
+Android della Parte 2 vale anche lì). Il QR della verifica in due passaggi compare sullo schermo
+del PC: inquadralo con Authenticator del tuo telefono. Telefono = admin, emulatore = ristoratore.
 
 1. Ristoratore: tab **Ristoratore** → accede con Google → accetta le condizioni per i ristoranti →
    attiva la 2FA (**Attiva adesso**) → cerca il locale → scrive telefono o email di lavoro →

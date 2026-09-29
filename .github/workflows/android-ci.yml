@@ -139,6 +139,11 @@ jobs:
             -f supabase/tests/osm_import_check.sql 2>&1 | tee osm.log
           grep -q "IMPORT OSM OK" osm.log
 
+      - name: DEV tools leave restaurants with a real manager alone
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/dev_tools_checks.sql 2>&1 | tee devtools.log | grep -E "ok:|FAIL|ERROR|STRUMENTI"
+          grep -q "STRUMENTI DEV OK" devtools.log
+
       - name: DEV purge leaves no test data
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/dev/dev_purge.sql
