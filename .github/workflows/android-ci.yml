@@ -29,16 +29,17 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v5
 
-      # No Supabase credentials in CI: BuildConfig stays empty and the app uses the local demo
-      # repository, exactly like a fresh checkout without local.properties.
+      # No Supabase/Firebase/Google credentials in CI: BuildConfig stays empty. The DEMO flavor
+      # uses the local demo data; DEV and PROD are still compiled (they show a configuration error
+      # at runtime, exactly like a fresh checkout without local.properties).
       - name: Unit tests
-        run: ./gradlew --stacktrace testDebugUnitTest
+        run: ./gradlew --stacktrace testDemoDebugUnitTest
 
-      - name: Assemble app and instrumented test APKs
-        run: ./gradlew --stacktrace assembleDebug assembleDebugAndroidTest
+      - name: Assemble demo, dev and prod apps and instrumented test APK
+        run: ./gradlew --stacktrace assembleDebug assembleDemoDebugAndroidTest
 
       - name: Android lint
-        run: ./gradlew --stacktrace lintDebug
+        run: ./gradlew --stacktrace lintDemoDebug
 
       - name: Lint summary
         if: always()
@@ -131,6 +132,29 @@ jobs:
           psql -v ON_ERROR_STOP=1 -q -f supabase/dev/dev_purge.sql
           test "$(psql -At -c "select count(*) from public.restaurants where data_source = 'DEV_SEED'")" = "0"
 
+  edge-functions:
+    name: Supabase Edge Functions (type check, lint, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type check every function
+        run: deno check */index.ts
+
+      - name: Lint
+        run: deno lint
+
+      - name: Unit tests (Stripe signature, Google Play states, helpers)
+        run: deno test --allow-env
+
   instrumented:
     name: Instrumented tests (emulator)
     needs: build
@@ -160,7 +184,7 @@ jobs:
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew --stacktrace connectedDebugAndroidTest
+          script: ./gradlew --stacktrace connectedDemoDebugAndroidTest
 
       - name: Upload instrumented test reports
         if: always()
