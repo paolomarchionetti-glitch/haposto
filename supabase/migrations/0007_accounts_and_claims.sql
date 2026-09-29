@@ -281,6 +281,9 @@ begin
 end;
 $$;
 
+-- Rieseguendo questo file dopo la 0012 si torna alla versione a 3 argomenti: la 0012, rieseguita
+-- subito dopo, rimette quella con la verifica telefonica (esegui sempre i file in ordine).
+drop function if exists public.admin_review_claim(uuid, boolean, text, boolean);
 create or replace function public.admin_review_claim(
     p_claim_id uuid,
     p_approve boolean,
@@ -332,6 +335,7 @@ begin
 end;
 $$;
 
+drop function if exists public.admin_pending_claims();
 create or replace function public.admin_pending_claims()
 returns table (
     claim_id uuid,

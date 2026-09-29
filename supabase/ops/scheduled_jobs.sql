@@ -1,6 +1,6 @@
 -- HAPOSTO — Lavori pianificati di produzione (pg_cron).
 --
--- Prerequisiti: migration 0006–0011 eseguite; estensione pg_cron attiva
+-- Prerequisiti: migration 0006–0013 eseguite; estensione pg_cron attiva
 -- (Dashboard → Database → Extensions → "pg_cron" → Enable).
 -- Rieseguibile: cron.schedule con lo stesso nome aggiorna il job esistente.
 -- Orari cron in UTC (Supabase): 02:30 UTC = 03:30 o 04:30 in Italia.
@@ -34,6 +34,24 @@ select cron.schedule(
       where provider in ('MANUAL', 'BETA')
         and status in ('TRIALING', 'ACTIVE', 'PAST_DUE')
         and current_period_end < now() - interval '3 days'$$
+);
+
+-- Plus regalati dall'admin (PROMO) scaduti: stato allineato.
+select cron.schedule(
+    'haposto-expire-promo-plus',
+    '5 3 * * *',
+    $$update public.consumer_subscriptions set status = 'EXPIRED'
+      where provider = 'PROMO'
+        and status in ('TRIALING', 'ACTIVE', 'PAST_DUE')
+        and current_period_end < now()$$
+);
+
+-- Conservazione dei dati dichiarata nella privacy: storico stati 180 giorni, statistiche e
+-- registro operazioni 2 anni, sessioni admin scadute (ogni domenica).
+select cron.schedule(
+    'haposto-purge-operational-data',
+    '15 3 * * 0',
+    'select public.purge_operational_data()'
 );
 
 -- Controllo: elenco dei job attivi.
