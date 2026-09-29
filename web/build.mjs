@@ -40,7 +40,7 @@ const config = {
   supabaseUrl,
   supabaseKey,
   playUrl: env("HAPOSTO_PLAY_URL"),
-  contactEmail: env("HAPOSTO_CONTACT_EMAIL", "assistenza@haposto.app"),
+  contactEmail: env("HAPOSTO_CONTACT_EMAIL", "info@haposto.app"),
 };
 writeFileSync(
   join(dist, "assets", "config.js"),
@@ -69,7 +69,8 @@ for (const file of readdirSync(legalDir)) {
   writeFileSync(join(dist, slug, "index.html"), html);
 }
 
-// 3) Digital Asset Links: i link haposto.app/r/... si aprono direttamente nell'app.
+// 3) Digital Asset Links (facoltativo): dichiara che l'app com.haposto appartiene al sito,
+//    base per aprire in futuro i link /r/... direttamente nell'app.
 const fingerprints = env("HAPOSTO_ANDROID_CERT_SHA256").split(",").map((v) => v.trim()).filter(Boolean);
 if (fingerprints.length > 0) {
   mkdirSync(join(dist, ".well-known"), { recursive: true });

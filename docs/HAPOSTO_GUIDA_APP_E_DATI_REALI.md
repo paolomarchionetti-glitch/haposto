@@ -19,27 +19,27 @@ Telefono (app Android)
    │  chiave "publishable" (pubblica, sta nell'app)
    ▼
 Supabase (database Postgres in cloud)
-   ├─ nearby_restaurants  → lista dei locali vicini con lo stato
-   ├─ dev_publish_live_status → (solo DEV) il "ristoratore di prova" pubblica
+   ├─ nearby_restaurants  → lista dei locali vicini con lo stato (+ tempo reale)
+   ├─ set_restaurant_live_status → pubblica SOLO titolare/staff con verifica in due passaggi
    └─ simulatore ogni 5 min → (solo DEV) i locali di prova si aggiornano da soli
 ```
 
-Se nel file `local.properties` non ci sono le chiavi Supabase, l'app usa i **dati DEMO** dentro il
-telefono: funziona tutto, ma ogni telefono vede i propri dati.
+Le versioni dell'app sono tre (Android Studio → *Build Variants*): **Demo** (`demoDebug`, dati di
+prova dentro il telefono, nessun account), **Dev** (`devDebug`, progetto Supabase DEV con account
+veri) e **Prod** (produzione). Configurazione: `HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
 
 ### Cosa è vero e cosa è simulato oggi
 
-| Parte | Oggi | Diventa reale con |
+| Parte | Versione Dev / Prod | Versione Demo |
 |---|---|---|
-| Lista, ricerca, filtro, distanze, posizione | **vera** | — |
-| Stati dei locali dal database | **veri** (letti da Supabase ogni minuto) | — |
-| Locali in elenco | inventati (DEMO o seed DEV) | import OpenStreetMap (§3) |
-| Accesso ristoratore "Continua con Google" | **simulato** | Step 8 |
-| Approvazione della richiesta | **simulata** (tasto) | Step 8: la fai tu da SQL |
-| Pubblicazione dello stato | vera su DEV, ma senza account (chiunque abbia l'app DEV può scrivere i locali di prova) | Step 9: solo il titolare e lo staff |
-| Preferiti | veri, salvati sul telefono | Step 16: anche sincronizzati con Plus |
-| Prenotazioni di sala | vere, salvate sul telefono | con Pro: condivise nello staff |
-| Notifiche, pagina pubblica, pagamenti | database pronto, app no | Step 11, 12, 14, 16 |
+| Lista, mappa, ricerca, filtro, distanze, posizione | **vera** | vera (dati nel telefono) |
+| Stati dei locali | **veri**, in tempo reale | simulati |
+| Locali in elenco | seed DEV o import OpenStreetMap (§3) | 10 fissi |
+| Accesso ristoratore | **Google + verifica in due passaggi** | simulato |
+| Approvazione della richiesta | **pannello admin** con codice dettato al telefono del locale | simulata (tasto) |
+| Pubblicazione dello stato | solo titolare e staff verificati | simulata |
+| Preferiti | nel telefono e, con account, sincronizzati | nel telefono |
+| Notifiche, pagina pubblica, QR, statistiche, Plus, Pro | vere (dopo la configurazione di Firebase, Play, Stripe, sito) | non disponibili |
 
 ---
 
@@ -49,8 +49,8 @@ telefono: funziona tutto, ma ogni telefono vede i propri dati.
 |---|---|---|---|
 | Dove sono i dati | nel telefono | progetto Supabase `haposto-dev` | progetto Supabase `haposto-prod` (nuovo) |
 | Locali | 10 fissi | 43 inventati + eventuali "prove sul campo" | reali (OpenStreetMap + partner) |
-| Chi pubblica | nessuno (solo in memoria) | simulatore + app | solo titolari e staff verificati |
-| Migration | — | 0001–0004, 0006–0011 | 0001–0004, 0006–0011 |
+| Chi pubblica | nessuno (solo in memoria) | simulatore + titolari/staff verificati | solo titolari e staff verificati |
+| Migration | — | 0001–0004, 0006–0013 | 0001–0004, 0006–0013 |
 | Seed e `dev/` | — | sì | **mai** |
 | A cosa serve | provare le schermate | provare il prodotto, prove sul campo | pilot e lancio |
 
@@ -156,8 +156,8 @@ Per le prove sul progetto DEV non pubblico non serve.
 
 ## 4. Test veri, subito: la prova sul campo con un ristoratore amico
 
-Prima del login reale (Step 8–9) puoi già fare la cosa più utile di tutte: **vedere un ristoratore
-vero usare la dashboard durante un servizio**. Si fa sul progetto **DEV**.
+La cosa più utile di tutte: **vedere un ristoratore vero usare la dashboard durante un servizio**.
+Si fa sul progetto **DEV**, con il login vero (Google + verifica in due passaggi).
 
 ### 4.1 Crea il suo locale nel DEV
 
@@ -174,7 +174,7 @@ on conflict do nothing
 returning id, slug;
 ```
 
-- `DEV_SEED` permette all'app DEV di pubblicarne lo stato e lo fa sparire con `dev_purge.sql`;
+- `DEV_SEED` lo fa sparire con `dev_purge.sql` quando hai finito;
 - `field-test:` dice al simulatore di **non toccarlo**: lo aggiorna solo il ristoratore.
 
 ### 4.2 Installa l'app sul suo telefono
@@ -184,11 +184,14 @@ returning id, slug;
 - **Build → Build App Bundle(s) / APK(s) → Build APK(s)**, invia il file `.apk` e fallo installare
   (Android chiederà di consentire l'installazione da questa fonte).
 
-Nell'app: tab **Ristoratore** → *Continua con Google · demo locale* → cerca il nome → *Questo è il mio
-locale* → *Invia richiesta demo* → *Simula approvazione admin* → **Apri dashboard**.
+Installa la versione **Dev** (`devDebug`). Nell'app: tab **Ristoratore** → accede con il suo
+account Google → accetta le condizioni → attiva la verifica in due passaggi → cerca il nome →
+**È il mio locale: invia la richiesta**. Tu, dal pannello admin → **Richieste** → *Genera codice* →
+glielo detti al telefono del locale → lui lo inserisce → **Approva**. Da quel momento vede la
+dashboard (procedura completa: guida di configurazione, Parte 4.3).
 
-> Nel DEV la scrittura non è protetta da account: fai la prova solo con persone di fiducia e non
-> distribuire questa versione dell'app.
+> Se il suo telefono non ha il Google Play Services aggiornato o un'app di autenticazione, aiutalo
+> a installare Google Authenticator prima della serata.
 
 ### 4.3 La prova
 
@@ -211,23 +214,22 @@ locale* → *Invia richiesta demo* → *Simula approvazione admin* → **Apri da
    4. Se domani un cliente ti dicesse "vi ho trovato su HAPOSTO", cosa penseresti?
    5. Lo useresti tutte le sere? Cosa te lo farebbe usare di più?
 
-Obiettivo: almeno **3 ristoratori** e **2 serate** ciascuno prima di scrivere il login reale.
+Obiettivo: almeno **3 ristoratori** e **2 serate** ciascuno prima del lancio.
 Quello che emerge qui vale più di qualsiasi funzione nuova.
 
 ---
 
-## 5. Dopo il login reale: test chiuso e pilot
+## 5. Test chiuso e pilot
 
 ### 5.1 Progetto di produzione (una volta sola)
 
 1. Supabase → **New project** `haposto-prod`, regione **Europa (Frankfurt)**, password del database
    salvata nel tuo gestore di password.
-2. SQL Editor: `0001`→`0004`, poi `0006`→`0011` (come in `HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md`).
-   **Niente seed, niente `dev/`.**
+2. SQL Editor: `0001`→`0004`, poi `0006`→`0013` (come in `HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` e
+   nella guida di configurazione, Parte 1). **Niente seed, niente `dev/`.**
 3. Import OpenStreetMap delle zone del pilot (§3).
-4. Registrati nell'app e rendi il tuo utente amministratore (guida aggiornamento DB §4).
-5. Authentication → Providers → **Google** (Step 8, istruzioni nel relativo documento).
-6. Controllo finale:
+4. Login Google, 2FA, credenziali admin, Edge Function e sito: guida di configurazione, Parti 2–10.
+5. Controllo finale:
 
    ```sql
    select count(*) as dati_di_prova from public.restaurants where data_source = 'DEV_SEED';  -- deve essere 0
@@ -256,12 +258,12 @@ Segui `HAPOSTO_ROADMAP_INTEGRATIVA.md`, Step 13. Per ogni ristoratore:
 
 | Voce | Dove |
 |---|---|
-| Login Google reale e approvazione manuale funzionanti | Step 8 |
-| Pubblicazione solo da titolare/staff, tasti demo nascosti nella versione release | Step 9 |
-| L'app non mostra più l'etichetta "SUPABASE DEV" né il testo "attività fittizie" | Home e scheda locale (da collegare a un'impostazione di build, Step 13) |
+| Login Google reale, 2FA e approvazione con codice telefonico funzionanti | guida configurazione, Parte 4 |
+| Pubblicazione solo da titolare/staff verificati (nella versione Prod non esistono tasti demo) | database 0012 + versione `prod` |
+| La versione Prod non mostra etichette "DEMO"/"DEV" né testi sulle attività fittizie | automatico nella variante `prod` |
 | Scritta "© OpenStreetMap contributors" se si usano dati OSM | Home ("Come funziona HAPOSTO") e sito |
 | Privacy policy pubblica e modulo "Sicurezza dei dati" compilato | Play Console, Step 15 |
-| Termini per i ristoratori accettati al primo accesso (`accept_terms`) | Step 8 |
+| Termini e condizioni ristoratori accettati al primo accesso (con approvazione specifica) | app, Account e tab Ristoratore |
 | Progetto di produzione su piano Pro con backup | Supabase |
 | Nessun dato `DEV_SEED` in produzione | query §5.1 |
 | `min_supported_app_version` aggiornato | `app_config` |

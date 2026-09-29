@@ -57,8 +57,12 @@ email privacy@haposto.app. Per qualsiasi domanda sui tuoi dati scrivi a questo i
 Solo a fornitori che ci servono per far funzionare il servizio, con accordi sul trattamento dei dati:
 
 - **Supabase** (database e accesso) — server nell'Unione Europea (Francoforte);
-- **Google** (accesso con Google, notifiche Firebase, report degli errori, Google Play);
+- **Google** (accesso con Google, notifiche Firebase Cloud Messaging, Google Play e relativi
+  pagamenti);
 - **Stripe** (pagamenti degli abbonamenti dei ristoranti);
+- **OpenFreeMap** (immagini della mappa): quando apri la mappa il telefono scarica le immagini
+  direttamente dai suoi server, che vedono l'indirizzo IP come per qualsiasi sito; nessun altro
+  dato viene inviato;
 - **[FORNITORE DEL SITO]** (hosting del sito haposto.app);
 - **[GESTIONALE FATTURE]** (fatture elettroniche ai ristoranti).
 
