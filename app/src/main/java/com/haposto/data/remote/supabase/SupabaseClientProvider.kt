@@ -1,15 +1,20 @@
 package com.haposto.data.remote.supabase
 
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.postgrest.Postgrest
 import com.haposto.BuildConfig
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.functions.Functions
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 
 /**
- * STEP 7: first real Supabase activation.
+ * Client Supabase unico dell'app (versioni DEV e PROD).
  *
- * Android may contain only the Project URL and a low-privilege publishable key.
- * Never put sb_secret_*, service_role, database passwords or signing secrets in the APK.
+ * Android contiene solo il Project URL e la chiave "publishable", che è pubblica per natura: la
+ * sicurezza sta nelle regole del database (RLS e funzioni). Mai sb_secret_, service_role, password
+ * del database o chiavi di firma nell'APK.
  */
 object SupabaseClientProvider {
 
@@ -23,6 +28,14 @@ object SupabaseClientProvider {
     val isConfigured: Boolean
         get() = configuration.isComplete && configuration.validationError() == null
 
+    @Volatile
+    private var sessionManager: SessionManager? = null
+
+    /** Da chiamare all'avvio, prima di usare [client]: la sessione viene salvata cifrata. */
+    fun useSessionManager(manager: SessionManager) {
+        sessionManager = manager
+    }
+
     val client: SupabaseClient by lazy {
         val config = configuration
         check(config.isComplete) {
@@ -34,9 +47,15 @@ object SupabaseClientProvider {
             supabaseUrl = config.url,
             supabaseKey = config.publishableKey,
         ) {
-            // STEP 7 intentionally installs only PostgREST.
-            // Auth is activated in STEP 8 and Realtime in STEP 10.
+            install(Auth) {
+                sessionManager?.let { this.sessionManager = it }
+                alwaysAutoRefresh = true
+                autoLoadFromStorage = true
+                autoSaveToStorage = true
+            }
             install(Postgrest)
+            install(Realtime)
+            install(Functions)
         }
     }
 }

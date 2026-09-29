@@ -4,6 +4,8 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import com.haposto.data.ErrorMessages
+import com.haposto.data.Outcome
 import com.haposto.data.location.LocationSession
 import com.haposto.data.repository.RestaurantDataSource
 import com.haposto.data.repository.RestaurantRepository
@@ -41,19 +43,21 @@ internal interface DirectoryApi {
     suspend fun nearby(latitude: Double, longitude: Double, radiusMeters: Int): List<Restaurant>
 
     /**
-     * DEV projects only (supabase/dev/dev_tools.sql): publishes the status of a test venue so other
-     * phones see it. Throws when the function is missing, disabled or the venue is not a test one.
+     * Protected publication (set_restaurant_live_status): only the owner or the staff of the
+     * restaurant, signed in with 2FA. The reason of a refusal comes back in the [Outcome].
      */
-    suspend fun devPublishLiveStatus(
+    suspend fun publishLiveStatus(
         restaurantId: String,
         status: AvailabilityStatus,
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
-    )
+    ): Outcome<Unit>
 }
 
 internal class SupabaseDirectoryApi(private val client: SupabaseClient) : DirectoryApi {
+
+    private val management = SupabaseManagementRepository(client)
 
     override suspend fun nearby(latitude: Double, longitude: Double, radiusMeters: Int): List<Restaurant> {
         // Keys match the SQL function nearby_restaurants(lat, long, radius_meters, search_text);
@@ -69,39 +73,30 @@ internal class SupabaseDirectoryApi(private val client: SupabaseClient) : Direct
             .map(NearbyRestaurantDto::toDomain)
     }
 
-    override suspend fun devPublishLiveStatus(
+    override suspend fun publishLiveStatus(
         restaurantId: String,
         status: AvailabilityStatus,
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
-    ) {
-        val params = buildJsonObject {
-            put("p_restaurant_id", restaurantId)
-            put("p_status", status.name)
-            put("p_available_tables", availableTables)
-            put("p_estimated_wait_minutes", estimatedWaitMinutes)
-            put("p_note", note)
-        }
-        client.postgrest.rpc("dev_publish_live_status", params)
-    }
+    ): Outcome<Unit> = management.publish(restaurantId, status, availableTables, estimatedWaitMinutes, note)
 }
 
 /**
- * STEP 7 repository.
+ * Directory from Supabase (versions DEV and PROD).
  *
- * READ path: real Supabase RPC + PostGIS using the current foreground/manual origin, refreshed
- * every [refreshIntervalMillis] while someone is observing (Realtime arrives in STEP 10).
- * WRITE path: on a DEV project with supabase/dev/dev_tools.sql, test venues are written to the
- * database so every phone sees the change; otherwise the change stays a RAM-only overlay until
- * real authenticated writes arrive in STEP 9.
+ * READ path: RPC + PostGIS around the current foreground/manual origin, refreshed every
+ * [refreshIntervalMillis] while someone is observing, immediately after a publication and when
+ * Realtime reports a change ([requestRefresh]).
+ * WRITE path: set_restaurant_live_status, protected by account + role + 2FA in the database; the
+ * new status is shown at once and then follows the server.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class SupabaseRestaurantRepository internal constructor(
     private val api: DirectoryApi,
     private val locationSession: LocationSession,
     private val clock: Clock = Clock.systemUTC(),
-    private val radiusMeters: Int = DEFAULT_RADIUS_METERS,
+    radiusMeters: Int = DEFAULT_RADIUS_METERS,
     private val refreshIntervalMillis: Long = DEFAULT_REFRESH_INTERVAL_MILLIS,
 ) : RestaurantRepository, RestaurantRepositoryMetadata {
 
@@ -119,15 +114,17 @@ class SupabaseRestaurantRepository internal constructor(
     private val latestSnapshot = ConcurrentHashMap<String, Restaurant>()
     private val writeSequence = AtomicLong(0)
     private val refreshTicket = MutableStateFlow(0L)
+    private val searchRadiusMeters = MutableStateFlow(radiusMeters)
 
-    @Volatile
-    private var devWritesAvailable = true
+    /** HAPOSTO Plus cerca più lontano (search_radius_km del piano). */
+    fun setSearchRadiusKm(km: Int) {
+        searchRadiusMeters.value = (km.coerceIn(5, 100)) * 1_000
+    }
 
     override fun observeRestaurants(): Flow<List<Restaurant>> {
-        val remote = locationSession.origin
-            .debounce(150)
+        val remote = combine(locationSession.origin.debounce(150), searchRadiusMeters) { origin, radius -> origin to radius }
             .distinctUntilChanged()
-            .flatMapLatest(::pollDirectory)
+            .flatMapLatest { (origin, radius) -> pollDirectory(origin, radius) }
 
         return combine(remote, localManagerOverrides) { backendRows, overrides ->
             backendRows.map { backend ->
@@ -151,36 +148,48 @@ class SupabaseRestaurantRepository internal constructor(
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
-    ): Boolean {
+    ): Boolean = publishAvailabilityResult(restaurantId, status, availableTables, estimatedWaitMinutes, note).isSuccess
+
+    override suspend fun publishAvailabilityResult(
+        restaurantId: String,
+        status: AvailabilityStatus,
+        availableTables: Int?,
+        estimatedWaitMinutes: Int?,
+        note: String?,
+    ): Outcome<Unit> {
         require(status in PUBLISHABLE_STATUSES)
         require(availableTables == null || availableTables in 0..AvailabilityRules.MAX_AVAILABLE_TABLES)
         require(estimatedWaitMinutes == null || estimatedWaitMinutes in 0..AvailabilityRules.MAX_ESTIMATED_WAIT_MINUTES)
         require(note == null || note.length <= AvailabilityRules.MAX_NOTE_LENGTH)
 
-        val current = findById(restaurantId) ?: return false
-        if (current.partnershipStatus != PartnershipStatus.ACTIVE_PARTNER) return false
+        val current = findById(restaurantId) ?: return ErrorMessages.failure("RESTAURANT_NOT_FOUND")
+        if (current.partnershipStatus != PartnershipStatus.ACTIVE_PARTNER) {
+            return ErrorMessages.failure("not an active partner")
+        }
 
-        val now = clock.instant()
         val cleanNote = note?.trim()?.takeIf(String::isNotEmpty)
         val tables = if (status == AvailabilityStatus.FULL) null else availableTables
-        val updated = current.copy(
-            liveAvailability = LiveAvailability(
-                status = status,
-                updatedAt = now,
-                validUntil = now.plus(Duration.ofMinutes(AvailabilityRules.LIVE_TTL_MINUTES)),
-                availableTables = tables,
-                estimatedWaitMinutes = estimatedWaitMinutes,
-                note = cleanNote,
-            ),
-        )
-
-        val storedOnServer = tryDevPublish(restaurantId, status, tables, estimatedWaitMinutes, cleanNote)
-        putOverride(updated, serverWriteSeq = if (storedOnServer) writeSequence.incrementAndGet() else null)
-        if (storedOnServer) requestRefresh()
-        return true
+        val result = api.publishLiveStatus(restaurantId, status, tables, estimatedWaitMinutes, cleanNote)
+        if (result is Outcome.Success) {
+            // Shown at once; the next refresh (requested now) brings the server's own values.
+            val now = clock.instant()
+            val updated = current.copy(
+                liveAvailability = LiveAvailability(
+                    status = status,
+                    updatedAt = now,
+                    validUntil = now.plus(Duration.ofMinutes(AvailabilityRules.LIVE_TTL_MINUTES)),
+                    availableTables = tables,
+                    estimatedWaitMinutes = estimatedWaitMinutes,
+                    note = cleanNote,
+                ),
+            )
+            putOverride(updated, serverWriteSeq = writeSequence.incrementAndGet())
+            requestRefresh()
+        }
+        return result
     }
 
-    /** STEP 7 local manager overlay. Real authenticated DB write is introduced in STEP 9. */
+    /** Only on this phone: the real change is made from "Gestisci il locale" (update_restaurant_profile). */
     override suspend fun setPhonePublic(
         restaurantId: String,
         isPublic: Boolean,
@@ -198,7 +207,7 @@ class SupabaseRestaurantRepository internal constructor(
      * refresh is requested. Only the first load may fail the flow (Home shows the error and retry);
      * a later failure keeps the last list on screen and simply tries again at the next tick.
      */
-    private fun pollDirectory(origin: DistanceOrigin): Flow<List<Restaurant>> = flow {
+    private fun pollDirectory(origin: DistanceOrigin, radiusMeters: Int): Flow<List<Restaurant>> = flow {
         var loadedOnce = false
         while (true) {
             val ticket = refreshTicket.value
@@ -224,29 +233,7 @@ class SupabaseRestaurantRepository internal constructor(
         }
     }
 
-    private suspend fun tryDevPublish(
-        restaurantId: String,
-        status: AvailabilityStatus,
-        availableTables: Int?,
-        estimatedWaitMinutes: Int?,
-        note: String?,
-    ): Boolean {
-        if (!devWritesAvailable) return false
-        return try {
-            api.devPublishLiveStatus(restaurantId, status, availableTables, estimatedWaitMinutes, note)
-            true
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            // Production (no dev tools) or dev tools switched off: stop trying for this session.
-            // Any other failure (a real venue, a network hiccup) only falls back for this change.
-            val message = error.message.orEmpty()
-            if (DEV_TOOLS_MISSING_MARKERS.any(message::contains)) devWritesAvailable = false
-            false
-        }
-    }
-
-    private fun requestRefresh() {
+    override fun requestRefresh() {
         refreshTicket.update { it + 1 }
     }
 
@@ -276,12 +263,6 @@ class SupabaseRestaurantRepository internal constructor(
             AvailabilityStatus.AVAILABLE,
             AvailabilityStatus.LIMITED,
             AvailabilityStatus.FULL,
-        )
-        private val DEV_TOOLS_MISSING_MARKERS = listOf(
-            "PGRST202",
-            "Could not find the function",
-            "DEV_TOOLS_DISABLED",
-            "permission denied for function dev_publish_live_status",
         )
     }
 }

@@ -14,7 +14,9 @@ create table auth.users (
     id uuid primary key default gen_random_uuid(),
     email text unique,
     raw_user_meta_data jsonb not null default '{}'::jsonb,
-    created_at timestamptz not null default now()
+    created_at timestamptz not null default now(),
+    last_sign_in_at timestamptz,
+    banned_until timestamptz
 );
 -- Same definition as Supabase: claim.sub setting or the sub inside request.jwt.claims.
 create function auth.uid() returns uuid language sql stable as $$
@@ -26,7 +28,14 @@ $$;
 create function auth.role() returns text language sql stable as $$
     select nullif(current_setting('request.jwt.claim.role', true), '')
 $$;
-grant execute on function auth.uid(), auth.role() to anon, authenticated, service_role;
+-- Same definition as Supabase: all the JWT claims (sub, role, aal, session_id, ...).
+create function auth.jwt() returns jsonb language sql stable as $$
+    select coalesce(
+        nullif(current_setting('request.jwt.claim', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')
+    )::jsonb
+$$;
+grant execute on function auth.uid(), auth.role(), auth.jwt() to anon, authenticated, service_role;
 create publication supabase_realtime;
 -- Supabase default privileges: new objects in public are granted to the API roles.
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;

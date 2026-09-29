@@ -2,4 +2,5 @@
 <full-backup-content>
     <!-- Android 11 e precedenti: le prenotazioni di sala restano sul dispositivo. -->
     <exclude domain="file" path="reservations" />
+    <exclude domain="sharedpref" path="haposto_secure.xml" />
 </full-backup-content>

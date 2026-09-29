@@ -1,9 +1,34 @@
-# HAPOSTO — Android prototype
+# HAPOSTO — app Android, database Supabase, sito
 
-**Step corrente:** STEP 7 — Supabase database + directory reale DEV  
-**Area pilota futura:** Pesaro e provincia
+**Versione:** 0.9.0 — app completa lato codice (in attesa di configurazione e test finali)
+**Area pilota:** Pesaro e provincia
 
 HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano disponibilità **adesso**, con timestamp e TTL.
+
+## Stato attuale (da leggere per primo)
+
+| Parte | Dove | Stato |
+|---|---|---|
+| App Android: versioni **Demo** / **Dev** / **Prod** | `app/` | completa: lista e mappa, preferiti, account Google, verifica in due passaggi per i ristoratori, area ristoratore reale (rivendicazione con codice telefonico, registrazione, dashboard, QR, statistiche, orari, staff), pannello admin nascosto con seconda password, HAPOSTO Plus (Google Play), notifiche push e promemoria, termini e privacy |
+| Database | `supabase/migrations/0001–0013` | completo, verificato dalla CI (151 controlli su permessi e regole) |
+| Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe |
+| Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR, pagine legali, cancellazione account |
+
+**Cosa manca (lo fai tu, con la guida):** eseguire le migration 0012–0013, attivare Google e la 2FA
+in Supabase, creare le chiavi (Google, Firebase, Play, Stripe), pubblicare Edge Function e sito,
+test finali → **`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`**.
+
+Build Variants in Android Studio: `demoDebug` (nessun server), `devDebug` (Supabase DEV),
+`prodDebug`/`prodRelease` (produzione). Comandi: `./gradlew testDemoDebugUnitTest`,
+`./gradlew assembleDebug` (tutte e tre le versioni), `./gradlew lintDemoDebug`,
+`./gradlew connectedDemoDebugAndroidTest`.
+
+Strumenti gratuiti: Supabase Free (database, login, tempo reale, Edge Function), Google Sign-In,
+Firebase Cloud Messaging, MapLibre + OpenFreeMap (mappe), Cloudflare/GitHub Pages (sito).
+
+---
+
+# Storico: Step 7
 
 ## Cosa cambia nello STEP 7
 
@@ -184,16 +209,18 @@ Il daemon Gradle usa Java 21 (`gradle/gradle-daemon-jvm.properties`); la JBR inc
 in Android Studio va bene.
 
 ```text
-./gradlew testDebugUnitTest            # unit test JVM (dominio, dati, ViewModel)
-./gradlew assembleDebug                # APK debug
-./gradlew lintDebug                    # Android lint
-./gradlew connectedDebugAndroidTest    # test Compose su device/emulatore collegato
+./gradlew testDemoDebugUnitTest            # unit test JVM (dominio, dati, ViewModel)
+./gradlew assembleDebug                    # APK debug delle tre versioni (demo, dev, prod)
+./gradlew lintDemoDebug                    # Android lint
+./gradlew connectedDemoDebugAndroidTest    # test Compose su device/emulatore collegato
 ```
 
 Su Windows usa `gradlew.bat` al posto di `./gradlew`.
 
-La CI GitHub (`.github/workflows/android-ci.yml`) esegue unit test, build di app e APK
-di test strumentali e lint a ogni push/PR, senza credenziali Supabase (fallback demo).
+La CI GitHub (`.github/workflows/android-ci.yml`) esegue unit test, build delle tre versioni e
+dell'APK di test strumentali, lint, migration e controlli SQL, controllo delle Edge Function
+(Deno) e test su emulatore a ogni push/PR, senza nessuna credenziale. Il workflow `website.yml`
+costruisce il sito.
 
 Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
 
@@ -203,9 +230,10 @@ Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
 
 Da dove partire (settembre 2026):
 
+- `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` — **tutte le operazioni rimaste**, in ordine: migration 0012–0013, login Google e 2FA, chiavi, Edge Function, Google Play, Stripe, sito, produzione, test finali
 - `docs/HAPOSTO_GUIDA_APP_TUTORIAL.md` — come si usa l'app, per utenti e ristoratori
 - `docs/HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md` — provare l'app con 36 locali che cambiano da soli, anche con due telefoni
-- `docs/HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo
+- `docs/HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo (0012–0013: guida di configurazione, Parte 1)
 - `docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
 - `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Basic/Pro e Gratis/Plus, registrazione, acquisti
 - `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo

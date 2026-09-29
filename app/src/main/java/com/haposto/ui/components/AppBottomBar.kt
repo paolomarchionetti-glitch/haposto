@@ -10,10 +10,8 @@ import com.haposto.R
 import com.haposto.ui.navigation.AppDestination
 
 /**
- * Barra inferiore a 3 voci (STEP 7.5).
+ * Barra inferiore a 4 voci: Vicino, Preferiti, Ristoratore, Account.
  * Le icone usano glifi testuali per non introdurre dipendenze da material-icons.
- * Se hai `androidx.compose.material:material-icons-extended`, puoi sostituirle
- * con Icon(Icons.Rounded.*) senza cambiare la struttura.
  */
 @Composable
 fun AppBottomBar(
@@ -21,6 +19,7 @@ fun AppBottomBar(
     onSelectNearby: () -> Unit,
     onSelectFavorites: () -> Unit,
     onSelectRestaurateur: () -> Unit,
+    onSelectAccount: () -> Unit,
 ) {
     NavigationBar {
         NavigationBarItem(
@@ -36,10 +35,16 @@ fun AppBottomBar(
             label = { Text(stringResource(R.string.nav_favorites)) },
         )
         NavigationBarItem(
-            selected = false,
+            selected = currentRoute == AppDestination.RESTAURANT_AREA || currentRoute == AppDestination.RESTAURANT_ACCESS,
             onClick = onSelectRestaurateur,
             icon = { Text("🍴", style = MaterialTheme.typography.titleMedium) },
             label = { Text(stringResource(R.string.nav_restaurateur)) },
+        )
+        NavigationBarItem(
+            selected = currentRoute == AppDestination.ACCOUNT,
+            onClick = onSelectAccount,
+            icon = { Text("👤", style = MaterialTheme.typography.titleMedium) },
+            label = { Text(stringResource(R.string.nav_account)) },
         )
     }
 }

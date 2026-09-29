@@ -13,11 +13,14 @@ Il repository contiene il wrapper standard (`gradlew`, `gradlew.bat`,
 generarlo. Android Studio lo usa in automatico; da terminale usa `./gradlew`
 (o `gradlew.bat` su Windows).
 
-## 3. Configura Supabase
+## 3. Configura Supabase e scegli la versione
 
-Copia `local.properties.example` in `local.properties` e inserisci
-`SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY`. Vedi `docs/STEP_7_SETUP_SUPABASE.md`
-o la guida `MD1_GUIDA_BUILD_E_SUPABASE.md`.
+Copia `local.properties.example` in `local.properties` e compila le chiavi (DEV, poi
+produzione, Google, Firebase): istruzioni in `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
+
+In Android Studio → *Build Variants* scegli `demoDebug` (nessun server, dati di prova nel
+telefono), `devDebug` (Supabase DEV con account veri) o `prodDebug`/`prodRelease` (produzione).
+Le tre versioni si installano insieme sullo stesso telefono.
 
 ## 4. JDK 21
 
@@ -28,7 +31,7 @@ Gradle → Gradle JDK*. Se manca, Gradle può scaricarla da solo.
 ## 5. Test
 
 - **Unit test** (`app/src/test`): dominio, dati, parsing Supabase e ViewModel.
-  `./gradlew testDebugUnitTest`.
+  `./gradlew testDemoDebugUnitTest`.
 - **Test strumentali Compose** (`app/src/androidTest`): servono un device o un
-  emulatore collegato. `./gradlew connectedDebugAndroidTest`.
+  emulatore collegato. `./gradlew connectedDemoDebugAndroidTest`.
 - La CI GitHub esegue unit test, build e lint a ogni push/PR.

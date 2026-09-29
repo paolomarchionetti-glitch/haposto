@@ -30,7 +30,7 @@ TalkBack l'app pronuncia "Disponibilità: C'è posto".
    *Vicino a te*. Tocca **Avanti** oppure **Salta**, poi **Inizia**. Non compaiono più.
 2. In alto nella Home vedi un'etichetta:
    - **DEMO** = dati dimostrativi dentro il telefono (10 locali fissi);
-   - **SUPABASE DEV** = dati dal database di prova (vedi `HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md`).
+   - **DEV** = versione di prova collegata al database di prova (vedi `HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md`); la versione definitiva non mostra etichette.
 
 ---
 

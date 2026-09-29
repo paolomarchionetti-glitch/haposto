@@ -10,6 +10,14 @@ documenti restano validi per i dettagli:
 - database già pronto: `HAPOSTO_SQL_INTEGRATIVO.md`;
 - dati reali e pilot: `HAPOSTO_GUIDA_APP_E_DATI_REALI.md`.
 
+> **Aggiornamento 29 settembre 2026 — tutta la parte 🤖 è fatta.** App (versioni Demo/Dev/Prod,
+> login Google + verifica in due passaggi, area ristoratore reale con codice telefonico, pannello
+> admin nascosto, QR, statistiche, mappe, tempo reale, notifiche, Plus), database 0012–0013, Edge
+> Function (push, Google Play, Stripe), sito (area ristoratori Pro, pagina pubblica, pagine legali)
+> e CI. Restano le attività 🧑 e ⚖️: segui **`HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`** nell'ordine
+> (migration, login, chiavi, Edge Function, Play, Stripe, sito, produzione, test finali), poi le
+> fasi di pubblicazione, pilot e lancio di questo documento.
+
 **Chi fa cosa**
 
 | Simbolo | Chi |

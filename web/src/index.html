@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HAPOSTO · Sai dove c'è posto. Ora.</title>
+  <meta name="description" content="HAPOSTO mostra quali ristoranti hanno posto adesso, dichiarato dai locali e aggiornato in tempo reale. Pesaro e provincia.">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">HA<span>POSTO</span></a>
+    <nav><a href="/ristoratori/">Ristoratori</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Sai dove c'è posto. Ora.</h1>
+      <p>Apri l'app, guarda i pallini e vai. Gli stati li dichiarano i locali e scadono dopo 30 minuti:
+        niente telefonate, niente giri a vuoto.</p>
+      <div class="dots">
+        <span class="dot" style="--c: var(--green)">C'è posto</span>
+        <span class="dot" style="--c: var(--amber)">Pochi posti</span>
+        <span class="dot" style="--c: var(--red)">Completo</span>
+      </div>
+      <a id="play" class="button" href="#">Scarica l'app per Android</a>
+      <p class="muted small" id="play-note">In arrivo su Google Play.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Per chi esce a mangiare</h3>
+        <p>Gratis e senza account. Con <strong>HAPOSTO Plus</strong> ricevi un avviso quando si libera un
+          tavolo nei tuoi locali preferiti.</p>
+      </div>
+      <div class="card">
+        <h3>Per i ristoranti</h3>
+        <p>Un tocco per dire se c'è posto. Pagina pubblica con QR, statistiche e, con <strong>Pro</strong>,
+          tavoli liberi, attesa, collaboratori e promemoria.</p>
+        <a href="/ristoratori/">Scopri di più →</a>
+      </div>
+      <div class="card">
+        <h3>Onesto per costruzione</h3>
+        <p>Non è una prenotazione: la disponibilità può cambiare. Gli stati vecchi spariscono da soli e
+          ogni locale è verificato prima di poter pubblicare.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <a href="/privacy/">Privacy</a> · <a href="/termini/">Termini</a> ·
+    <a href="/termini-ristoranti/">Condizioni ristoranti</a> · <a href="/cookie/">Cookie</a> ·
+    <a href="/cancella-account/">Cancella account</a> · <a href="/licenze/">Licenze</a>
+  </footer>
+  <script src="/assets/config.js"></script>
+  <script>
+    const playUrl = (window.HAPOSTO_CONFIG || {}).playUrl;
+    const play = document.getElementById("play");
+    if (playUrl) {
+      play.href = playUrl;
+      document.getElementById("play-note").classList.add("hidden");
+    } else {
+      play.classList.add("hidden");
+    }
+  </script>
+</body>
+</html>

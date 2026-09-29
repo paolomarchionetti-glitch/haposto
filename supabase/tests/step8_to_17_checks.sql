@@ -15,23 +15,31 @@
 
 begin;
 
-create function pg_temp.act_as(p_email text) returns void language plpgsql as $$
+-- Impersona un utente come farebbe Supabase: token con sub, ruolo, livello di autenticazione
+-- (aal2 = ha usato la 2FA) e id della sessione del telefono.
+create function pg_temp.act_as(p_email text, p_aal text default 'aal2') returns void language plpgsql as $$
 declare
     v_id uuid;
 begin
     if p_email = 'postgres' then
         execute 'reset role';
         perform set_config('request.jwt.claim.sub', '', true);
+        perform set_config('request.jwt.claims', '', true);
     elsif p_email is null then
         perform set_config('request.jwt.claim.sub', '', true);
+        perform set_config('request.jwt.claims', '{"role": "anon"}', true);
         execute 'set local role anon';
     elsif p_email = 'service_role' then
         perform set_config('request.jwt.claim.sub', '', true);
+        perform set_config('request.jwt.claims', '{"role": "service_role"}', true);
         execute 'set local role service_role';
     else
         execute 'reset role';
         select id into v_id from auth.users where email = p_email;
         perform set_config('request.jwt.claim.sub', v_id::text, true);
+        perform set_config('request.jwt.claims',
+            json_build_object('sub', v_id, 'role', 'authenticated', 'aal', p_aal,
+                              'session_id', 'sessione-di-prova-' || v_id)::text, true);
         execute 'set local role authenticated';
     end if;
 end;
@@ -89,7 +97,8 @@ select pg_temp.expect(
      where u.email like 'test-%@haposto.test') = 5,
     'ogni utente registrato ha un profilo (trigger on_auth_user_created)');
 
-update public.profiles set is_platform_admin = true where id = pg_temp.uid('test-admin@haposto.test');
+-- Credenziali del pannello admin (seconda password) per l'account amministratore di prova.
+select public.admin_set_credentials('test-admin@haposto.test', 'test.admin', 'password-di-prova-123');
 
 -- Beta attiva per i test che seguono.
 update public.app_config
@@ -148,9 +157,12 @@ select pg_temp.expect(
 -- 3. Amministratore: approva.
 -- ---------------------------------------------------------------------------
 select pg_temp.act_as('test-admin@haposto.test');
+select pg_temp.expect((select ok from public.admin_unlock('test.admin', 'password-di-prova-123')),
+    'admin: sblocca il pannello con la seconda password');
 select pg_temp.expect((select count(*) from public.admin_pending_claims()) = 1, 'admin: vede le richieste in attesa');
 select public.admin_review_claim(
-    (select claim_id from public.admin_pending_claims() limit 1), true, 'Verificato al telefono');
+    (select claim_id from public.admin_pending_claims() limit 1), true,
+    'Verificato di persona con documento', true);
 
 select pg_temp.act_as('test-owner@haposto.test');
 select pg_temp.expect((select role::text from public.my_restaurants() limit 1) = 'OWNER', 'titolare: ora è OWNER');

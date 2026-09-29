@@ -21,7 +21,7 @@ Tempo necessario: circa 30–40 minuti la prima volta.
 | Livello | Dove sono i dati | Cosa vedi nell'app | A cosa serve |
 |---|---|---|---|
 | **DEMO** | nel telefono | badge **DEMO**, 10 locali fissi | provare le schermate senza internet |
-| **DEV pseudo-realistico** (questa guida) | Supabase DEV + simulatore | badge **SUPABASE DEV**, 43 locali che cambiano | provare il prodotto come in una serata vera, anche con 2 telefoni |
+| **DEV pseudo-realistico** (questa guida) | Supabase DEV + simulatore | app **HAPOSTO Dev**, badge **DEV**, 43 locali che cambiano | provare il prodotto come in una serata vera, anche con 2 telefoni |
 | **Pilot reale** | Supabase di produzione | locali veri, gestiti dai titolari | test con ristoratori e clienti veri (vedi `HAPOSTO_GUIDA_APP_E_DATI_REALI.md`) |
 
 ---
@@ -118,14 +118,18 @@ Il simulatore segue l'**ora italiana**:
 
 1. Nella cartella del progetto apri (o crea) `local.properties` e scrivi, senza virgolette:
    ```
-   SUPABASE_URL=https://IL_TUO_REF.supabase.co
-   SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   SUPABASE_DEV_URL=https://IL_TUO_REF.supabase.co
+   SUPABASE_DEV_PUBLISHABLE_KEY=sb_publishable_...
+   GOOGLE_WEB_CLIENT_ID=....apps.googleusercontent.com
    ```
-   (li trovi in Supabase → **Project Settings** → **API**. Mai la chiave `secret`/`service_role`.)
-2. Android Studio: **File → Sync Project with Gradle Files**, poi **Run ▶** sul telefono.
-3. In alto nella Home deve comparire il badge **SUPABASE DEV**.
+   (Supabase → **Project Settings** → **API Keys**. Mai la chiave `secret`/`service_role`. Il client
+   Google e il resto: `HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`, Parti 2–3. Le vecchie righe
+   `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY` valgono ancora per la versione Dev.)
+2. Android Studio: **File → Sync Project with Gradle Files** → *Build Variants* → **devDebug** →
+   **Run ▶** sul telefono. Sul telefono compare l'app **HAPOSTO Dev**.
+3. In alto nella Home deve comparire il badge **DEV**.
 
-L'app ricarica la lista **da sola ogni minuto** e subito dopo ogni tua pubblicazione.
+Gli stati arrivano **in tempo reale**; in più l'app ricarica la lista da sola ogni minuto.
 
 ---
 
@@ -135,7 +139,7 @@ L'app ricarica la lista **da sola ogni minuto** e subito dopo ogni tua pubblicaz
 
 | # | Cosa fai | Cosa deve succedere |
 |---|---|---|
-| 1 | Apri l'app | Badge SUPABASE DEV, lista di locali di Pesaro ordinati per distanza |
+| 1 | Apri l'app | Badge DEV, lista di locali di Pesaro ordinati per distanza (tasto **Mappa** per vederli sulla mappa) |
 | 2 | Tocca **Mostra solo dove c'è posto** | Restano solo i locali ✓ "C'è posto" |
 | 3 | Riga 📍 → **Cambia** → **Fano** | Lista e distanze cambiano, in cima i locali di Fano |
 | 4 | Aspetta 5–10 minuti con l'app aperta | Alcuni stati cambiano da soli (il simulatore ha lavorato) |
@@ -147,21 +151,24 @@ L'app ricarica la lista **da sola ogni minuto** e subito dopo ogni tua pubblicaz
 
 ### 6.2 Due telefoni — ristoratore e cliente (la prova più importante)
 
-Telefono **A** = ristoratore, telefono **B** = cliente. Entrambi con l'app collegata a DEV.
+Telefono **A** = ristoratore, telefono **B** = cliente. Entrambi con la versione **HAPOSTO Dev**.
 
-1. **A**: tab **Ristoratore** → *Continua con Google · demo locale* → cerca **Osteria del Fanale Verde**
-   → *Questo è il mio locale* → invia → *Simula approvazione admin* → **Apri dashboard**.
+1. **A**: tab **Ristoratore** → accedi con Google → accetta le condizioni → attiva la verifica in
+   due passaggi → cerca **Osteria del Fanale Verde** → **È il mio locale: invia la richiesta**.
+   Tu, come admin (Account → tieni premuto 5 secondi sulla versione → pannello → **Richieste**):
+   *Genera codice* → inserisci il codice su **A** → **Approva**. Su **A** si apre la dashboard.
+   (Procedura completa: `HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`, Parte 4.)
 2. **B**: Home su *Pesaro centro*, trova **Osteria del Fanale Verde**.
 3. **A**: tocca il tasto rosso **✕ Completo**.
-4. **B**: entro 1 minuto (o cambiando area avanti e indietro) vede **✕ Completo**, "aggiornato ora".
+4. **B**: in pochi secondi (tempo reale; al massimo entro 1 minuto) vede **✕ Completo**, "aggiornato ora".
 5. **A**: tocca **✓ È ancora così: confermo** → su **B** l'orario torna "aggiornato ora".
 6. **A**: tocca **! Pochi posti**, poi apri *Dettagli facoltativi* → tavoli 2, attesa 10 min →
    *Aggiorna dettagli e riconferma* → **B** vede "! Pochi posti", "2 tavoli liberi" e "attesa ~10 min".
    (Con **Completo** i tavoli liberi vengono azzerati apposta: completo vuol dire zero tavoli.)
 7. Aspetta: il simulatore **non tocca** per 3 ore un locale aggiornato a mano dall'app.
 
-> Nota: in questo ambiente il login ristoratore è ancora **dimostrativo** (Step 4–7). Il login Google
-> vero e la scrittura protetta arrivano con gli Step 8–9: le funzioni SQL sono già pronte (0007–0008).
+> Nota: la versione **Demo** (`demoDebug`) conserva il flusso ristoratore simulato (nessun account,
+> tasto "Simula approvazione admin"): utile per mostrare l'app senza server.
 
 > Vuoi far provare la dashboard a un **ristoratore vero**, con il suo locale, durante una cena?
 > Si fa già adesso su questo ambiente: `HAPOSTO_GUIDA_APP_E_DATI_REALI.md`, capitolo 4.
@@ -205,7 +212,7 @@ order by start_time desc limit 10;
 
 | Problema | Causa probabile | Soluzione |
 |---|---|---|
-| Badge **DEMO** invece di SUPABASE DEV | `local.properties` non letto | controlla i nomi delle due righe, Sync, Clean, Rebuild |
+| Badge **DEMO** invece di DEV, o errore di configurazione in Home | variante sbagliata o `local.properties` non letto | *Build Variants* → `devDebug`; controlla i nomi delle righe, Sync, Clean, Rebuild |
 | "Configurazione Supabase incompleta" | manca una delle due righe | mettile entrambe |
 | Gli stati non cambiano mai | pg_cron non attivo o è notte | attiva pg_cron, riesegui `dev_tools.sql`, prova `select public.dev_simulate_live_activity();` |
 | Il telefono B non vede le modifiche di A | strumenti DEV non installati o spenti | riesegui `dev_tools.sql`; controlla `select value from public.app_config where key='dev_tools_enabled';` → `true` |
