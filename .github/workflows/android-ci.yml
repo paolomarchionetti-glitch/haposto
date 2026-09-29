@@ -94,7 +94,7 @@ jobs:
           createdb -T template0 haposto
           run() { echo "== $1"; psql -v ON_ERROR_STOP=1 -q -f "$1"; }
           run supabase/tests/local_only_supabase_emulation.sql
-          for f in 0001_extensions 0002_schema 0003_functions 0004_rls_and_grants \
+          for f in 0001_extensions 0002_schema 0003_functions 0004_rls_and_grants 0005_realtime_future \
                    0006_hardening_and_data_source 0007_accounts_and_claims 0008_plans_and_billing \
                    0009_favorites_alerts_notifications 0010_reservations_cloud 0011_public_page_stats_import \
                    0012_security_and_admin 0013_profile_consents_account; do
@@ -104,7 +104,9 @@ jobs:
           run supabase/seeds/910_pseudo_realistic_dev_seed.sql
           run supabase/dev/dev_tools.sql
           # Re-running every migration must be harmless.
-          for f in supabase/migrations/000[6-9]_*.sql supabase/migrations/001[0-3]_*.sql; do run "$f"; done
+          for f in supabase/migrations/000[5-9]_*.sql supabase/migrations/001[0-3]_*.sql; do run "$f"; done
+          # Realtime: the live status table is published exactly once.
+          test "$(psql -At -c "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'restaurant_live_status'")" = "1"
 
       - name: RLS and business-rule checks
         run: |

@@ -11,7 +11,7 @@ sicurezza non stanno nel repository. Questa guida le elenca **in ordine**, una a
 
 | Parte | Cosa | Tempo | Serve per |
 |---|---|---|---|
-| 1 | Database DEV: migration 0012–0013 | 10 min | tutto |
+| 1 | Database DEV: migration 0012–0013 e tempo reale (0005) | 10 min | tutto |
 | 2 | Login: Google in Supabase + 2FA | 20 min | account, ristoratori, admin |
 | 3 | Android Studio: `local.properties` e versioni | 10 min | provare l'app |
 | 4 | Diventa amministratore e prova il flusso ristoratore | 20 min | pannello admin |
@@ -32,7 +32,7 @@ se lo vuoi, un dominio (~10–15 €/anno; senza dominio il sito resta su `*.pag
 
 ---
 
-## Parte 1 — Database DEV: migration 0012 e 0013
+## Parte 1 — Database DEV: migration 0012, 0013 e tempo reale (0005)
 
 Prerequisito: 0001–0004 e 0006–0011 già eseguite (vedi `HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md`).
 Controllo di partenza (SQL Editor → **New query** → **Run**):
@@ -59,8 +59,9 @@ sostituiscono vecchie versioni di funzioni e regole): premi **Run this query**.
 |---|---|---|---|---|
 | 1 | `supabase/migrations/0012_security_and_admin.sql` | 2FA obbligatoria per gestire un locale, codice telefonico per le rivendicazioni, registro operazioni, blocco account, pannello admin con seconda password, limite anti-abuso | `select key from public.app_config order by key;` | compaiono `legal`, `public_links`, `security` |
 | 2 | `supabase/migrations/0013_profile_consents_account.sql` | orari e dati del locale, registro attività, consensi, preferenze notifiche, coda push, cancellazione account, storico "di solito" | `select count(*) from public.consent_log;` | `0` |
+| 3 | `supabase/migrations/0005_realtime_future.sql` | **tempo reale**: gli stati pubblicati compaiono sugli altri telefoni in 1–2 secondi (senza, entro 1 minuto) | `select tablename from pg_publication_tables where pubname = 'supabase_realtime';` | `restaurant_live_status` |
 
-Entrambi i file sono **rieseguibili**. Se ricevi un errore, fermati e mandami la riga dell'errore.
+I tre file sono **rieseguibili**. Se ricevi un errore, fermati e mandami la riga dell'errore.
 
 **Verifica completa (facoltativa, consigliata).** Crea in Authentication → Users → *Add user*
 (con "Auto Confirm User") anche `test-thief@haposto.test` (oltre ai 5 utenti di prova già usati),
@@ -238,7 +239,8 @@ Ti servono un secondo account Google (il "ristoratore") e, se possibile, un seco
 4. Admin: **Approva** con una nota. (Solo in casi eccezionali, es. verifica di persona: spunta
    *Approvo senza codice telefonico* e scrivi il motivo; resta nel registro.)
 5. Ristoratore: tab Ristoratore → il locale → pubblica "C'è posto". Sul telefono del cliente (o
-   nella versione Dev dello stesso telefono, tab Vicino) lo stato compare **subito** (tempo reale).
+   nella versione Dev dello stesso telefono, tab Vicino) lo stato compare in 1–2 secondi (tempo
+   reale, migration 0005 della Parte 1; senza, entro 1 minuto).
 6. Prova di sicurezza: accedi con lo stesso account Google del ristoratore su un altro telefono
    e **non** inserire il codice a 6 cifre → la dashboard mostra l'avviso "serve la verifica in due
    passaggi" e ogni pubblicazione viene rifiutata dal server (`MFA_REQUIRED`).
@@ -454,7 +456,7 @@ Prova in locale: `node web/build.mjs` e poi `npx serve web/dist -l 8080` → <ht
 
 1. Supabase → **New project** (regione UE, es. Frankfurt), password del database in un gestore
    di password.
-2. SQL Editor: migration **0001–0004 e 0006–0013** in ordine (0005 no). **Non** caricare i seed di
+2. SQL Editor: migration **0001–0013** in ordine (compresa la 0005, tempo reale). **Non** caricare i seed di
    prova (`900_…`, `910_…`) né `supabase/dev/*`.
 3. Directory dei locali reali: `supabase/ops/import_osm_overpass.sql` (istruzioni nel file).
 4. Google Cloud, stesso client *Web* del punto 2.2: aggiungi `https://REF_PROD.supabase.co/auth/v1/callback`

@@ -41,7 +41,7 @@ select
 ### 1.3 Regola d'oro
 
 Esegui i file **nell'ordine** e **un file alla volta**, sempre il file intero (Ctrl+A, Ctrl+C dal file,
-Ctrl+V nell'editor). **Non** eseguire `0005_realtime_future.sql`: è per lo Step 10.
+Ctrl+V nell'editor). `0005_realtime_future.sql` (tempo reale) si esegue dopo la 0013: `HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`, Parte 1.
 
 ---
 
