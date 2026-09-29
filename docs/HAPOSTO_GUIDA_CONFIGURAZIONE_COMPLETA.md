@@ -206,6 +206,11 @@ select public.admin_set_credentials('LA_TUA_EMAIL_GOOGLE', 'nome.utente', 'una-p
   caratteri (meglio una frase). Salvala in un gestore di password: nel database c'è solo l'impronta
   (bcrypt), nessuno può leggerla.
 - Per cambiarla riesegui la stessa riga con la nuova password.
+- L'SQL Editor **salva da solo** ogni query nell'elenco a sinistra (*Private*): dopo il *Run*
+  cancella la password dal testo o elimina la query (**⋯ → Delete query**).
+- Errori possibili: `USER_NOT_REGISTERED` (quell'email non ha ancora fatto l'accesso all'app, punto
+  4.1), `INVALID_USERNAME`, `PASSWORD_TOO_SHORT`, `CONSOLE_ONLY` (in alto a destra nell'editor il
+  ruolo dev'essere `postgres`, non un utente).
 
 **Aprire il pannello.** Tab **Account** → sezione *Informazioni*, in fondo → **tieni premuto per 5
 secondi** sul testo della versione (es. "HAPOSTO 0.9.0-dev (9) · DEV"; non c'è nessun segno
