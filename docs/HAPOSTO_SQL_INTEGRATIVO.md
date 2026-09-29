@@ -14,7 +14,7 @@ Per il modello di business che implementano: `HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.
 | File | Tipo | Quando si esegue |
 |---|---|---|
 | `migrations/0001`–`0004` | base Step 7 (directory, stati live, RLS) | già fatto |
-| `migrations/0005_realtime_future.sql` | Realtime | **solo allo Step 10** |
+| `migrations/0005_realtime_future.sql` | Realtime (stati aggiornati in 1–2 secondi) | dopo la 0013 (guida di configurazione, Parte 1); rieseguibile |
 | `migrations/0006_hardening_and_data_source.sql` | permessi, provenienza dati, configurazione | subito |
 | `migrations/0007_accounts_and_claims.sql` | profili, admin, claim, registrazione locale | subito (usato dallo Step 8) |
 | `migrations/0008_plans_and_billing.sql` | piani, abbonamenti, pagamenti, fatturazione, diritti | subito (usato dallo Step 14) |

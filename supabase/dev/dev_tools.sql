@@ -1,6 +1,6 @@
 -- HAPOSTO — STRUMENTI SOLO PER IL PROGETTO SUPABASE DEV. MAI IN PRODUZIONE.
 --
--- Esegui DOPO le migration 0001–0004, 0006–0011 e il seed 910.
+-- Esegui DOPO le migration e il seed 910. Rieseguibile (per aggiornarlo basta rieseguirlo).
 -- Cosa aggiunge:
 --   1. dev_publish_live_status(): l'app (anche senza login) può pubblicare lo stato dei SOLI locali
 --      di test (data_source = 'DEV_SEED'). Così due telefoni vedono la stessa cosa: su uno fai il
@@ -43,11 +43,13 @@ begin
     if not public.dev_tools_enabled() then
         raise exception 'DEV_TOOLS_DISABLED';
     end if;
+    -- Un locale di test rivendicato da un account vero lo aggiorna solo chi lo gestisce.
     if not exists (
         select 1 from public.restaurants r
         where r.id = p_restaurant_id
           and r.data_source = 'DEV_SEED'
           and r.partnership_status = 'ACTIVE_PARTNER'
+          and not exists (select 1 from public.restaurant_users ru where ru.restaurant_id = r.id)
     ) then
         raise exception 'NOT_A_DEV_PARTNER';
     end if;
@@ -87,7 +89,8 @@ $$;
 --    - pranzo (11:30–14:45) e cena (18:45–23:00, ora italiana) più affollati; venerdì e sabato di più;
 --    - circa 1 locale su 5 è "pigro" e lascia scadere lo stato (così si vede "Da aggiornare");
 --    - di notte nessun aggiornamento: gli stati scadono da soli, come nella realtà;
---    - non tocca per 3 ore un locale aggiornato a mano dall'app (DEV_APP).
+--    - non tocca per 3 ore un locale aggiornato a mano dall'app (DEV_APP);
+--    - non tocca mai un locale che ha un titolare o uno staff vero (rivendicato nelle prove).
 -- ---------------------------------------------------------------------------
 create or replace function public.dev_simulate_live_activity()
 returns integer
@@ -131,6 +134,8 @@ begin
           and rest.partnership_status = 'ACTIVE_PARTNER'
           -- I locali per le prove sul campo con un ristoratore vero li aggiorna solo lui dall'app.
           and coalesce(rest.source_ref, '') not like 'field-test:%'
+          -- ...e nemmeno quelli rivendicati da un account vero (titolare o staff).
+          and not exists (select 1 from public.restaurant_users ru where ru.restaurant_id = rest.id)
     loop
         continue when r.updated_via = 'DEV_APP' and r.updated_at > v_now - interval '3 hours';
         continue when r.lazy and random() < 0.85;
