@@ -144,14 +144,29 @@ entra solo con Google, così non esistono password deboli da indovinare. Gli ute
 
 ## Parte 3 — Android Studio: chiavi e versioni
 
-1. Copia `local.properties.example` in `local.properties` (stessa cartella; il file **non** va su
-   GitHub) e compila almeno:
-   ```properties
-   SUPABASE_DEV_URL=https://REF_DEV.supabase.co
-   SUPABASE_DEV_PUBLISHABLE_KEY=sb_publishable_...
-   GOOGLE_WEB_CLIENT_ID=....apps.googleusercontent.com
-   ```
+0. Progetto aggiornato: Android Studio → **Git → Pull…** (ramo `main`), oppure scarica di nuovo lo
+   ZIP da GitHub in una cartella nuova e **copia lì il tuo `local.properties`**. Se in
+   *Build Variants* vedi solo `debug` e `release` il progetto è vecchio: mancano le versioni
+   demo/dev/prod.
+1. `local.properties` è nella cartella principale del progetto (in Android Studio: vista
+   **Android** → *Gradle Scripts* → `local.properties (SDK Location)`); **non** va su GitHub.
+   - **Se esiste già** (con `sdk.dir` e, dallo Step 7, `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY`):
+     **non** sovrascriverlo con l'esempio. Le due chiavi vecchie valgono ancora per la versione Dev;
+     aggiungi solo la riga del client *Web* della Parte 2:
+     ```properties
+     GOOGLE_WEB_CLIENT_ID=....apps.googleusercontent.com
+     ```
+   - **Se non esiste**: copia `local.properties.example` in `local.properties` e compila:
+     ```properties
+     SUPABASE_DEV_URL=https://REF_DEV.supabase.co
+     SUPABASE_DEV_PUBLISHABLE_KEY=sb_publishable_...
+     GOOGLE_WEB_CLIENT_ID=....apps.googleusercontent.com
+     ```
+     Le righe con `#` davanti (produzione, Firebase, firma) restano così finché non arrivi alle
+     rispettive parti: un valore inventato è peggio di un valore mancante.
+
    La chiave è in Supabase → **Project Settings → API Keys → Publishable key** (mai la *secret*).
+   Valori senza virgolette e senza spazi.
 2. **File → Sync Project with Gradle Files**.
 3. **Build → Select Build Variant** (pannello *Build Variants*) → modulo `app`:
 
@@ -240,7 +255,8 @@ mandate dal server.
    non necessario).
 2. **Aggiungi app → Android**: package `com.haposto.dev` (poi di nuovo per `com.haposto`).
    Scarica `google-services.json` ma **non** metterlo nel progetto: ti servono solo 4 valori.
-3. Da quel file (o da Impostazioni progetto → Le tue app) copia in `local.properties`:
+3. Da quel file (o da Impostazioni progetto → Le tue app) copia in `local.properties`
+   (se hai usato l'esempio, togli il `#` davanti alle righe `FIREBASE_DEV_…`):
 
    | `local.properties` | Dove si trova in `google-services.json` |
    |---|---|
