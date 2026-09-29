@@ -79,47 +79,65 @@ anche chi ruba l'account Google di un ristoratore non può pubblicare nulla.
 
 ### 2.1 Google Cloud: schermata di consenso
 
+`REF_DEV` è la parte iniziale dell'indirizzo del progetto DEV (`https://REF_DEV.supabase.co`,
+lo trovi anche nell'indirizzo del browser nella dashboard di Supabase).
+
 1. <https://console.cloud.google.com> → crea un progetto **HAPOSTO** (puoi usare lo stesso di Firebase).
-2. **APIs & Services → OAuth consent screen** (o "Google Auth Platform → Branding"):
-   - tipo **External**; nome app **HAPOSTO**; email di assistenza; logo (facoltativo);
-   - domini autorizzati: il tuo dominio (es. `haposto.app`) e `supabase.co`;
-   - link a privacy e termini: `https://TUO_SITO/privacy/` e `https://TUO_SITO/termini/`;
-   - ambiti (scopes): solo `openid`, `email`, `profile` (non richiedono verifica di Google).
-   - Finché l'app è "In test" aggiungi i tuoi account in **Test users**; al lancio → **Publish app**.
+2. **Google Auth Platform** (menu ☰ → *APIs & Services → OAuth consent screen* porta lì) → **Get started**:
+   nome app **HAPOSTO**, email di assistenza, pubblico **External**, email di contatto → **Create**.
+3. **Branding**:
+   - logo: **per ora no** (caricare un logo obbliga a far verificare l'app da Google);
+   - *Authorized domains*: `REF_DEV.supabase.co` (in Parte 10 anche `REF_PROD.supabase.co`).
+     **Non** `supabase.co`: è un dominio condiviso tra tutti i progetti e Google lo rifiuta;
+   - home page, link a privacy e termini e dominio del sito: **quando il sito esiste** (Parte 9):
+     `https://TUO_SITO/`, `https://TUO_SITO/privacy/`, `https://TUO_SITO/termini/`, e il dominio tra
+     gli *Authorized domains* (es. `haposto.app`; senza dominio tuo l'indirizzo completo
+     `haposto.pages.dev`, perché anche `pages.dev` è condiviso).
+4. **Data Access**: non serve aggiungere nulla: l'app chiede solo `openid`, `email`, `profile`
+   (non richiedono verifica di Google).
+5. **Audience**: finché l'app è in *Testing* possono entrare **solo** gli account elencati in
+   **Test users** → **Add users**: il tuo Gmail e quello che userai come "ristoratore" di prova
+   (Parte 4). Al lancio → **Publish app**.
 
 ### 2.2 Google Cloud: ID client
 
-**APIs & Services → Credentials → Create credentials → OAuth client ID**, tre volte:
+**Google Auth Platform → Clients → Create client** (oppure *APIs & Services → Credentials →
+Create credentials → OAuth client ID*):
 
-| Tipo | Nome | Dati da inserire | A cosa serve |
-|---|---|---|---|
-| **Web application** | HAPOSTO Web | *Authorized JavaScript origins*: `https://TUO_SITO` · *Authorized redirect URIs*: `https://REF_DEV.supabase.co/auth/v1/callback` e `https://REF_PROD.supabase.co/auth/v1/callback` | È il `GOOGLE_WEB_CLIENT_ID` dell'app e il login del sito |
-| **Android** | HAPOSTO Dev | package `com.haposto.dev` · SHA-1 del certificato di debug | fa comparire la finestra di Google nell'app Dev |
-| **Android** | HAPOSTO | package `com.haposto` · SHA-1 della chiave di caricamento **e** (dopo il primo caricamento su Play) SHA-1 della chiave di firma di Google Play | app di produzione |
+| Quando | Tipo | Nome | Dati da inserire | A cosa serve |
+|---|---|---|---|---|
+| ora | **Web application** | HAPOSTO Web | *Authorized redirect URIs*: `https://REF_DEV.supabase.co/auth/v1/callback` (è la *Callback URL* mostrata da Supabase al punto 2.3; in Parte 10 aggiungi `https://REF_PROD.supabase.co/auth/v1/callback`). *Authorized JavaScript origins*: nessuna (il sito passa da Supabase) | È il `GOOGLE_WEB_CLIENT_ID` dell'app e il login del sito |
+| ora | **Android** | HAPOSTO Dev | package `com.haposto.dev` · SHA-1 del certificato di debug | fa comparire la finestra di Google nell'app Dev |
+| Parte 7/10 | **Android** | HAPOSTO | package `com.haposto` · SHA-1 della chiave di caricamento **e** (dopo il primo caricamento su Play) SHA-1 della chiave di firma di Google Play | app di produzione |
 
-Come trovare lo SHA-1: Android Studio → pannello **Gradle** → `app` → Tasks → android →
-**signingReport** (riga `SHA1` della variante `devDebug`). Per Play: Play Console → la tua app →
+Come trovare lo SHA-1 di debug: Android Studio → **Terminal** (in basso) → `.\gradlew signingReport`
+su Windows (`./gradlew signingReport` su Mac/Linux) → nel blocco `Variant: devDebug` la riga `SHA1:`
+(tutte le varianti debug usano lo stesso certificato del PC). Per Play: Play Console → la tua app →
 **Test and release → App integrity → App signing** → "SHA-1 certificate fingerprint".
 
-Copia **Client ID** e **Client secret** del client *Web*: ti servono al punto 2.3.
+Del client *Web* ti servono **Client ID** e **Client secret** (punto 2.3). Il secret compare solo
+alla creazione: copialo subito in Supabase o nel gestore di password, mai in chat o su GitHub.
 
 ### 2.3 Supabase: provider Google
 
-Supabase (DEV) → **Authentication → Sign In / Providers → Google** → **Enable**:
+Supabase (DEV) → **Authentication → Sign In / Providers → Google** → **Enable Sign in with Google**:
 
 - **Client IDs**: il Client ID *Web* (una sola riga);
-- **Client Secret**: il secret del client *Web*;
-- **Skip nonce check**: **disattivato** (l'app manda il nonce: è una protezione in più);
+- **Client Secret (for OAuth)**: il secret del client *Web*;
+- **Skip nonce checks**: **disattivato** (l'app manda il nonce: è una protezione in più);
+- **Callback URL (for OAuth)**: è l'indirizzo da mettere tra gli *Authorized redirect URIs* (2.2);
 - **Save**.
 
 Sempre in **Sign In / Providers**: disattiva **Email** (e ogni altro provider) — in HAPOSTO si
-entra solo con Google, così non esistono password deboli da indovinare.
+entra solo con Google, così non esistono password deboli da indovinare. Gli utenti di prova
+`test-…@haposto.test` restano: servono solo agli script di controllo, che non fanno accessi.
 
 ### 2.4 Supabase: verifica in due passaggi e indirizzi
 
 - **Authentication → Multi-Factor**: *TOTP (App Authenticator)* **Enabled**; *Phone* disattivato.
-- **Authentication → URL Configuration**: *Site URL* `https://TUO_SITO`; *Redirect URLs*:
-  `https://TUO_SITO/ristoratori/` (e, per provare il sito sul PC, `http://localhost:8080/ristoratori/`).
+- **Authentication → URL Configuration** (serve solo al sito, l'app non la usa): **quando il sito
+  esiste** (Parte 9) *Site URL* `https://TUO_SITO` e tra le *Redirect URLs*
+  `https://TUO_SITO/ristoratori/`; per provare il sito sul PC anche `http://localhost:8080/ristoratori/`.
 - **Authentication → Rate Limits**: lascia i valori predefiniti.
 
 ---
@@ -418,8 +436,9 @@ Prova in locale: `node web/build.mjs` e poi `npx serve web/dist -l 8080` → <ht
 2. SQL Editor: migration **0001–0004 e 0006–0013** in ordine (0005 no). **Non** caricare i seed di
    prova (`900_…`, `910_…`) né `supabase/dev/*`.
 3. Directory dei locali reali: `supabase/ops/import_osm_overpass.sql` (istruzioni nel file).
-4. Parte 2.3–2.4 sul progetto di produzione (stesso client Google Web: il redirect di produzione è
-   già nella lista del punto 2.2).
+4. Google Cloud, stesso client *Web* del punto 2.2: aggiungi `https://REF_PROD.supabase.co/auth/v1/callback`
+   agli *Authorized redirect URIs* e `REF_PROD.supabase.co` agli *Authorized domains* (2.1); poi
+   Parte 2.3–2.4 sul progetto di produzione.
 5. Parte 4.2 (le tue credenziali admin sul progetto di produzione, **diverse** da quelle del DEV).
 6. Parte 6 con `npx supabase link --project-ref REF_PROD` e i segreti di produzione
    (`PLAY_PACKAGE_NAME=com.haposto`, chiavi Stripe **live**, nuovo `HAPOSTO_CRON_SECRET`).
