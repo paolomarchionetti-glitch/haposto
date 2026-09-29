@@ -10,13 +10,13 @@ data class SupabaseConfiguration(
     fun validationError(): String? {
         if (isAbsent) return null
         if (!isComplete) {
-            return "Configurazione Supabase incompleta: servono sia SUPABASE_URL sia SUPABASE_PUBLISHABLE_KEY in local.properties."
+            return "Configurazione Supabase incompleta: in local.properties servono sia l'indirizzo sia la chiave publishable di questa versione (DEV: SUPABASE_DEV_URL e SUPABASE_DEV_PUBLISHABLE_KEY; PROD: SUPABASE_PROD_URL e SUPABASE_PROD_PUBLISHABLE_KEY)."
         }
         if (!url.startsWith("https://") || !url.endsWith(".supabase.co")) {
-            return "SUPABASE_URL non valida. Usa il Project URL HTTPS mostrato nel pannello Connect di Supabase."
+            return "Indirizzo Supabase non valido. Usa il Project URL HTTPS mostrato nel pannello Connect di Supabase."
         }
         if (!publishableKey.startsWith("sb_publishable_")) {
-            return "SUPABASE_PUBLISHABLE_KEY non valida per Step 7. Usa la nuova publishable key sb_publishable_… e non una secret/service_role key."
+            return "Chiave Supabase non valida. Usa la publishable key sb_publishable_…, mai una secret/service_role key."
         }
         return null
     }

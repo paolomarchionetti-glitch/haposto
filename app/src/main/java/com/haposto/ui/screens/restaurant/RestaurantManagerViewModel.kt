@@ -7,6 +7,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.haposto.data.Outcome
 import com.haposto.data.repository.RestaurantRepository
 import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
@@ -16,6 +17,8 @@ import java.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
@@ -26,7 +29,11 @@ class RestaurantManagerViewModel(
     private val restaurantId: String,
     private val repository: RestaurantRepository,
     private val savedStateHandle: SavedStateHandle,
+    /** Chiamato dopo ogni pubblicazione riuscita (es. per programmare il promemoria). */
+    private val onPublished: (AvailabilityStatus) -> Unit = {},
 ) : ViewModel() {
+
+    private val mfaMissing = MutableStateFlow(false)
 
     private val availableTables = MutableStateFlow(
         savedStateHandle.get<Int>(KEY_TABLES)?.let(::decodeOptionalInt),
@@ -116,7 +123,7 @@ class RestaurantManagerViewModel(
             if (status == AvailabilityStatus.FULL) {
                 updateTables(null)
             }
-            val success = repository.publishAvailability(
+            val result = repository.publishAvailabilityResult(
                 restaurantId = restaurantId,
                 status = status,
                 availableTables = availableTables.value,
@@ -124,13 +131,23 @@ class RestaurantManagerViewModel(
                 note = note.value.trim().takeIf { it.isNotEmpty() },
             )
             isSaving.value = false
-            message.value = if (success) {
-                "✓ Pubblicato adesso: i clienti lo vedono per 30 minuti."
-            } else {
-                "Non è stato possibile pubblicare. Controlla la connessione e riprova."
+            mfaMissing.value = (result as? Outcome.Failure)?.code == "MFA_REQUIRED"
+            message.value = when (result) {
+                is Outcome.Success -> {
+                    onPublished(status)
+                    "✓ Pubblicato adesso: i clienti lo vedono per 30 minuti."
+                }
+                is Outcome.Failure -> if (result.code == "UNKNOWN") {
+                    "Non è stato possibile pubblicare. Controlla la connessione e riprova."
+                } else {
+                    result.message
+                }
             }
         }
     }
+
+    /** true quando il server ha rifiutato perché manca il codice della verifica in due passaggi. */
+    val needsMfa: StateFlow<Boolean> = mfaMissing.asStateFlow()
 
     fun refreshCurrentStatus() {
         val current = repository.findById(restaurantId)?.liveAvailability?.status ?: return
@@ -221,12 +238,14 @@ class RestaurantManagerViewModel(
 fun RestaurantManagerViewModelFactory(
     restaurantId: String,
     repository: RestaurantRepository,
+    onPublished: (AvailabilityStatus) -> Unit = {},
 ): ViewModelProvider.Factory = viewModelFactory {
     initializer {
         RestaurantManagerViewModel(
             restaurantId = restaurantId,
             repository = repository,
             savedStateHandle = createSavedStateHandle(),
+            onPublished = onPublished,
         )
     }
 }

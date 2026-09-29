@@ -28,7 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import com.haposto.config.AppConfig
+import com.haposto.config.AppEnvironment
+import com.haposto.data.consumer.RestaurantEvent
 import com.haposto.domain.model.AvailabilityStatus
+import com.haposto.domain.model.OpeningHours
+import com.haposto.ui.components.MessageBanner
+import java.time.ZoneId
 import com.haposto.domain.model.DistanceOrigin
 import com.haposto.domain.model.DistanceOriginType
 import com.haposto.domain.model.Restaurant
@@ -49,6 +56,8 @@ fun RestaurantDetailScreen(
     isFavorite: Boolean = false,
     onToggleFavorite: () -> Unit = {},
     onBack: () -> Unit,
+    /** Versioni DEV/PROD: orari, condivisione, avvisi Plus, storico e contatori anonimi. */
+    extras: DetailExtras? = null,
 ) {
     val context = LocalContext.current
     val now by produceState(initialValue = Instant.now(), key1 = restaurant.id) {
@@ -151,6 +160,47 @@ fun RestaurantDetailScreen(
                 }
             }
 
+            if (extras != null && effective.status in setOf(
+                    AvailabilityStatus.FULL,
+                    AvailabilityStatus.LIMITED,
+                    AvailabilityStatus.STALE,
+                )
+            ) {
+                OutlinedButton(
+                    onClick = extras.onAlertToggle,
+                    enabled = !extras.alertBusy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        when {
+                            extras.alertActive -> "🔔 Ti avviso quando c'è posto · tocca per annullare"
+                            extras.isPlus -> "🔔 Avvisami quando c'è posto"
+                            else -> "🔔 Avvisami quando c'è posto · Plus"
+                        },
+                    )
+                }
+            }
+
+            extras?.patternLines?.takeIf { it.isNotEmpty() }?.let { lines ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Di solito oggi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    lines.forEach { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                }
+            }
+
+            extras?.openingHours?.let { hours ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Orari", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    val zoned = now.atZone(ZoneId.of("Europe/Rome"))
+                    Text(
+                        if (hours.isOpen(zoned.dayOfWeek, zoned.toLocalTime())) "Aperto adesso" else "Chiuso adesso (secondo gli orari)",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    hours.describe().forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
+                }
+            }
+
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = "Dove si trova",
@@ -170,6 +220,7 @@ fun RestaurantDetailScreen(
 
             Button(
                 onClick = {
+                    extras?.onTrack?.invoke(RestaurantEvent.DIRECTIONS_TAP)
                     actionError = if (ExternalActions.openDirections(context, restaurant)) null
                     else "Nessuna app disponibile per aprire le indicazioni."
                 },
@@ -182,6 +233,7 @@ fun RestaurantDetailScreen(
             if (publicPhone != null) {
                 OutlinedButton(
                     onClick = {
+                        extras?.onTrack?.invoke(RestaurantEvent.CALL_TAP)
                         actionError = if (ExternalActions.openDialer(context, publicPhone)) null
                         else "Nessuna app disponibile per aprire il dialer."
                     },
@@ -197,6 +249,24 @@ fun RestaurantDetailScreen(
             ) {
                 Text(if (isFavorite) "★ Nei preferiti · tocca per togliere" else "☆ Salva nei preferiti")
             }
+
+            extras?.shareUrl?.let { url ->
+                OutlinedButton(
+                    onClick = {
+                        extras.onTrack(RestaurantEvent.SHARE)
+                        val send = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, "${restaurant.name}: guarda se c'è posto → $url")
+                        }
+                        context.startActivity(Intent.createChooser(send, null))
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Condividi")
+                }
+            }
+
+            extras?.message?.let { message -> MessageBanner(message) }
 
             actionError?.let { message ->
                 Surface(
@@ -214,10 +284,10 @@ fun RestaurantDetailScreen(
             }
 
             Text(
-                text = if (isSupabaseBacked) {
-                    "Scheda letta dal backend Supabase DEV. Il seed incluso contiene esclusivamente attività fittizie di test."
-                } else {
-                    "Scheda dimostrativa locale. Attività, indirizzi, coordinate e disponibilità sono dati fittizi."
+                text = when {
+                    !isSupabaseBacked -> "Scheda dimostrativa locale. Attività, indirizzi, coordinate e disponibilità sono dati fittizi."
+                    AppConfig.environment == AppEnvironment.DEV -> "Versione DEV: i locali di prova contengono dati fittizi."
+                    else -> "Dati del locale forniti dal locale o da © OpenStreetMap contributors."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -268,9 +338,22 @@ fun RestaurantNotFoundScreen(onBack: () -> Unit) {
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                text = "Il record demo non è disponibile.",
+                text = "Il locale non è più disponibile o non è nella zona che stai guardando.",
                 style = MaterialTheme.typography.bodyLarge,
             )
         }
     }
 }
+
+/** Parti della scheda disponibili solo con il server (DEV/PROD). */
+data class DetailExtras(
+    val openingHours: OpeningHours?,
+    val shareUrl: String?,
+    val isPlus: Boolean,
+    val alertActive: Boolean,
+    val alertBusy: Boolean,
+    val onAlertToggle: () -> Unit,
+    val patternLines: List<String>,
+    val message: String?,
+    val onTrack: (RestaurantEvent) -> Unit,
+)

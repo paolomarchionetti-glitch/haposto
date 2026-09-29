@@ -5,6 +5,10 @@
          diretto su un nuovo telefono dello stesso utente resta consentito. -->
     <cloud-backup>
         <exclude domain="file" path="reservations" />
+        <!-- La sessione di accesso è cifrata con una chiave che non lascia il telefono: niente backup. -->
+        <exclude domain="sharedpref" path="haposto_secure.xml" />
     </cloud-backup>
-    <device-transfer />
+    <device-transfer>
+        <exclude domain="sharedpref" path="haposto_secure.xml" />
+    </device-transfer>
 </data-extraction-rules>

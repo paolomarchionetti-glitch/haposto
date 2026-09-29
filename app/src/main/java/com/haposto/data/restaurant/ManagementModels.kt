@@ -1,0 +1,107 @@
+package com.haposto.data.restaurant
+
+import com.haposto.domain.model.GeoPoint
+import com.haposto.domain.model.OpeningHours
+import java.time.Instant
+import java.time.LocalDate
+
+enum class MemberRole { OWNER, STAFF }
+
+/** Un locale che l'utente gestisce (titolare o staff). */
+data class ManagedRestaurant(
+    val restaurantId: String,
+    val name: String,
+    val city: String,
+    val role: MemberRole,
+    val isActivePartner: Boolean,
+)
+
+enum class ClaimStatus { PENDING, APPROVED, REJECTED, CANCELLED }
+
+data class MyClaim(
+    val claimId: String,
+    val restaurantId: String,
+    val restaurantName: String,
+    val restaurantCity: String,
+    val status: ClaimStatus,
+    val createdAt: Instant?,
+    val reviewNote: String?,
+    /** HAPOSTO ha dettato il codice al telefono del locale: va inserito nell'app. */
+    val phoneCodePending: Boolean,
+    val phoneVerified: Boolean,
+)
+
+data class CodeCheck(
+    val ok: Boolean,
+    val errorCode: String?,
+    val attemptsLeft: Int,
+)
+
+data class NewRestaurantForm(
+    val name: String,
+    val category: String,
+    val address: String,
+    val city: String,
+    val province: String,
+    val location: GeoPoint,
+    val phoneNumber: String,
+    val contactInfo: String,
+)
+
+data class RestaurantPlan(
+    val code: String,
+    val name: String,
+    /** STRIPE, MANUAL, BETA, FREE. */
+    val source: String,
+    val validUntil: Instant?,
+    val features: Set<String>,
+    val staffLimit: Int,
+    val analyticsDays: Int,
+) {
+    val isPro: Boolean get() = "LIVE_DETAILS" in features
+    fun has(feature: String): Boolean = feature in features
+}
+
+/** Tutto ciò che serve alla dashboard e alla gestione del locale. */
+data class ManagerInfo(
+    val restaurantId: String,
+    val name: String,
+    val category: String,
+    val address: String,
+    val city: String,
+    val phoneNumber: String?,
+    val phonePublic: Boolean,
+    val openingHours: OpeningHours?,
+    val slug: String?,
+    val isActivePartner: Boolean,
+    val isSuspended: Boolean,
+    val myRole: MemberRole,
+    val plan: RestaurantPlan,
+    val mfaRequired: Boolean,
+    val mfaOk: Boolean,
+)
+
+data class RestaurantMember(
+    val userId: String,
+    val email: String,
+    val displayName: String?,
+    val role: MemberRole,
+    val since: Instant?,
+)
+
+data class ActivityEntry(
+    val at: Instant?,
+    val kind: String,
+    val actor: String,
+    val summary: String,
+)
+
+data class DailyStat(
+    val day: LocalDate,
+    val detailViews: Int,
+    val directionsTaps: Int,
+    val callTaps: Int,
+    val publicPageViews: Int,
+    val shares: Int,
+    val liveUpdates: Int,
+)

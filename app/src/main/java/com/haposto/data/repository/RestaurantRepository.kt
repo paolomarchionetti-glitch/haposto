@@ -1,5 +1,7 @@
 package com.haposto.data.repository
 
+import com.haposto.data.ErrorMessages
+import com.haposto.data.Outcome
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.Restaurant
 import kotlinx.coroutines.flow.Flow
@@ -32,4 +34,24 @@ interface RestaurantRepository {
         restaurantId: String,
         isPublic: Boolean,
     ): Boolean
+
+    /**
+     * Like [publishAvailability] but with the reason of a failure (e.g. "MFA_REQUIRED"), so the
+     * dashboard can tell the manager exactly what to do.
+     */
+    suspend fun publishAvailabilityResult(
+        restaurantId: String,
+        status: AvailabilityStatus,
+        availableTables: Int? = null,
+        estimatedWaitMinutes: Int? = null,
+        note: String? = null,
+    ): Outcome<Unit> =
+        if (publishAvailability(restaurantId, status, availableTables, estimatedWaitMinutes, note)) {
+            Outcome.Success(Unit)
+        } else {
+            ErrorMessages.failure("UNKNOWN")
+        }
+
+    /** Asks for fresh data now (e.g. a Realtime change arrived). No-op for local repositories. */
+    fun requestRefresh() = Unit
 }

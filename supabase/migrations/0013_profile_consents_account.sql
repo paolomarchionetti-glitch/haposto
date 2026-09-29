@@ -463,7 +463,8 @@ begin
            case when new.status = 'AVAILABLE'
                 then 'Ha appena segnalato posti liberi. Lo stato vale 30 minuti.'
                 else 'Ha segnalato pochi posti: meglio sbrigarsi.' end,
-           jsonb_build_object('restaurant_id', new.restaurant_id, 'status', new.status, 'action', 'OPEN_RESTAURANT')
+           jsonb_build_object('restaurant_id', new.restaurant_id, 'status', new.status, 'action', 'OPEN_RESTAURANT',
+                              'restaurant_name', v_name)
     from due d
     join public.profiles p on p.id = d.user_id
     where p.notify_availability_alerts and p.blocked_at is null;
@@ -488,7 +489,7 @@ begin
            'Come siete messi?',
            left(r.name || ': il tuo stato scade tra pochi minuti. Un tap per confermarlo.', 240),
            jsonb_build_object('restaurant_id', s.restaurant_id, 'action', 'OPEN_DASHBOARD',
-                              'status', s.status)
+                              'status', s.status, 'restaurant_name', r.name)
     from public.restaurant_live_status s
     join public.restaurants r on r.id = s.restaurant_id and r.partnership_status = 'ACTIVE_PARTNER'
     join public.restaurant_users ru on ru.restaurant_id = s.restaurant_id

@@ -48,6 +48,7 @@ import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
 import com.haposto.ui.components.AdaptiveScrollableContent
+import com.haposto.ui.components.BigActionButton
 import com.haposto.ui.components.InfoDisclosure
 import com.haposto.ui.components.OfflineBanner
 import com.haposto.ui.components.StatusSymbol
@@ -68,7 +69,12 @@ fun RestaurantManagerScreen(
     onRefreshCurrentStatus: () -> Unit,
     onPhonePublicChange: (Boolean) -> Unit,
     onOpenReservations: () -> Unit = {},
+    /** Versioni DEV/PROD: account vero, 2FA, gestione completa del locale. */
+    onOpenSettings: (() -> Unit)? = null,
+    mfaMissing: Boolean = false,
+    onOpenMfa: () -> Unit = {},
 ) {
+    val realMode = onOpenSettings != null
     Scaffold(
         topBar = {
             TopAppBar(
@@ -113,6 +119,24 @@ fun RestaurantManagerScreen(
 
             if (!isOnline) OfflineBanner()
 
+            if (mfaMissing) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = MaterialTheme.shapes.large,
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            "Per pubblicare serve il codice della verifica in due passaggi.",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        BigActionButton(text = "Inserisci il codice", onClick = onOpenMfa)
+                    }
+                }
+            }
+
             // Cosa vedono i clienti adesso, con il tasto "è ancora così".
             StatusHeroCard(
                 uiState = uiState,
@@ -155,6 +179,17 @@ fun RestaurantManagerScreen(
                 }
             }
 
+            if (onOpenSettings != null) {
+                OutlinedButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
+                ) {
+                    Text("⚙  Gestisci il locale · dati, orari, QR, staff, statistiche", fontWeight = FontWeight.SemiBold)
+                }
+            }
+
             // DETTAGLI FACOLTATIVI: chiusi di default
             OptionalDetailsCard(
                 uiState = uiState,
@@ -166,14 +201,16 @@ fun RestaurantManagerScreen(
             )
 
             // INFO LOCALE: sempre visibile ma ordinata
-            RestaurantInfoCard(
-                category = restaurant.category,
-                city = restaurant.city,
-                address = restaurant.address,
-                phoneNumber = restaurant.phoneNumber,
-                phonePublic = restaurant.phonePublic,
-                onPhonePublicChange = onPhonePublicChange,
-            )
+            if (!realMode) {
+                RestaurantInfoCard(
+                    category = restaurant.category,
+                    city = restaurant.city,
+                    address = restaurant.address,
+                    phoneNumber = restaurant.phoneNumber,
+                    phonePublic = restaurant.phonePublic,
+                    onPhonePublicChange = onPhonePublicChange,
+                )
+            }
 
             // PRENOTAZIONI DI SALA: ingresso discreto e facoltativo
             Surface(
@@ -518,7 +555,7 @@ private fun RestaurantInfoCard(
 
             InfoDisclosure(
                 label = "Modificare nome, categoria, orari?",
-                text = "La modifica completa dei dati del locale arriverà con il salvataggio reale (Step 9). Per ora qui puoi gestire la visibilità del telefono; nome e indirizzo arrivano dalla scheda del locale.",
+                text = "Nella versione demo qui gestisci solo la visibilità del telefono. Con l'account vero nome, telefono e orari si cambiano da «Gestisci il locale».",
             )
         }
     }

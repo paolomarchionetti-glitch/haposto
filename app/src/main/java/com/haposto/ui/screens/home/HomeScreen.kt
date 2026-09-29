@@ -43,7 +43,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.haposto.R
+import com.haposto.config.AppConfig
+import com.haposto.platform.map.RestaurantMap
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.DistanceOrigin
 import com.haposto.domain.model.DistanceOriginType
@@ -74,6 +77,7 @@ fun HomeScreen(
     onRestaurantClick: (String) -> Unit,
     onRestaurantAreaClick: () -> Unit,
 ) {
+    var showMap by rememberSaveable { mutableStateOf(false) }
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -81,6 +85,40 @@ fun HomeScreen(
                 .padding(innerPadding),
         ) {
             HomeHeroHeader(isSupabaseBacked = uiState.isSupabaseBacked)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(selected = !showMap, onClick = { showMap = false }, label = { Text("☰  Lista") })
+                FilterChip(selected = showMap, onClick = { showMap = true }, label = { Text("🗺  Mappa") })
+            }
+
+            if (showMap) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                ) {
+                    RestaurantMap(
+                        restaurants = uiState.restaurants,
+                        now = uiState.now,
+                        center = uiState.distanceOrigin.point,
+                        onRestaurantClick = onRestaurantClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                    )
+                    Text(
+                        text = "● verde c'è posto · ● ambra pochi posti · ● rosso completo · ● grigio da aggiornare. Tocca un pallino per aprire il locale.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+                return@Column
+            }
 
             BoxWithConstraints(
                 modifier = Modifier
@@ -154,10 +192,10 @@ fun HomeScreen(
                     InfoDisclosure(
                         label = "Come funziona HAPOSTO",
                         text = "Gli stati sono dichiarati dai locali e scadono dopo 30 minuti: non è una prenotazione, la disponibilità può cambiare. " +
-                            if (uiState.isSupabaseBacked) {
-                                "Dati dal backend DEV Supabase (attività fittizie)."
-                            } else {
-                                "Dati dimostrativi locali."
+                            when {
+                                !uiState.isSupabaseBacked -> "Dati dimostrativi locali."
+                                AppConfig.environment.badge != null -> "Versione DEV: locali di prova con dati fittizi."
+                                else -> "Elenco dei locali: dati dei locali e © OpenStreetMap contributors."
                             },
                     )
                     Spacer(Modifier.height(8.dp))
@@ -186,17 +224,21 @@ private fun HomeHeroHeader(isSupabaseBacked: Boolean) {
                     color = WarmSurface,
                     modifier = Modifier.weight(1f),
                 )
-                Surface(
-                    color = WarmSurface.copy(alpha = 0.16f),
-                    contentColor = WarmSurface,
-                    shape = MaterialTheme.shapes.small,
-                ) {
-                    Text(
-                        text = if (isSupabaseBacked) "SUPABASE DEV" else "DEMO",
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
+                // DEMO e DEV hanno un'etichetta ben visibile; la versione PROD nessuna.
+                val badge = AppConfig.environment.badge ?: if (!isSupabaseBacked) "DEMO" else null
+                if (badge != null) {
+                    Surface(
+                        color = WarmSurface.copy(alpha = 0.16f),
+                        contentColor = WarmSurface,
+                        shape = MaterialTheme.shapes.small,
+                    ) {
+                        Text(
+                            text = badge,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             }
             Text(

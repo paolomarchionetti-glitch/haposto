@@ -1,5 +1,7 @@
 package com.haposto.data.remote.supabase
 
+import com.haposto.data.ErrorMessages
+import com.haposto.data.Outcome
 import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.data.location.LocationSession
 import com.haposto.domain.model.AvailabilityStatus
@@ -25,13 +27,15 @@ class SupabaseRestaurantRepositoryTest {
 
     private class FakeDirectoryApi(var rows: List<Restaurant>) : DirectoryApi {
         val nearbyCalls = mutableListOf<Pair<Double, Double>>()
+        val radiusCalls = mutableListOf<Int>()
         var failuresToThrow = 0
-        var devPublishAttempts = 0
-        /** null = the DEV function exists and stores the status like the real one. */
-        var devPublishError: Exception? = IllegalStateException("PGRST202 Could not find the function")
+        var publishAttempts = 0
+        /** null = the database accepts the publication and stores it like the real function. */
+        var publishError: String? = null
 
         override suspend fun nearby(latitude: Double, longitude: Double, radiusMeters: Int): List<Restaurant> {
             nearbyCalls += latitude to longitude
+            radiusCalls += radiusMeters
             if (failuresToThrow > 0) {
                 failuresToThrow--
                 throw IllegalStateException("Rete non disponibile")
@@ -39,16 +43,17 @@ class SupabaseRestaurantRepositoryTest {
             return rows
         }
 
-        override suspend fun devPublishLiveStatus(
+        override suspend fun publishLiveStatus(
             restaurantId: String,
             status: AvailabilityStatus,
             availableTables: Int?,
             estimatedWaitMinutes: Int?,
             note: String?,
-        ) {
-            devPublishAttempts++
-            devPublishError?.let { throw it }
+        ): Outcome<Unit> {
+            publishAttempts++
+            publishError?.let { return ErrorMessages.failure(it) }
             rows = rows.map { if (it.id == restaurantId) it.withStatus(status) else it }
+            return Outcome.Success(Unit)
         }
     }
 
@@ -119,31 +124,26 @@ class SupabaseRestaurantRepositoryTest {
     }
 
     @Test
-    fun withoutDevToolsTheChangeStaysLocalAndIsNotRetried() = runTest {
+    fun aRefusedPublicationChangesNothingAndTellsWhy() = runTest {
+        val api = FakeDirectoryApi(listOf(levante)).apply { publishError = "MFA_REQUIRED" }
+        val repository = repository(api)
+        val emissions = collect(repository)
+
+        val result = repository.publishAvailabilityResult(levante.id, AvailabilityStatus.FULL)
+        runCurrent()
+
+        assertEquals("MFA_REQUIRED", (result as Outcome.Failure).code)
+        assertEquals(levante.liveAvailability?.status, emissions.lastStatus())
+        assertEquals(1, api.nearbyCalls.size)
+    }
+
+    @Test
+    fun anAcceptedPublicationIsShownAtOnceAndThenFollowsTheServer() = runTest {
         val api = FakeDirectoryApi(listOf(levante))
         val repository = repository(api)
         val emissions = collect(repository)
 
         assertTrue(repository.publishAvailability(levante.id, AvailabilityStatus.FULL))
-        runCurrent()
-        assertEquals(AvailabilityStatus.FULL, emissions.lastStatus())
-
-        // The backend still says AVAILABLE: the local change stays visible after a refresh.
-        advanceTimeBy(60_001)
-        runCurrent()
-        assertEquals(AvailabilityStatus.FULL, emissions.lastStatus())
-
-        repository.publishAvailability(levante.id, AvailabilityStatus.LIMITED)
-        assertEquals(1, api.devPublishAttempts)
-    }
-
-    @Test
-    fun withDevToolsTheChangeIsStoredAndThenFollowsTheServer() = runTest {
-        val api = FakeDirectoryApi(listOf(levante)).apply { devPublishError = null }
-        val repository = repository(api)
-        val emissions = collect(repository)
-
-        repository.publishAvailability(levante.id, AvailabilityStatus.FULL)
         runCurrent()
         assertEquals(AvailabilityStatus.FULL, emissions.lastStatus())
         // A successful write asks for an immediate refresh instead of waiting a minute.
@@ -154,6 +154,33 @@ class SupabaseRestaurantRepositoryTest {
         advanceTimeBy(60_001)
         runCurrent()
         assertEquals(AvailabilityStatus.LIMITED, emissions.lastStatus())
+    }
+
+    @Test
+    fun aRealtimeSignalRefreshesWithoutWaitingAMinute() = runTest {
+        val api = FakeDirectoryApi(listOf(levante))
+        val repository = repository(api)
+        val emissions = collect(repository)
+
+        api.rows = listOf(levante.withStatus(AvailabilityStatus.LIMITED))
+        repository.requestRefresh()
+        runCurrent()
+
+        assertEquals(2, api.nearbyCalls.size)
+        assertEquals(AvailabilityStatus.LIMITED, emissions.lastStatus())
+    }
+
+    @Test
+    fun plusSearchesAWiderArea() = runTest {
+        val api = FakeDirectoryApi(listOf(levante))
+        val repository = repository(api)
+        collect(repository)
+
+        repository.setSearchRadiusKm(100)
+        advanceTimeBy(200)
+        runCurrent()
+
+        assertEquals(listOf(60_000, 100_000), api.radiusCalls)
     }
 }
 
