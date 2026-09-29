@@ -15,6 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -59,8 +60,8 @@ fun RegisterRestaurantRoute(
     var province by rememberSaveable { mutableStateOf("PU") }
     var phone by rememberSaveable { mutableStateOf("") }
     var contact by rememberSaveable { mutableStateOf("") }
-    var latitude by rememberSaveable { mutableStateOf(origin.point.latitude) }
-    var longitude by rememberSaveable { mutableStateOf(origin.point.longitude) }
+    var latitude by rememberSaveable { mutableDoubleStateOf(origin.point.latitude) }
+    var longitude by rememberSaveable { mutableDoubleStateOf(origin.point.longitude) }
     var busy by rememberSaveable { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()

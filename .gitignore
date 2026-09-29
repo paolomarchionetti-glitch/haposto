@@ -18,3 +18,8 @@ secrets.properties
 .env
 .env.*
 !local.properties.example
+
+# Sito generato (node web/build.mjs) e cache locali di Supabase/Deno
+/web/dist/
+/supabase/.temp/
+/supabase/.branches/

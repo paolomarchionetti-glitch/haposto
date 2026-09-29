@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ristoratori · HAPOSTO</title>
+  <meta name="description" content="HAPOSTO per i ristoranti: pubblica se c'è posto con un tocco. Piano Basic gratuito, Pro con tavoli, attesa, collaboratori e statistiche.">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">HA<span>POSTO</span></a>
+    <nav><a href="/">Home</a> <a id="signout" class="hidden" href="#">Esci</a></nav>
+  </header>
+  <main>
+    <h1>HAPOSTO per i ristoranti</h1>
+    <p>Un tocco per dire ai clienti se c'è posto adesso. Il tuo locale si gestisce dall'app HAPOSTO
+      (tab <strong>Ristoratore</strong>); qui attivi e gestisci l'abbonamento <strong>Pro</strong>.</p>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Basic · gratis</h3>
+        <ul>
+          <li>Stato "c'è posto / pochi posti / completo"</li>
+          <li>Tasto Chiama e indicazioni</li>
+          <li>Pagina pubblica con QR code</li>
+          <li>Statistiche essenziali (7 giorni)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Pro · <span id="price">prezzo sul sito</span></h3>
+        <ul>
+          <li>Tavoli liberi, attesa e nota</li>
+          <li>Collaboratori (fino a 5)</li>
+          <li>Promemoria "come siete messi?"</li>
+          <li>Statistiche complete (90 giorni)</li>
+          <li>Prenotazioni di sala condivise</li>
+        </ul>
+      </div>
+    </section>
+
+    <div id="messages"></div>
+    <section id="app" class="card"><p class="muted">Carico…</p></section>
+
+    <p class="muted small">Pagamenti gestiti da Stripe: HAPOSTO non vede né conserva i dati della carta.
+      Fattura elettronica con i dati che indichi. Disdici quando vuoi da "Gestisci abbonamento".</p>
+  </main>
+  <footer class="foot">
+    <a href="/privacy/">Privacy</a> · <a href="/termini/">Termini</a> ·
+    <a href="/termini-ristoranti/">Condizioni ristoranti</a> · <a href="/cookie/">Cookie</a> ·
+    <a href="/cancella-account/">Cancella account</a>
+  </footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="/assets/ristoratori.js"></script>
+</body>
+</html>

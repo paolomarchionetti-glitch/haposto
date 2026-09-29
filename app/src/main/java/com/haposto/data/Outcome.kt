@@ -84,6 +84,7 @@ object ErrorMessages {
         "Not authorized" to "Non hai i permessi per questo locale.",
         "not an active partner" to "Il locale non è ancora attivo su HAPOSTO.",
         "GOOGLE_SIGN_IN_CANCELLED" to "Accesso annullato.",
+        "GOOGLE_NO_ACCOUNT" to "Nessun account Google su questo telefono: aggiungilo in Impostazioni → Account e riprova.",
         "GOOGLE_SIGN_IN_UNAVAILABLE" to "Accesso con Google non disponibile su questo telefono.",
         "NOT_CONFIGURED" to "Funzione non ancora configurata in questa versione dell'app.",
         "BILLING_UNAVAILABLE" to "Google Play non è disponibile per gli acquisti su questo telefono.",

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HAPOSTO</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">HA<span>POSTO</span></a>
+    <nav><a href="/ristoratori/">Ristoratori</a></nav>
+  </header>
+  <main id="page">
+    <p class="muted">Carico…</p>
+  </main>
+  <footer class="foot">
+    <a href="/privacy/">Privacy</a> · <a href="/termini/">Termini</a> · <a href="/cookie/">Cookie</a>
+  </footer>
+  <script src="/assets/config.js"></script>
+  <script src="/assets/site.js"></script>
+  <script>
+    // Pagina pubblica del locale (QR code sui tavoli e in vetrina): /r/<slug>.
+    // GitHub Pages e Cloudflare Pages mostrano questo file per ogni indirizzo non trovato.
+    (async function () {
+      const { publicRpc, liveStatus, minutesAgo, el, config } = window.HAPOSTO;
+      const page = document.getElementById("page");
+      const match = location.pathname.match(/^\/r\/([a-z0-9-]{1,80})\/?$/);
+
+      function notFound() {
+        document.title = "Pagina non trovata · HAPOSTO";
+        page.replaceChildren(
+          el("h1", {}, "Pagina non trovata"),
+          el("p", {}, "L'indirizzo non esiste o il locale non è più su HAPOSTO."),
+          el("a", { class: "button", href: "/" }, "Vai alla home"),
+        );
+      }
+
+      if (!match || !config.supabaseUrl) return notFound();
+      let row;
+      try {
+        row = (await publicRpc("public_restaurant_page", { p_slug: match[1] }))?.[0];
+      } catch (error) {
+        page.replaceChildren(el("div", { class: "banner error" }, "Servizio non raggiungibile: riprova tra poco."));
+        return;
+      }
+      if (!row) return notFound();
+
+      document.title = `${row.name} · HAPOSTO`;
+      publicRpc("track_restaurant_event", { p_restaurant_id: row.id, p_event: "PUBLIC_PAGE_VIEW" }).catch(() => {});
+
+      const status = liveStatus(row);
+      const partner = row.partnership_status === "ACTIVE_PARTNER";
+      const details = [];
+      if (status && row.available_tables) details.push(`${row.available_tables} tavoli liberi`);
+      if (status && row.estimated_wait_minutes) details.push(`attesa circa ${row.estimated_wait_minutes} min`);
+      const maps = `https://www.google.com/maps/dir/?api=1&destination=${row.latitude},${row.longitude}`;
+
+      page.replaceChildren(
+        el("h1", {}, row.name),
+        el("p", { class: "muted" }, [row.category, [row.address, row.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ")),
+        el("div", { class: "card" },
+          status
+            ? [
+                el("span", { class: `status ${status.css}` }, status.label),
+                el("p", {}, `Aggiornato ${minutesAgo(row.live_updated_at)}${details.length ? " · " + details.join(" · ") : ""}`),
+                row.note ? el("p", {}, `“${row.note}”`) : null,
+                el("p", { class: "muted small" }, "Dichiarato dal locale. Non è una prenotazione: la disponibilità può cambiare."),
+              ]
+            : [
+                el("span", { class: "status UNKNOWN" }, partner ? "Stato non aggiornato" : "Non ancora su HAPOSTO"),
+                el("p", { class: "muted" }, partner
+                  ? "Il locale non ha aggiornato lo stato negli ultimi 30 minuti."
+                  : "Questo locale non pubblica ancora la sua disponibilità."),
+              ],
+        ),
+        el("p", {},
+          el("a", { class: "button", href: maps, rel: "noopener" }, "Indicazioni"), " ",
+          row.phone_number ? el("a", { class: "button secondary", href: `tel:${row.phone_number}` }, "Chiama") : null,
+        ),
+        el("p", { class: "muted" }, "Con l'app HAPOSTO vedi tutti i locali vicini con posto adesso. ",
+          config.playUrl ? el("a", { href: config.playUrl }, "Scaricala gratis") : null),
+      );
+    })();
+  </script>
+</body>
+</html>

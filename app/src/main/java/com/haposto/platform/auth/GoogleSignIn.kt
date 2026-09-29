@@ -6,6 +6,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -48,6 +49,8 @@ object GoogleSignIn {
             }
         } catch (_: GetCredentialCancellationException) {
             ErrorMessages.failure("GOOGLE_SIGN_IN_CANCELLED")
+        } catch (_: NoCredentialException) {
+            ErrorMessages.failure("GOOGLE_NO_ACCOUNT")
         } catch (_: GetCredentialException) {
             ErrorMessages.failure("GOOGLE_SIGN_IN_UNAVAILABLE")
         } catch (_: GoogleIdTokenParsingException) {

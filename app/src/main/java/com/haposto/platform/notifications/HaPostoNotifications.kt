@@ -1,6 +1,7 @@
 package com.haposto.platform.notifications
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -25,7 +26,6 @@ object HaPostoNotifications {
     const val EXTRA_OPEN_DASHBOARD = "open_dashboard_id"
 
     fun createChannels(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         manager.createNotificationChannels(
             listOf(
@@ -46,6 +46,24 @@ object HaPostoNotifications {
         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Unico punto che mostra notifiche: ricontrolla il permesso (Android 13+) proprio prima di
+     * usarlo, perché l'utente può revocarlo in qualsiasi momento dalle impostazioni.
+     */
+    private fun post(context: Context, id: Int, notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        try {
+            post(context, id, notification)
+        } catch (_: SecurityException) {
+            // Permesso revocato nel frattempo: la notifica si perde, l'app continua.
+        }
+    }
 
     private fun openAppIntent(context: Context, extra: String?, restaurantId: String?, requestCode: Int): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -85,7 +103,7 @@ object HaPostoNotifications {
         StatusActionReceiver.actions(context, restaurantId, restaurantName, id).forEach { (label, intent) ->
             builder.addAction(0, label, intent)
         }
-        NotificationManagerCompat.from(context).notify(id, builder.build())
+        post(context, id, builder.build())
     }
 
     fun showMessage(context: Context, kind: String, title: String, body: String, restaurantId: String?) {
@@ -105,7 +123,7 @@ object HaPostoNotifications {
             .setAutoCancel(true)
             .setContentIntent(openAppIntent(context, extra, restaurantId, id))
             .build()
-        NotificationManagerCompat.from(context).notify(id, notification)
+        post(context, id, notification)
     }
 
     fun showConfirmation(context: Context, notificationId: Int, restaurantName: String, text: String) {
@@ -117,6 +135,6 @@ object HaPostoNotifications {
             .setTimeoutAfter(60_000)
             .setAutoCancel(true)
             .build()
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        post(context, notificationId, notification)
     }
 }

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cancella il tuo account · HAPOSTO</title>
+  <meta name="description" content="Come cancellare l'account HAPOSTO e quali dati vengono eliminati.">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">HA<span>POSTO</span></a>
+    <nav><a href="/ristoratori/">Ristoratori</a></nav>
+  </header>
+  <main class="doc">
+    <h1>Cancella il tuo account HAPOSTO</h1>
+
+    <h2>Dall'app (immediato)</h2>
+    <ol>
+      <li>Apri HAPOSTO e tocca <strong>Account</strong> in basso.</li>
+      <li>Scorri fino a <strong>Cancella account</strong>.</li>
+      <li>Scrivi <strong>ELIMINA</strong> e conferma.</li>
+    </ol>
+    <p>Se hai un abbonamento attivo, prima disdicilo: HAPOSTO Plus da Google Play → Abbonamenti;
+      Pro del locale dall'<a href="/ristoratori/">area ristoratori</a> → Gestisci abbonamento.</p>
+
+    <h2>Senza l'app</h2>
+    <p>Scrivi a <a id="mail" href="mailto:assistenza@haposto.app">assistenza@haposto.app</a> dall'indirizzo
+      email del tuo account Google con oggetto "Cancellazione account". Rispondiamo entro 30 giorni.</p>
+
+    <h2>Cosa viene cancellato</h2>
+    <ul>
+      <li>Account, profilo, preferiti, avvisi, token delle notifiche, consensi: <strong>subito</strong>.</li>
+      <li>Ruoli nei locali: rimossi; se eri l'unico titolare, il locale torna "non collegato" e resta
+        visibile solo con i dati pubblici di directory.</li>
+      <li>Registro operazioni di sicurezza: conservato fino a 2 anni in forma non collegata all'account.</li>
+      <li>Pagamenti e fatture dei locali: conservati 10 anni per obbligo di legge.</li>
+    </ul>
+  </main>
+  <footer class="foot">
+    <a href="/privacy/">Privacy</a> · <a href="/termini/">Termini</a> · <a href="/cookie/">Cookie</a>
+  </footer>
+  <script src="/assets/config.js"></script>
+  <script>
+    const email = (window.HAPOSTO_CONFIG || {}).contactEmail;
+    if (email) {
+      const mail = document.getElementById("mail");
+      mail.href = `mailto:${email}?subject=Cancellazione%20account`;
+      mail.textContent = email;
+    }
+  </script>
+</body>
+</html>

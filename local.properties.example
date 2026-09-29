@@ -1,8 +1,43 @@
 # Copia questo file in `local.properties` (che NON viene versionato) e compila i valori.
 # NON toccare la riga sdk.dir: la gestisce Android Studio.
+# Guida passo passo: docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md
 #
 # sdk.dir=C:\\Users\\TUO_NOME\\AppData\\Local\\Android\\Sdk   (Windows, esempio)
 #
-# Configurazione Supabase (senza virgolette):
-SUPABASE_URL=https://TUO_PROJECT_REF.supabase.co
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_LA_TUA_CHIAVE
+# Valori senza virgolette. Una riga vuota o mancante = funzione non configurata.
+# Build Variants in Android Studio: demoDebug (nessun server), devDebug, prodDebug/prodRelease.
+
+# --- Supabase DEV (versione "HAPOSTO Dev", pacchetto com.haposto.dev) ---
+SUPABASE_DEV_URL=https://TUO_PROGETTO_DEV.supabase.co
+SUPABASE_DEV_PUBLISHABLE_KEY=sb_publishable_CHIAVE_DEV
+# (Le vecchie chiavi SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY valgono ancora per DEV.)
+
+# --- Supabase PRODUZIONE (versione "HAPOSTO", pacchetto com.haposto) ---
+SUPABASE_PROD_URL=https://TUO_PROGETTO_PROD.supabase.co
+SUPABASE_PROD_PUBLISHABLE_KEY=sb_publishable_CHIAVE_PROD
+
+# --- Accesso con Google: ID client OAuth di tipo "Applicazione web" (Google Cloud) ---
+# Uno solo per entrambe le versioni, oppure uno per ambiente:
+GOOGLE_WEB_CLIENT_ID=123456789-xxxxxxxx.apps.googleusercontent.com
+# GOOGLE_WEB_CLIENT_ID_DEV=...
+# GOOGLE_WEB_CLIENT_ID_PROD=...
+
+# --- Notifiche push (Firebase, facoltativo: senza, i promemoria locali funzionano lo stesso) ---
+# Valori da Firebase → Impostazioni progetto → Le tue app → app Android.
+FIREBASE_DEV_APP_ID=1:123456789:android:abcdef
+FIREBASE_DEV_API_KEY=AIza_CHIAVE_ANDROID_DEV
+FIREBASE_DEV_PROJECT_ID=haposto-dev
+FIREBASE_DEV_SENDER_ID=123456789
+FIREBASE_PROD_APP_ID=
+FIREBASE_PROD_API_KEY=
+FIREBASE_PROD_PROJECT_ID=
+FIREBASE_PROD_SENDER_ID=
+
+# --- Sito pubblico (link di condivisione, QR, privacy) ---
+PUBLIC_SITE_URL=https://haposto.app
+
+# --- Firma della versione da pubblicare su Google Play (MAI su GitHub) ---
+# HAPOSTO_KEYSTORE_FILE=C:\\Users\\TUO_NOME\\chiavi\\haposto-upload.jks
+# HAPOSTO_KEYSTORE_PASSWORD=
+# HAPOSTO_KEY_ALIAS=upload
+# HAPOSTO_KEY_PASSWORD=

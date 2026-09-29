@@ -1,0 +1,75 @@
+name: Website
+
+# Costruisce il sito (web/) e, solo su main e se abilitato, lo pubblica su GitHub Pages.
+# Per pubblicare: Settings → Pages → Source "GitHub Actions"; Settings → Secrets and variables →
+# Actions → Variables: HAPOSTO_DEPLOY_PAGES=true, HAPOSTO_SITE_URL, HAPOSTO_SUPABASE_URL,
+# HAPOSTO_SUPABASE_PUBLISHABLE_KEY (chiave PUBBLICA), HAPOSTO_PLAY_URL, HAPOSTO_CONTACT_EMAIL,
+# HAPOSTO_ANDROID_CERT_SHA256. In alternativa: Cloudflare Pages con comando "node web/build.mjs"
+# e cartella "web/dist" (vedi docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md).
+
+on:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["web/**", "app/src/main/assets/legal/**", ".github/workflows/website.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["web/**", "app/src/main/assets/legal/**", ".github/workflows/website.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Build
+        env:
+          HAPOSTO_SITE_URL: ${{ vars.HAPOSTO_SITE_URL }}
+          HAPOSTO_SUPABASE_URL: ${{ vars.HAPOSTO_SUPABASE_URL }}
+          HAPOSTO_SUPABASE_PUBLISHABLE_KEY: ${{ vars.HAPOSTO_SUPABASE_PUBLISHABLE_KEY }}
+          HAPOSTO_PLAY_URL: ${{ vars.HAPOSTO_PLAY_URL }}
+          HAPOSTO_CONTACT_EMAIL: ${{ vars.HAPOSTO_CONTACT_EMAIL }}
+          HAPOSTO_ANDROID_CERT_SHA256: ${{ vars.HAPOSTO_ANDROID_CERT_SHA256 }}
+        run: node web/build.mjs
+
+      - name: Check generated pages
+        run: |
+          for page in index.html 404.html ristoratori/index.html cancella-account/index.html \
+                      privacy/index.html termini/index.html termini-ristoranti/index.html \
+                      cookie/index.html licenze/index.html assets/config.js; do
+            test -s "web/dist/$page" || { echo "missing $page"; exit 1; }
+          done
+          node --check web/dist/assets/site.js
+          node --check web/dist/assets/ristoratori.js
+          node --test "web/tests/*.test.mjs"
+
+      - uses: actions/upload-pages-artifact@v4
+        if: github.ref == 'refs/heads/main' && vars.HAPOSTO_DEPLOY_PAGES == 'true'
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && vars.HAPOSTO_DEPLOY_PAGES == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
