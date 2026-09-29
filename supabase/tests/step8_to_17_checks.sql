@@ -92,9 +92,12 @@ begin
 end;
 $$;
 
+-- Solo i 5 utenti di questo script: sul DEV esiste anche test-thief@haposto.test (step18).
 select pg_temp.expect(
     (select count(*) from public.profiles p join auth.users u on u.id = p.id
-     where u.email like 'test-%@haposto.test') = 5,
+     where u.email in ('test-admin@haposto.test', 'test-owner@haposto.test',
+                       'test-staff@haposto.test', 'test-user@haposto.test',
+                       'test-user2@haposto.test')) = 5,
     'ogni utente registrato ha un profilo (trigger on_auth_user_created)');
 
 -- Credenziali del pannello admin (seconda password) per l'account amministratore di prova.

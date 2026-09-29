@@ -116,6 +116,16 @@ jobs:
           psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step18_security_admin_checks.sql 2>&1 | tee security.log | grep -E "ok:|FAIL|ERROR|SUPERATI"
           grep -q "CONTROLLI SICUREZZA SUPERATI" security.log
 
+      # As in the setup guide (Parte 1): the six test users already exist in Authentication,
+      # test-thief included, and both scripts are run again on the same database.
+      - name: Checks in the setup guide order (six test users)
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -c "insert into auth.users (email) values ('test-thief@haposto.test') on conflict (email) do nothing"
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step18_security_admin_checks.sql 2>&1 | tee guide-security.log | grep -E "FAIL|ERROR|SUPERATI"
+          grep -q "CONTROLLI SICUREZZA SUPERATI" guide-security.log
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step8_to_17_checks.sql 2>&1 | tee guide-checks.log | grep -E "FAIL|ERROR|TUTTI"
+          grep -q "TUTTI I CONTROLLI SUPERATI" guide-checks.log
+
       - name: KPI queries run on the final schema
         run: psql -v ON_ERROR_STOP=1 -q -f supabase/ops/kpi_queries.sql > /dev/null
 
