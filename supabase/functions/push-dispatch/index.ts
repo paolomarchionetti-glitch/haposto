@@ -37,32 +37,39 @@ serve(async (request) => {
     throw new HttpError(500, "DATABASE_ERROR");
   }
   const batch = (data ?? []) as QueuedNotification[];
-  if (batch.length === 0) return json(request, 200, { sent: 0, failed: 0 });
+  if (batch.length === 0) return json(request, 200, { delivered: 0, no_device: 0, failed: 0 });
 
   const accessToken = await googleAccessToken(account, FCM_SCOPE);
   const sentIds: number[] = [];
   const failedIds: number[] = [];
   const invalidTokens: string[] = [];
   let lastError: string | null = null;
+  // Solo per la diagnosi (risposta visibile in net._http_response): arrivate a un telefono /
+  // chiuse perché l'utente non ha nessun telefono registrato (accesso all'app mai fatto).
+  let delivered = 0;
+  let noDevice = 0;
 
   for (const item of batch) {
     if (item.tokens.length === 0) {
       // Nessun telefono registrato: niente da inviare, la notifica si chiude.
       sentIds.push(item.notification_id);
+      noDevice++;
       continue;
     }
-    let delivered = false;
+    let reached = false;
     for (const token of item.tokens) {
       const result = await sendToDevice(projectId, accessToken, token, item);
-      if (result === "OK") delivered = true;
+      if (result === "OK") reached = true;
       else if (result === "INVALID_TOKEN") invalidTokens.push(token);
       else lastError = result;
     }
     // Se almeno un telefono l'ha ricevuta è inviata; se tutti i token erano scaduti, pure
     // (riprovare non servirebbe). Si ritenta solo per errori temporanei.
     const onlyInvalid = item.tokens.every((token) => invalidTokens.includes(token));
-    if (delivered || onlyInvalid) sentIds.push(item.notification_id);
+    if (reached || onlyInvalid) sentIds.push(item.notification_id);
     else failedIds.push(item.notification_id);
+    if (reached) delivered++;
+    else if (onlyInvalid) noDevice++;
   }
 
   const { error: completeError } = await db.rpc("complete_notifications", {
@@ -75,7 +82,12 @@ serve(async (request) => {
     console.error("complete_notifications", completeError.message);
     throw new HttpError(500, "DATABASE_ERROR");
   }
-  return json(request, 200, { sent: sentIds.length, failed: failedIds.length, invalid_tokens: invalidTokens.length });
+  return json(request, 200, {
+    delivered,
+    no_device: noDevice,
+    failed: failedIds.length,
+    invalid_tokens: invalidTokens.length,
+  });
 });
 
 /** Messaggio "data": titolo, testo e tasti li costruisce l'app (canali e azioni rapide). */
