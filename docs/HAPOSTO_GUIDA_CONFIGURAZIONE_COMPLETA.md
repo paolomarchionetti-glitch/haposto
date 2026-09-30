@@ -384,7 +384,10 @@ key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la *publishable key*.
 3. Esegui `supabase/ops/scheduled_jobs.sql` (promemoria, pulizie, scadenze, conservazione dati).
 4. Esegui `supabase/ops/push_dispatch_cron.sql` (invio notifiche ogni minuto): in fondo deve
    comparire `haposto-push-dispatch` con `active = true`. Tutti e due i file sono rieseguibili.
-5. Prova, con l'app chiusa e il tuo indirizzo email:
+5. Prova. Prima apri **HAPOSTO Dev** ed entra con il tuo account: il telefono si registra per le
+   notifiche solo quando nell'app c'è un account collegato. Poi chiudi l'app **scorrendola via dalle
+   app recenti** (non con *Forza interruzione* né con lo Stop di Android Studio: un'app "fermata"
+   non riceve notifiche finché non la riapri). Infine, con il tuo indirizzo email:
    ```sql
    insert into public.notification_outbox (user_id, kind, title, body)
    select id, 'CLAIM_UPDATE', 'Prova HAPOSTO', 'Le notifiche dal server funzionano'
@@ -395,10 +398,18 @@ key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la *publishable key*.
    select kind, attempts, sent_at, last_error from public.notification_outbox order by id desc limit 5;
    select status_code, content, created from net._http_response order by created desc limit 5;
    ```
-   `sent_at` compilato = inviata. Nelle risposte: `401 UNAUTHORIZED` = i due valori del segreto
-   (funzione e vault) sono diversi; `500 NOT_CONFIGURED` = manca un segreto della funzione;
-   `500 DATABASE_ERROR` = chiavi del server (vedi la fine del 6.2); `502 GOOGLE_AUTH_FAILED` =
-   JSON di Firebase non valido o incompleto.
+   `sent_at` compilato = notifica chiusa (non per forza arrivata). Nelle risposte:
+   `"delivered":1` = arrivata al telefono; `"no_device":1` = per quell'account non c'è nessun
+   telefono registrato (apri l'app ed entra con quell'account, poi riprova); `401 UNAUTHORIZED` =
+   i due valori del segreto (funzione e vault) sono diversi; `500 NOT_CONFIGURED` = manca un
+   segreto della funzione; `500 DATABASE_ERROR` = chiavi del server (vedi la fine del 6.2);
+   `502 GOOGLE_AUTH_FAILED` = JSON di Firebase non valido o incompleto. Registrazioni del telefono
+   per un account (senza mostrare il token):
+   ```sql
+   select t.platform, t.app_version, t.last_seen_at
+   from public.device_push_tokens t join auth.users u on u.id = t.user_id
+   where u.email = 'LA_TUA_EMAIL';
+   ```
 
 ---
 
