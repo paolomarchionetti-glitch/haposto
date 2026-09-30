@@ -237,6 +237,10 @@ Impostazioni → *Google* / *Account* → aggiungi l'account del ristoratore →
 l'emulatore accanto a ▶ e premi **Run** con `devDebug` (stessa firma di debug del PC: il client
 Android della Parte 2 vale anche lì). Il QR della verifica in due passaggi compare sullo schermo
 del PC: inquadralo con Authenticator del tuo telefono. Telefono = admin, emulatore = ristoratore.
+Senza emulatore si fa tutto sullo stesso telefono alternando gli account: **Account → Esci** e
+rientra con l'altro (non toccare *Elimina account*, subito sotto). A ogni rientro l'app chiede il
+codice di Authenticator della voce con **quell'email** e il pannello admin va riaperto; solo il
+tempo reale fra due telefoni resta da provare con un secondo dispositivo.
 
 1. Ristoratore: tab **Ristoratore** → accede con Google → accetta le condizioni per i ristoranti →
    attiva la 2FA (**Attiva adesso**) → cerca il locale → scrive telefono o email di lavoro →
@@ -268,23 +272,35 @@ Senza Firebase l'app funziona: i promemoria "come siete messi?" al ristoratore p
 stesso. Firebase serve per gli **avvisi Plus** ("si è liberato un tavolo") e per le notifiche
 mandate dal server.
 
-1. <https://console.firebase.google.com> → **Aggiungi progetto** (piano Spark, gratuito; Analytics
-   non necessario).
-2. **Aggiungi app → Android**: package `com.haposto.dev` (poi di nuovo per `com.haposto`).
-   Scarica `google-services.json` ma **non** metterlo nel progetto: ti servono solo 4 valori.
-3. Da quel file (o da Impostazioni progetto → Le tue app) copia in `local.properties`
+1. <https://console.firebase.google.com> → crea un progetto e, in fondo alla prima schermata,
+   scegli **Aggiungi Firebase a un progetto Google Cloud** → il progetto della Parte 2 (così login,
+   notifiche e Play restano nello stesso progetto). Piano **Spark** (gratuito); Google Analytics
+   **disattivato** (non serve).
+2. **Panoramica del progetto → + Aggiungi app → Android**: package `com.haposto.dev`, nickname
+   `HAPOSTO Dev`, SHA-1 facoltativo → **Registra app** → scarica `google-services.json` ma **non**
+   metterlo nel progetto: ti servono solo 4 valori. I passi successivi della procedura guidata
+   (plugin e SDK) saltali con **Avanti**: l'app li ha già. (L'app `com.haposto` si aggiunge in Parte 10.)
+3. Apri `google-services.json` con il Blocco note e copia in `local.properties`
    (se hai usato l'esempio, togli il `#` davanti alle righe `FIREBASE_DEV_…`):
 
-   | `local.properties` | Dove si trova in `google-services.json` |
-   |---|---|
-   | `FIREBASE_DEV_APP_ID` | `client[].client_info.mobilesdk_app_id` |
-   | `FIREBASE_DEV_API_KEY` | `client[].api_key[].current_key` |
-   | `FIREBASE_DEV_PROJECT_ID` | `project_info.project_id` |
-   | `FIREBASE_DEV_SENDER_ID` | `project_info.project_number` |
+   | `local.properties` | Dove si trova in `google-services.json` | Aspetto |
+   |---|---|---|
+   | `FIREBASE_DEV_APP_ID` | `client[].client_info.mobilesdk_app_id` | `1:123…:android:abc…` |
+   | `FIREBASE_DEV_API_KEY` | `client[].api_key[].current_key` | `AIza…` |
+   | `FIREBASE_DEV_PROJECT_ID` | `project_info.project_id` | l'ID del progetto |
+   | `FIREBASE_DEV_SENDER_ID` | `project_info.project_number` | solo cifre |
 
    (Per la produzione le stesse chiavi con `FIREBASE_PROD_…`.) Poi cancella il file scaricato.
-4. **Impostazioni progetto → Account di servizio → Genera nuova chiave privata**: scarica il JSON
-   (è un **segreto**). Lo userai solo al punto 6.2 e poi lo cancelli dal PC.
+   **Sync** e **▶ Run** con `devDebug`.
+4. Verifica:
+   - telefono → Impostazioni → App → **HAPOSTO Dev** → **Notifiche**: consentite;
+   - nell'app esci e rientra con il tuo account; poi Supabase → SQL Editor:
+     `select platform, app_version, last_seen_at from public.device_push_tokens order by last_seen_at desc limit 3;`
+     → una riga con l'ora di adesso (il telefono è registrato per le notifiche);
+   - prova di consegna (facoltativa): Table Editor → `device_push_tokens` → copia il `token` →
+     Firebase → **Messaging** → nuova campagna **Notifiche** → titolo e testo → **Invia messaggio
+     di prova** → incolla il token → **Prova**, con l'app chiusa: la notifica arriva in pochi secondi.
+5. La chiave dell'account di servizio (un **segreto**) **non** crearla ora: serve solo al punto 6.2.
 
 ---
 
@@ -329,7 +345,7 @@ oppure <https://www.random.org/strings/>.
 | Segreto | Valore | Serve a |
 |---|---|---|
 | `HAPOSTO_CRON_SECRET` | stringa casuale lunga (≥ 40 caratteri) | push-dispatch |
-| `FIREBASE_SERVICE_ACCOUNT` | **tutto il contenuto** del JSON del punto 5.4 | push-dispatch |
+| `FIREBASE_SERVICE_ACCOUNT` | **tutto il contenuto** del JSON scaricato da Firebase → Impostazioni progetto → **Account di servizio** → **Genera nuova chiave privata** (poi cancella il file dal PC) | push-dispatch |
 | `HAPOSTO_SITE_URL` | `https://TUO_SITO` | Stripe (ritorno dal pagamento) |
 | `HAPOSTO_ALLOWED_ORIGINS` | `https://TUO_SITO` (più origini separate da virgola) | sito → funzioni |
 | `PLAY_PACKAGE_NAME` | `com.haposto.dev` in DEV, `com.haposto` in produzione | Plus |
