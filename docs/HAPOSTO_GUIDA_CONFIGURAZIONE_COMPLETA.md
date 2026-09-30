@@ -320,7 +320,8 @@ utente, segreto condiviso o firma di Stripe), quindi si pubblicano tutte con `--
 
 ### 6.1 Pubblicazione (una volta, poi a ogni aggiornamento delle funzioni)
 
-Serve Node.js (<https://nodejs.org>, versione LTS). Da un terminale nella cartella del progetto:
+Serve Node.js (<https://nodejs.org>, versione LTS). Dal terminale nella cartella del progetto (in
+Android Studio: **Terminal**, in basso, è già nella cartella giusta):
 
 ```bash
 npx supabase login
@@ -333,44 +334,71 @@ npx supabase functions deploy billing-portal --no-verify-jwt --use-api
 npx supabase functions deploy stripe-webhook --no-verify-jwt --use-api
 ```
 
-(`--use-api` evita di dover installare Docker.) Il riferimento `REF_DEV` è la parte iniziale
-dell'indirizzo `https://REF_DEV.supabase.co`.
+- `login` apre il browser: accedi a Supabase e conferma. Se `link` chiede la password del database
+  premi **Invio** (non serve per le funzioni).
+- `--use-api` evita di dover installare Docker. `REF_DEV` è la parte iniziale dell'indirizzo
+  `https://REF_DEV.supabase.co`.
+- Si possono pubblicare tutte subito: finché mancano i loro segreti (Parti 7–9) ogni funzione
+  rifiuta le chiamate.
+- Controllo: Supabase → **Edge Functions** → compaiono le 6 funzioni.
 
 ### 6.2 Segreti delle funzioni
 
 Supabase → **Edge Functions → Secrets** (oppure `npx supabase secrets set NOME=valore`). Per i
-valori casuali usa un generatore: PowerShell `-join ((48..57)+(97..102) | Get-Random -Count 48 | % {[char]$_})`
-oppure <https://www.random.org/strings/>.
+valori casuali usa il generatore del gestore di password (48 caratteri, solo lettere e numeri)
+oppure PowerShell, che scrive 48 caratteri esadecimali presi dal generatore crittografico di Windows:
 
-| Segreto | Valore | Serve a |
-|---|---|---|
-| `HAPOSTO_CRON_SECRET` | stringa casuale lunga (≥ 40 caratteri) | push-dispatch |
-| `FIREBASE_SERVICE_ACCOUNT` | **tutto il contenuto** del JSON scaricato da Firebase → Impostazioni progetto → **Account di servizio** → **Genera nuova chiave privata** (poi cancella il file dal PC) | push-dispatch |
-| `HAPOSTO_SITE_URL` | `https://TUO_SITO` | Stripe (ritorno dal pagamento) |
-| `HAPOSTO_ALLOWED_ORIGINS` | `https://TUO_SITO` (più origini separate da virgola) | sito → funzioni |
-| `PLAY_PACKAGE_NAME` | `com.haposto.dev` in DEV, `com.haposto` in produzione | Plus |
-| `PLAY_SERVICE_ACCOUNT` | JSON dell'account di servizio Play (Parte 7) | Plus |
-| `PLAY_RTDN_TOKEN` | stringa casuale lunga | Plus |
-| `STRIPE_SECRET_KEY` | chiave segreta Stripe (Parte 8) | Pro |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_…` (Parte 8) | Pro |
-| `STRIPE_TAX_RATE_ID` | `txr_…` IVA 22% (facoltativo, Parte 8) | Pro |
+```powershell
+$b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); -join ($b | ForEach-Object { $_.ToString('x2') })
+```
 
-Se il tuo progetto usa **solo** le nuove chiavi API (chiavi legacy disattivate), aggiungi anche
-`HAPOSTO_SECRET_KEY` = la *secret key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la
-*publishable key*. `SUPABASE_URL` e le chiavi legacy le fornisce Supabase da sé.
+| Segreto | Valore | Serve a | Quando |
+|---|---|---|---|
+| `HAPOSTO_CRON_SECRET` | stringa casuale lunga (≥ 40 caratteri) | push-dispatch | ora |
+| `FIREBASE_SERVICE_ACCOUNT` | **tutto il contenuto** del JSON scaricato da Firebase → Impostazioni progetto → **Account di servizio** → **Genera nuova chiave privata** (poi cancella il file dal PC) | push-dispatch | ora |
+| `HAPOSTO_SITE_URL` | `https://TUO_SITO` | Stripe (ritorno dal pagamento) | Parte 9 |
+| `HAPOSTO_ALLOWED_ORIGINS` | `https://TUO_SITO` (più origini separate da virgola) | sito → funzioni | Parte 9 |
+| `PLAY_PACKAGE_NAME` | `com.haposto.dev` in DEV, `com.haposto` in produzione | Plus | Parte 7 |
+| `PLAY_SERVICE_ACCOUNT` | JSON dell'account di servizio Play (Parte 7) | Plus | Parte 7 |
+| `PLAY_RTDN_TOKEN` | stringa casuale lunga | Plus | Parte 7 |
+| `STRIPE_SECRET_KEY` | chiave segreta Stripe (Parte 8) | Pro | Parte 8 |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_…` (Parte 8) | Pro | Parte 8 |
+| `STRIPE_TAX_RATE_ID` | `txr_…` IVA 22% (facoltativo, Parte 8) | Pro | Parte 8 |
+
+`SUPABASE_URL` e le chiavi del server le fornisce Supabase da sé. Controlla solo Supabase →
+**Project Settings → API Keys** → scheda delle chiavi *legacy* (`anon`, `service_role`): se sono
+attive non serve altro; se sono **disattivate** aggiungi anche `HAPOSTO_SECRET_KEY` = la *secret
+key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la *publishable key*.
 
 ### 6.3 Lavori pianificati (pg_cron) e invio push
 
 1. **Database → Extensions**: attiva `pg_cron` e `pg_net`.
-2. SQL Editor, **una volta**, con i tuoi valori (non salvare questa query):
+2. SQL Editor, **una volta**, con i tuoi valori (indirizzo **senza** `/` finale):
    ```sql
    select vault.create_secret('https://REF_DEV.supabase.co', 'haposto_project_url');
    select vault.create_secret('LO_STESSO_VALORE_DI_HAPOSTO_CRON_SECRET', 'haposto_cron_secret');
    ```
+   Poi elimina la query dall'elenco a sinistra (**⋯ → Delete query**): l'editor la salva da solo e
+   contiene il segreto. Per cambiare un valore: `select vault.update_secret(id, 'nuovo valore')`
+   con l'`id` preso da `select id, name from vault.secrets;`.
 3. Esegui `supabase/ops/scheduled_jobs.sql` (promemoria, pulizie, scadenze, conservazione dati).
-4. Esegui `supabase/ops/push_dispatch_cron.sql` (invio notifiche ogni minuto).
-5. Prova: pubblica uno stato da un locale di cui un utente Plus di prova ha attivato l'avviso →
-   entro un minuto arriva la notifica. Diagnosi: le query in fondo a `push_dispatch_cron.sql`.
+4. Esegui `supabase/ops/push_dispatch_cron.sql` (invio notifiche ogni minuto): in fondo deve
+   comparire `haposto-push-dispatch` con `active = true`. Tutti e due i file sono rieseguibili.
+5. Prova, con l'app chiusa e il tuo indirizzo email:
+   ```sql
+   insert into public.notification_outbox (user_id, kind, title, body)
+   select id, 'CLAIM_UPDATE', 'Prova HAPOSTO', 'Le notifiche dal server funzionano'
+   from auth.users where email = 'LA_TUA_EMAIL';
+   ```
+   Entro un minuto arriva la notifica. Controllo e diagnosi:
+   ```sql
+   select kind, attempts, sent_at, last_error from public.notification_outbox order by id desc limit 5;
+   select status_code, content, created from net._http_response order by created desc limit 5;
+   ```
+   `sent_at` compilato = inviata. Nelle risposte: `401 UNAUTHORIZED` = i due valori del segreto
+   (funzione e vault) sono diversi; `500 NOT_CONFIGURED` = manca un segreto della funzione;
+   `500 DATABASE_ERROR` = chiavi del server (vedi la fine del 6.2); `502 GOOGLE_AUTH_FAILED` =
+   JSON di Firebase non valido o incompleto.
 
 ---
 
