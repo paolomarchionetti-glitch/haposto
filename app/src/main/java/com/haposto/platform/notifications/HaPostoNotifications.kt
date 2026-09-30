@@ -59,7 +59,7 @@ object HaPostoNotifications {
             return
         }
         try {
-            post(context, id, notification)
+            NotificationManagerCompat.from(context).notify(id, notification)
         } catch (_: SecurityException) {
             // Permesso revocato nel frattempo: la notifica si perde, l'app continua.
         }
