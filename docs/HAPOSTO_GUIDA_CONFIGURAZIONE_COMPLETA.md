@@ -495,23 +495,103 @@ Il sito è in `web/`: home, **/ristoratori/** (login Google + 2FA, dati di fattu
 Play). Le pagine legali si generano dagli **stessi file** mostrati nell'app
 (`app/src/main/assets/legal/`): si modifica un testo una volta sola.
 
-**Cloudflare Pages (consigliato: gratis, funziona anche con repository privato):**
+Il sito va servito alla **radice** di un indirizzo (`https://indirizzo/`): link, pagine `/r/…` dei
+QR e ritorno dal login con Google partono da `/`. Per questo si usa **Cloudflare Pages**
+(`nome.pages.dev`, gratis, senza carta, anche con repository privato). GitHub Pages va bene solo con
+un **dominio tuo**: senza, il sito finirebbe in `utente.github.io/haposto/` e grafica, QR e login
+non funzionerebbero.
 
-1. <https://dash.cloudflare.com> → **Workers & Pages → Create → Pages → Connect to Git** → il
-   repository HAPOSTO, branch `main`.
-2. *Build command* `node web/build.mjs` · *Build output directory* `web/dist`.
-3. *Environment variables* (tutte **pubbliche**):
-   `HAPOSTO_SITE_URL` (es. `https://haposto.pages.dev` o il tuo dominio),
-   `HAPOSTO_SUPABASE_URL` (progetto di **produzione**), `HAPOSTO_SUPABASE_PUBLISHABLE_KEY`
-   (**publishable**, mai la secret: la build si rifiuta di proseguire con una chiave segreta),
-   `HAPOSTO_CONTACT_EMAIL`, `HAPOSTO_PLAY_URL` (quando l'app è sul Play Store).
-4. **Custom domains** → il tuo dominio (facoltativo).
-5. Aggiorna `PUBLIC_SITE_URL` in `local.properties` con lo stesso indirizzo (serve ai QR e ai link
-   di condivisione) e gli indirizzi nei punti 2.1, 2.2, 2.4 e 6.2.
+Finché il progetto di produzione non esiste (Parte 10) il sito usa il progetto **DEV**; poi si
+cambiano due variabili. L'indirizzo `.pages.dev` può essere provvisorio (es. `haposto-test`): il
+dominio definitivo si aggiunge dopo.
 
-**In alternativa GitHub Pages** (repository pubblico): Settings → Pages → Source **GitHub Actions**;
-Settings → Secrets and variables → Actions → **Variables**: le stesse variabili del punto 3 più
-`HAPOSTO_DEPLOY_PAGES` = `true`. Il workflow `Website` pubblica a ogni modifica su `main`.
+### 9.1 Account Cloudflare
+
+1. <https://dash.cloudflare.com/sign-up> → email e password, oppure **Sign up with Google** → conferma
+   l'email dal link ricevuto. Piano **Free**: se compare una richiesta di pagamento, fermati.
+2. Proposte di "aggiungere un dominio": salta.
+3. Sicurezza: se entri con Google non esiste una password Cloudflare; basta la **verifica in due
+   passaggi dell'account Google** (<https://myaccount.google.com/security>). Con email e password
+   attiva invece la 2FA di Cloudflare: profilo → **Autenticazione** → *App per dispositivi mobili*.
+
+### 9.2 Progetto Pages collegato a GitHub
+
+1. **Workers & Pages** (a volte dentro *Compute (Workers)*) → **Create**: la pagina propone prima i
+   *Workers*; scegli la scheda **Pages** (o il link *Looking to deploy Pages? Get started*) →
+   **Import an existing Git repository** → **Connect GitHub**.
+2. Su GitHub l'app *Cloudflare Workers and Pages*: **Only select repositories** → `haposto` →
+   **Install & Authorize**. Poi su Cloudflare scegli il repository → **Begin setup**.
+3. Impostazioni:
+
+   | Campo | Valore |
+   |---|---|
+   | Project name | es. `haposto-test` (diventa `haposto-test.pages.dev`) |
+   | Production branch | `main` |
+   | Framework preset | **None** |
+   | Build command | `node web/build.mjs` |
+   | Build output directory | `web/dist` |
+   | Root directory | vuoto |
+
+4. **Environment variables** (tutte **pubbliche**: finiscono nelle pagine del sito):
+
+   | Variabile | Valore |
+   |---|---|
+   | `NODE_VERSION` | `22` |
+   | `HAPOSTO_SITE_URL` | `https://haposto-test.pages.dev` (l'indirizzo del sito) |
+   | `HAPOSTO_SUPABASE_URL` | `https://REF_DEV.supabase.co` (in Parte 10: produzione) |
+   | `HAPOSTO_SUPABASE_PUBLISHABLE_KEY` | chiave **publishable** dello stesso progetto (mai la secret: la build si rifiuta) |
+   | `HAPOSTO_CONTACT_EMAIL` | email di assistenza, **visibile** sul sito |
+   | `HAPOSTO_PLAY_URL` | link a Google Play, quando l'app ci sarà |
+
+5. **Save and Deploy** → dopo circa un minuto "Success". Controlla l'indirizzo assegnato: se il nome
+   era preso Cloudflare aggiunge delle lettere; in quel caso correggi `HAPOSTO_SITE_URL`
+   (**Settings → Variables and Secrets**) e **Deployments → ⋯ → Retry deployment**.
+6. Facoltativo: **Settings → Builds → Branch control** → *Preview branch* **None**. Altrimenti ogni
+   branch di lavoro crea un'anteprima pubblica (`nome-branch.haposto-test.pages.dev`) e il bot di
+   Cloudflare la segnala nelle PR.
+
+Da qui il sito si ripubblica da solo a ogni modifica unita su `main`.
+
+### 9.3 Controllo
+
+- `https://haposto-test.pages.dev` → home; in fondo **Privacy** e **Termini** (gli stessi testi dell'app).
+- Pagina di un locale: SQL Editor
+  `select name, slug from public.restaurants where partnership_status = 'ACTIVE_PARTNER' order by name limit 3;`
+  → `https://haposto-test.pages.dev/r/SLUG` → nome e stato del locale.
+
+### 9.4 Collegamenti con il resto
+
+1. **Supabase → Authentication → URL Configuration**: *Site URL* `https://haposto-test.pages.dev`;
+   *Redirect URLs* → **Add URL** → `https://haposto-test.pages.dev/ristoratori/`.
+2. **Google Cloud → Branding** (<https://console.cloud.google.com/auth/branding>, progetto della
+   Parte 2; in italiano: *Piattaforma di autenticazione Google → Branding*): *Home page
+   dell'applicazione* `https://haposto-test.pages.dev/`, *Link alle norme sulla privacy*
+   `…/privacy/`, *Link ai Termini di servizio* `…/termini/`; *Domini autorizzati* → **Aggiungi
+   dominio** `haposto-test.pages.dev` (il dominio `….supabase.co` resta) → **Salva**.
+3. **Supabase → Edge Functions → Secrets**: `HAPOSTO_SITE_URL` e `HAPOSTO_ALLOWED_ORIGINS` =
+   `https://haposto-test.pages.dev` (servono a Pro, Parte 8).
+4. **App**: `PUBLIC_SITE_URL=https://haposto-test.pages.dev` in `local.properties` → **Sync** →
+   **▶ Run** (QR, condivisione e link legali puntano al sito).
+
+### 9.5 Prove
+
+1. **Area ristoratori**: `https://haposto-test.pages.dev/ristoratori/` → **Accedi con Google** →
+   scegli l'account del **ristoratore** (Google chiede sempre quale usare; con un solo browser
+   collegato al tuo account admin si può usare una finestra in incognito).
+   - "Continua su `….supabase.co`" è normale: il login del sito passa dal progetto Supabase.
+   - "Google non ha verificato questa app" → **Continua** (app in prova). "Accesso bloccato" = l'account
+     non è tra i *Test users* (Parte 2.1).
+   - Codice di Authenticator della voce con **l'email mostrata** sulla pagina ("Account: …").
+   - Compaiono il locale, il piano, le condizioni e i dati di fatturazione. Prova facoltativa: salva
+     dati di fatturazione di prova (Partita IVA di 11 cifre, codice SDI di 7 caratteri). **Non**
+     attivare Pro prima della Parte 8. Con un account senza locali: "Nessun locale di cui sei titolare".
+2. **QR dall'app**: app Dev come ristoratore → **Gestisci il locale** → *QR e link del locale*:
+   sotto il QR `haposto-test.pages.dev/r/…`. **Condividi il link** → Chrome → pagina del locale con lo
+   stato attuale. Con un solo telefono, **Condividi il QR (immagine)** → aprila sullo schermo del PC
+   e inquadrala con la fotocamera. **Crea l'adesivo da stampare (PDF)** apre l'adesivo.
+
+**Dominio definitivo** (quando avrai il nome): Cloudflare → progetto → **Custom domains**, poi
+aggiorna lo stesso indirizzo in `HAPOSTO_SITE_URL`, nei punti 9.4.1–9.4.4 e nei QR già stampati.
 
 Prova in locale: `node web/build.mjs` e poi `npx serve web/dist -l 8080` → <http://localhost:8080>.
 
@@ -531,6 +611,9 @@ Prova in locale: `node web/build.mjs` e poi `npx serve web/dist -l 8080` → <ht
 6. Parte 6 con `npx supabase link --project-ref REF_PROD` e i segreti di produzione
    (`PLAY_PACKAGE_NAME=com.haposto`, chiavi Stripe **live**, nuovo `HAPOSTO_CRON_SECRET`).
 7. `local.properties`: `SUPABASE_PROD_URL`, `SUPABASE_PROD_PUBLISHABLE_KEY`, `FIREBASE_PROD_…`.
+   Sito: Cloudflare → progetto → **Settings → Variables and Secrets** → `HAPOSTO_SUPABASE_URL` e
+   `HAPOSTO_SUPABASE_PUBLISHABLE_KEY` del progetto di **produzione** → **Deployments → ⋯ → Retry
+   deployment**; poi Parte 9.4.1 e 9.4.3 sul progetto di produzione.
 8. Beta: finché vuoi Pro gratis per tutti i locali, nel pannello admin → Impostazioni → `beta` →
    `restaurants_all_pro_until` con la data di fine beta.
 9. Backup: con il piano gratuito esporta periodicamente le tabelle principali (Table Editor →
