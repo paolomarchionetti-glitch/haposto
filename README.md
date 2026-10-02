@@ -10,7 +10,7 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 | Parte | Dove | Stato |
 |---|---|---|
 | App Android: versioni **Demo** / **Dev** / **Prod** | `app/` | completa: lista e mappa, preferiti, account Google, verifica in due passaggi per i ristoratori, area ristoratore reale (rivendicazione con codice telefonico, registrazione, dashboard, QR, statistiche, orari, staff), pannello admin nascosto con seconda password, HAPOSTO Plus (Google Play), notifiche push e promemoria, termini e privacy |
-| Database | `supabase/migrations/0001–0013` | completo, verificato dalla CI (151 controlli su permessi e regole) |
+| Database | `supabase/migrations/0001–0014` | completo, verificato dalla CI (151 controlli su permessi e regole) |
 | Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe |
 | Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR, pagine legali, cancellazione account |
 

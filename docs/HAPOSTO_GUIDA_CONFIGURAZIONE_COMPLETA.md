@@ -20,7 +20,7 @@ sicurezza non stanno nel repository. Questa guida le elenca **in ordine**, una a
 | 7 | Google Play: HAPOSTO Plus | 1–2 ore | abbonamento utenti |
 | 8 | Stripe: Pro per i ristoranti | 1 ora | abbonamento ristoranti |
 | 9 | Sito (gratis) | 20 min | privacy, termini, QR, pagamento Pro |
-| 10 | Progetto di produzione | 1 ora | lancio |
+| 10 | Progetto di produzione | 1–2 ore | lancio |
 | 11 | Procedure di tutti i giorni (admin, 2FA perse, sospensioni) | — | gestione |
 | 12 | Test finali prima del lancio | 2–3 ore | lancio |
 
@@ -109,7 +109,8 @@ Create credentials → OAuth client ID*):
 |---|---|---|---|---|
 | ora | **Web application** | HAPOSTO Web | *Authorized redirect URIs*: `https://REF_DEV.supabase.co/auth/v1/callback` (è la *Callback URL* mostrata da Supabase al punto 2.3; in Parte 10 aggiungi `https://REF_PROD.supabase.co/auth/v1/callback`). *Authorized JavaScript origins*: nessuna (il sito passa da Supabase) | È il `GOOGLE_WEB_CLIENT_ID` dell'app e il login del sito |
 | ora | **Android** | HAPOSTO Dev | package `com.haposto.dev` · SHA-1 del certificato di debug | fa comparire la finestra di Google nell'app Dev |
-| Parte 7/10 | **Android** | HAPOSTO | package `com.haposto` · SHA-1 della chiave di caricamento **e** (dopo il primo caricamento su Play) SHA-1 della chiave di firma di Google Play | app di produzione |
+| Parte 10 | **Android** | HAPOSTO (debug) | package `com.haposto` · lo stesso SHA-1 di debug di *HAPOSTO Dev* | la versione `prodDebug` sul tuo telefono |
+| Parte 7 | **Android** | HAPOSTO | package `com.haposto` · SHA-1 della chiave di caricamento **e** (dopo il primo caricamento su Play, un altro client) SHA-1 della chiave di firma di Google Play | app di produzione pubblicata |
 
 Come trovare lo SHA-1 di debug: Android Studio → **Terminal** (in basso) → `.\gradlew signingReport`
 su Windows (`./gradlew signingReport` su Mac/Linux) → nel blocco `Variant: devDebug` la riga `SHA1:`
@@ -365,10 +366,10 @@ $b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create
 | `STRIPE_WEBHOOK_SECRET` | `whsec_…` (Parte 8) | Pro | Parte 8 |
 | `STRIPE_TAX_RATE_ID` | `txr_…` IVA 22% (facoltativo, Parte 8) | Pro | Parte 8 |
 
-`SUPABASE_URL` e le chiavi del server le fornisce Supabase da sé. Controlla solo Supabase →
-**Project Settings → API Keys** → scheda delle chiavi *legacy* (`anon`, `service_role`): se sono
-attive non serve altro; se sono **disattivate** aggiungi anche `HAPOSTO_SECRET_KEY` = la *secret
-key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la *publishable key*.
+`SUPABASE_URL` e le chiavi del server le fornisce Supabase da sé, anche nei progetti senza chiavi
+*legacy* (`anon`, `service_role`): le funzioni usano la *secret key* `default` che Supabase passa
+loro. **Non** copiare la *secret key* nei segreti. (`HAPOSTO_SECRET_KEY` / `HAPOSTO_PUBLISHABLE_KEY`,
+se li avevi aggiunti, restano validi e hanno la precedenza; non servono più.)
 
 ### 6.3 Lavori pianificati (pg_cron) e invio push
 
@@ -402,9 +403,9 @@ key* (`sb_secret_…`) e `HAPOSTO_PUBLISHABLE_KEY` = la *publishable key*.
    `"delivered":1` = arrivata al telefono; `"no_device":1` = per quell'account non c'è nessun
    telefono registrato (apri l'app ed entra con quell'account, poi riprova); `401 UNAUTHORIZED` =
    i due valori del segreto (funzione e vault) sono diversi; `500 NOT_CONFIGURED` = manca un
-   segreto della funzione; `500 DATABASE_ERROR` = chiavi del server (vedi la fine del 6.2);
-   `502 GOOGLE_AUTH_FAILED` = JSON di Firebase non valido o incompleto. Registrazioni del telefono
-   per un account (senza mostrare il token):
+   segreto della funzione; `500 DATABASE_ERROR` = permessi del database (migration 0014, Parte
+   10.2) o chiavi del server (fine del 6.2); `502 GOOGLE_AUTH_FAILED` = JSON di Firebase non valido
+   o incompleto. Registrazioni del telefono per un account (senza mostrare il token):
    ```sql
    select t.platform, t.app_version, t.last_seen_at
    from public.device_push_tokens t join auth.users u on u.id = t.user_id
@@ -599,25 +600,180 @@ Prova in locale: `node web/build.mjs` e poi `npx serve web/dist -l 8080` → <ht
 
 ## Parte 10 — Progetto di produzione
 
-1. Supabase → **New project** (regione UE, es. Frankfurt), password del database in un gestore
-   di password.
-2. SQL Editor: migration **0001–0013** in ordine (compresa la 0005, tempo reale). **Non** caricare i seed di
-   prova (`900_…`, `910_…`) né `supabase/dev/*`.
-3. Directory dei locali reali: `supabase/ops/import_osm_overpass.sql` (istruzioni nel file).
-4. Google Cloud, stesso client *Web* del punto 2.2: aggiungi `https://REF_PROD.supabase.co/auth/v1/callback`
-   agli *Authorized redirect URIs* e `REF_PROD.supabase.co` agli *Authorized domains* (2.1); poi
-   Parte 2.3–2.4 sul progetto di produzione.
-5. Parte 4.2 (le tue credenziali admin sul progetto di produzione, **diverse** da quelle del DEV).
-6. Parte 6 con `npx supabase link --project-ref REF_PROD` e i segreti di produzione
-   (`PLAY_PACKAGE_NAME=com.haposto`, chiavi Stripe **live**, nuovo `HAPOSTO_CRON_SECRET`).
-7. `local.properties`: `SUPABASE_PROD_URL`, `SUPABASE_PROD_PUBLISHABLE_KEY`, `FIREBASE_PROD_…`.
-   Sito: Cloudflare → progetto → **Settings → Variables and Secrets** → `HAPOSTO_SUPABASE_URL` e
-   `HAPOSTO_SUPABASE_PUBLISHABLE_KEY` del progetto di **produzione** → **Deployments → ⋯ → Retry
-   deployment**; poi Parte 9.4.1 e 9.4.3 sul progetto di produzione.
-8. Beta: finché vuoi Pro gratis per tutti i locali, nel pannello admin → Impostazioni → `beta` →
-   `restaurants_all_pro_until` con la data di fine beta.
-9. Backup: con il piano gratuito esporta periodicamente le tabelle principali (Table Editor →
-   Export CSV); con il piano Pro i backup sono giornalieri.
+Il progetto di produzione è un **secondo progetto Supabase**, sempre sul piano **Free** (gratis: il
+piano Free ammette due progetti attivi, DEV e produzione). Si rifà quello che hai fatto sul DEV,
+**senza** dati di prova. `REF_PROD` è la parte iniziale dell'indirizzo del nuovo progetto
+(`https://REF_PROD.supabase.co`). Le chiavi e i segreti di produzione sono **nuovi** (mai quelli del
+DEV); restano gli stessi solo il client Google *Web*, il progetto Google Cloud/Firebase e il sito.
+
+> Novità di Supabase per i progetti creati nel 2026, già gestite dal codice: **niente chiavi
+> legacy** (`anon`, `service_role`: ci sono solo *publishable* e *secret*) e tabelle **non più
+> aperte in automatico** alle API. La migration 0014 dà i permessi in modo esplicito e le Edge
+> Function usano da sole la *secret key*: non devi copiarla da nessuna parte.
+
+### 10.1 Crea il progetto
+
+1. <https://supabase.com/dashboard> → la stessa organizzazione del DEV → **New project**:
+
+   | Campo | Valore |
+   |---|---|
+   | Project name | `haposto-prod` |
+   | Database password | **Generate a password** → copiala nel gestore di password (voce "Supabase haposto-prod – database"); non serve altrove |
+   | Region | Europa: **Central EU (Frankfurt)** (se c'è solo la scelta generale: *Europe*) |
+   | Opzioni di sicurezza / Data API (se compaiono) | *Data API* **attiva**, schema **public** (non lo schema API dedicato); *Automatically expose new tables* e la RLS automatica: **lascia come sono** (funziona in entrambi i casi) |
+
+   Piano **Free**: se compare un costo mensile o la richiesta di una carta, **fermati**.
+2. **Create new project** → attendi un paio di minuti che il progetto sia pronto.
+3. **Project Settings → API Keys**: c'è la *publishable key* (`sb_publishable_…`, pubblica: andrà
+   nell'app e nel sito). La *secret key* non va copiata. È normale che le chiavi *legacy* manchino.
+
+### 10.2 Database: migration 0001–0014
+
+Supabase (**produzione**: controlla il nome del progetto in alto) → **SQL Editor** → **New query** →
+incolla il file intero → **Run**, **uno alla volta, in ordine**: `supabase/migrations/0001_extensions.sql`
+… `0014_explicit_grants.sql` (14 file, compresa la 0005). Se compare *Potential issue detected…
+destructive operation* premi **Run this query**. Se un file dà errore, fermati e mandami la riga.
+
+Verifica (nuova query):
+
+```sql
+select
+    (select count(*) from public.restaurants) as locali,
+    (select string_agg(key, ', ' order by key) from public.app_config) as impostazioni,
+    (select count(*) from public.plans) as piani,
+    (select count(*) from pg_publication_tables
+     where pubname = 'supabase_realtime' and tablename = 'restaurant_live_status') as tempo_reale,
+    (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
+     where n.nspname = 'public' and c.relkind = 'r'
+       and not has_table_privilege('service_role', c.oid, 'UPDATE')) as tabelle_senza_permessi_del_server;
+```
+
+Atteso: `locali` 0 · `impostazioni` `beta, dev_tools_enabled, legal, min_supported_app_version,
+public_links, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0.
+
+In produzione **mai**: `supabase/seeds/*`, `supabase/dev/*`, `supabase/tests/*`. (Sul DEV la 0014
+non serve, ha già quei permessi; eseguirla è innocuo.)
+
+### 10.3 Directory reale (OpenStreetMap)
+
+`HAPOSTO_GUIDA_APP_E_DATI_REALI.md`, capitoli 3.1–3.3, sul progetto di **produzione**: Overpass
+Turbo → `export.json` → incollato in `supabase/ops/import_osm_overpass.sql` → **Run**. Il risultato
+`inserted` è il numero di locali creati. Controllo:
+`select city, count(*) from public.restaurants where data_source = 'OSM_IMPORT' group by city;`
+Dopo l'incolla il file SQL contiene il JSON: non salvarlo nel progetto (o rimetti la riga
+`INCOLLA_QUI_IL_JSON_DI_OVERPASS`) ed elimina la query salvata dall'editor.
+
+### 10.4 Login: Google e verifica in due passaggi
+
+1. Google Cloud → **Google Auth Platform → Clients** (*Client*) → **HAPOSTO Web** → *Authorized
+   redirect URIs* (*URI di reindirizzamento autorizzati*) → **Add URI** →
+   `https://REF_PROD.supabase.co/auth/v1/callback` (quello del DEV resta) → **Save**.
+2. **Branding** → *Authorized domains* (*Domini autorizzati*) → **Add domain**
+   `REF_PROD.supabase.co` → **Save**.
+3. Supabase (produzione) → **Authentication → Sign In / Providers → Google** → **Enable Sign in with
+   Google**: *Client IDs* e *Client Secret* **dello stesso client Web** usato per il DEV (dal gestore
+   di password); *Skip nonce checks* disattivato → **Save**. Secret perso? Nel client Web → **Add
+   secret** crea un secondo secret (quello del DEV resta valido).
+4. Sempre in **Sign In / Providers**: **Email** → disattiva → **Save** (nei progetti nuovi è attivo).
+5. **Authentication → Multi-Factor**: *TOTP (App Authenticator)* **Enabled**; *Phone* disattivato.
+
+### 10.5 L'app di produzione sul telefono
+
+1. Google Cloud → **Clients** → apri **HAPOSTO Dev** e copia lo *SHA-1*. Poi **Create client** →
+   **Android** → nome `HAPOSTO (debug)`, package `com.haposto`, lo stesso SHA-1 → **Create**.
+2. `local.properties`: togli il `#` dalle righe di produzione (o aggiungile) e compila:
+   ```properties
+   SUPABASE_PROD_URL=https://REF_PROD.supabase.co
+   SUPABASE_PROD_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+   (la *publishable key* del progetto di **produzione**, punto 10.1.3).
+3. **Sync** → *Build Variants* → `prodDebug` → **▶ Run**. Si installa **HAPOSTO** (senza etichetta
+   DEV), accanto a HAPOSTO Dev. In Home compaiono i locali importati, come "Non collegato".
+4. App HAPOSTO → **Account** → **Accedi con Google** → accetta termini e privacy → **Verifica in due
+   passaggi** → *Attiva*. In Authenticator compare una **seconda** voce "HAPOSTO" con la stessa
+   email: rinominala subito (tieni premuto sulla voce → ✏️) in `HAPOSTO PROD`. Da qui, nell'app di
+   produzione si usa solo quella.
+
+### 10.6 Credenziali admin di produzione
+
+Come al punto 4.2, nel SQL Editor del progetto di **produzione**, con nome utente e password
+**diversi** da quelli del DEV (salvali nel gestore di password), poi **⋯ → Delete query**:
+
+```sql
+select public.admin_set_credentials('LA_TUA_EMAIL_GOOGLE', 'nome.utente', 'una-password-lunga-almeno-12-caratteri');
+```
+
+Prova: app HAPOSTO → Account → tieni premuto 5 secondi sulla versione → "Area riservata".
+
+### 10.7 Notifiche: Firebase per l'app di produzione
+
+1. Firebase (stesso progetto del DEV) → ⚙ **Impostazioni progetto** → *Le tue app* → **Aggiungi
+   app** → **Android**: package `com.haposto`, nickname `HAPOSTO` → **Registra app** → scarica
+   `google-services.json` (non metterlo nel progetto) → salta i passi successivi con **Avanti**.
+2. `local.properties`, come al punto 5.3 ma con `FIREBASE_PROD_…` (togli il `#`): `APP_ID` e
+   `API_KEY` dal blocco `client` di **`com.haposto`** (nel file c'è anche `com.haposto.dev`);
+   `PROJECT_ID` e `SENDER_ID` uguali a quelli del DEV. Cancella il file scaricato.
+3. **Sync** → **▶ Run** con `prodDebug` → nell'app esci e rientra con il tuo account (il telefono si
+   registra per le notifiche).
+
+### 10.8 Edge Function e lavori pianificati di produzione
+
+1. Terminale di Android Studio (se chiede l'accesso: `npx supabase login`):
+   ```bash
+   npx supabase link --project-ref REF_PROD
+   npx supabase functions deploy push-dispatch --no-verify-jwt --use-api
+   npx supabase functions deploy play-verify --no-verify-jwt --use-api
+   npx supabase functions deploy play-rtdn --no-verify-jwt --use-api
+   npx supabase functions deploy stripe-checkout --no-verify-jwt --use-api
+   npx supabase functions deploy billing-portal --no-verify-jwt --use-api
+   npx supabase functions deploy stripe-webhook --no-verify-jwt --use-api
+   ```
+   Da qui la CLI lavora sulla **produzione**: per ripubblicare sul DEV rifai prima
+   `npx supabase link --project-ref REF_DEV`. Il progetto collegato è quello con ● in
+   `npx supabase projects list`.
+2. Supabase (produzione) → **Edge Functions → Secrets**:
+
+   | Segreto | Valore |
+   |---|---|
+   | `HAPOSTO_CRON_SECRET` | **nuovo** valore casuale (generatore del punto 6.2), salvato nel gestore di password |
+   | `FIREBASE_SERVICE_ACCOUNT` | Firebase → Impostazioni progetto → **Account di servizio** → **Genera nuova chiave privata** (una chiave nuova, solo per la produzione) → tutto il JSON; poi cancella il file |
+   | `HAPOSTO_SITE_URL`, `HAPOSTO_ALLOWED_ORIGINS` | l'indirizzo del sito, es. `https://haposto-test.pages.dev` |
+
+   Play (`PLAY_…`) e Stripe **live** (`STRIPE_…`) arriveranno con le Parti 7 e 8. Nessuna chiave del
+   server da aggiungere.
+3. Come al punto 6.3, ma sul progetto di **produzione**: **Database → Extensions** → `pg_cron` e
+   `pg_net`; nel vault `https://REF_PROD.supabase.co` e il **nuovo** `HAPOSTO_CRON_SECRET` (poi
+   **⋯ → Delete query**); `supabase/ops/scheduled_jobs.sql`; `supabase/ops/push_dispatch_cron.sql`.
+4. Prova come al punto 6.3.5 con l'app **HAPOSTO** (chiusa scorrendola via): nella risposta deve
+   comparire `"delivered":1`.
+
+### 10.9 Il sito passa alla produzione
+
+Da qui il sito (`/r/…` dei QR e area ristoratori) legge il progetto di **produzione**: i QR creati
+con l'app Dev non si aprono più sul sito. Le prove dell'app Dev continuano come prima.
+
+1. Cloudflare → **Workers & Pages** → il progetto del sito → **Settings → Variables and Secrets**:
+   `HAPOSTO_SUPABASE_URL` = `https://REF_PROD.supabase.co`, `HAPOSTO_SUPABASE_PUBLISHABLE_KEY` = la
+   *publishable key* di produzione → **Save** → **Deployments** → sull'ultima pubblicazione
+   **⋯ → Retry deployment**.
+2. Supabase (produzione) → **Authentication → URL Configuration**: *Site URL*
+   `https://haposto-test.pages.dev`; *Redirect URLs* → **Add URL** →
+   `https://haposto-test.pages.dev/ristoratori/`.
+3. Prove: SQL Editor `select name, slug from public.restaurants where slug is not null order by name limit 3;`
+   → `https://haposto-test.pages.dev/r/SLUG` mostra il locale ("non collegato");
+   `https://haposto-test.pages.dev/ristoratori/` → accedi con il tuo account → codice della voce
+   `HAPOSTO PROD` → "Nessun locale di cui sei titolare" (normale: in produzione non ci sono ancora
+   partner).
+
+### 10.10 Beta, backup e pausa del progetto
+
+- **Beta**: dalla migration 0006 tutti i locali hanno Pro gratis fino al **30 giugno 2027**
+  (`restaurants_all_pro_until`). Per cambiare la data: pannello admin → **Impostazioni** → `beta`.
+- **Backup**: con il piano Free esporta periodicamente le tabelle principali (Table Editor →
+  **Export → CSV**); con il piano Pro (a pagamento) i backup sono giornalieri.
+- **Pausa**: un progetto Free senza attività per 7 giorni viene messo in pausa (succederà alla
+  produzione finché non ci sono utenti). Dashboard → il progetto → **Restore project**: gratis, i dati
+  restano (entro 90 giorni dalla pausa).
 
 ---
 

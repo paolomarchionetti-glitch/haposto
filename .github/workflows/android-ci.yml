@@ -97,14 +97,14 @@ jobs:
           for f in 0001_extensions 0002_schema 0003_functions 0004_rls_and_grants 0005_realtime_future \
                    0006_hardening_and_data_source 0007_accounts_and_claims 0008_plans_and_billing \
                    0009_favorites_alerts_notifications 0010_reservations_cloud 0011_public_page_stats_import \
-                   0012_security_and_admin 0013_profile_consents_account; do
+                   0012_security_and_admin 0013_profile_consents_account 0014_explicit_grants; do
             run supabase/migrations/$f.sql
           done
           run supabase/seeds/900_example_fictional_data.sql
           run supabase/seeds/910_pseudo_realistic_dev_seed.sql
           run supabase/dev/dev_tools.sql
           # Re-running every migration must be harmless.
-          for f in supabase/migrations/000[5-9]_*.sql supabase/migrations/001[0-3]_*.sql; do run "$f"; done
+          for f in supabase/migrations/000[5-9]_*.sql supabase/migrations/001[0-4]_*.sql; do run "$f"; done
           # Realtime: the live status table is published exactly once.
           test "$(psql -At -c "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'restaurant_live_status'")" = "1"
 
@@ -148,6 +148,47 @@ jobs:
         run: |
           psql -v ON_ERROR_STOP=1 -q -f supabase/dev/dev_purge.sql
           test "$(psql -At -c "select count(*) from public.restaurants where data_source = 'DEV_SEED'")" = "0"
+
+      # Production project (guide, Parte 10): a Supabase project created since 30 May 2026 gives no
+      # automatic privileges on new tables and sequences in public. After the migrations alone the
+      # API roles must have the same table privileges as on the DEV-like database above.
+      - name: New production project (no automatic grants)
+        run: |
+          set -e
+          createdb -T template0 haposto_prod
+          export PGDATABASE=haposto_prod
+          run() { echo "== $1"; psql -v ON_ERROR_STOP=1 -q -f "$1"; }
+          # The API roles already exist in this Postgres server.
+          sed '/^create role/d' supabase/tests/local_only_supabase_emulation.sql > "$RUNNER_TEMP/new_project.sql"
+          run "$RUNNER_TEMP/new_project.sql"
+          psql -v ON_ERROR_STOP=1 -q -c "alter default privileges in schema public revoke all on tables from anon, authenticated, service_role" \
+                                    -c "alter default privileges in schema public revoke all on sequences from anon, authenticated, service_role"
+          for f in supabase/migrations/0*.sql; do run "$f"; done
+          grants="select table_name, column_name, grantee, privilege_type from information_schema.column_privileges
+                  where table_schema = 'public' and grantee in ('anon', 'authenticated', 'service_role')
+                    and privilege_type in ('SELECT', 'INSERT', 'UPDATE')
+                  union all
+                  select table_name, '', grantee, privilege_type from information_schema.role_table_grants
+                  where table_schema = 'public' and grantee in ('anon', 'authenticated', 'service_role')
+                    and privilege_type in ('SELECT', 'INSERT', 'UPDATE', 'DELETE')
+                  order by 1, 2, 3, 4"
+          psql -d haposto -At -c "$grants" > "$RUNNER_TEMP/grants_dev.txt"
+          psql -At -c "$grants" > "$RUNNER_TEMP/grants_prod.txt"
+          test -s "$RUNNER_TEMP/grants_prod.txt"
+          diff "$RUNNER_TEMP/grants_dev.txt" "$RUNNER_TEMP/grants_prod.txt"
+          # What the Edge Functions do with the server role, then the usual checks (rolled back).
+          psql -v ON_ERROR_STOP=1 -q -c "set role service_role" -c "select count(*) from public.plans" \
+            -c "update public.billing_events set error = null where false" -c "delete from public.billing_events where false" \
+            -c "update public.consumer_subscriptions set status = status where false" \
+            -c "select count(*) from public.restaurant_subscriptions"
+          run supabase/seeds/900_example_fictional_data.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step8_to_17_checks.sql 2>&1 | tee prod-checks.log | grep -E "FAIL|ERROR|TUTTI"
+          grep -q "TUTTI I CONTROLLI SUPERATI" prod-checks.log
+          psql -v ON_ERROR_STOP=1 -q -f supabase/tests/step18_security_admin_checks.sql 2>&1 | tee prod-security.log | grep -E "FAIL|ERROR|SUPERATI"
+          grep -q "CONTROLLI SICUREZZA SUPERATI" prod-security.log
+          # Real directory (guide, Parte 10): the OpenStreetMap import as run from the SQL Editor.
+          psql -v ON_ERROR_STOP=1 -q -f "$RUNNER_TEMP/import_osm_ready.sql" > /dev/null
+          test "$(psql -At -c "select count(*) from public.restaurants where data_source = 'OSM_IMPORT'")" -gt 0
 
   edge-functions:
     name: Supabase Edge Functions (type check, lint, tests)
