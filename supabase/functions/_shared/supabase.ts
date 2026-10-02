@@ -2,13 +2,29 @@
 import { createClient, type SupabaseClient, type User } from "npm:@supabase/supabase-js@2";
 import { base64UrlDecode, HttpError, requireEnv } from "./http.ts";
 
-function serverKey(): string {
-  // Progetti con le nuove chiavi: si può salvare la "secret key" come HAPOSTO_SECRET_KEY.
-  return Deno.env.get("HAPOSTO_SECRET_KEY") ?? requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+/**
+ * Chiave del progetto, in quest'ordine: segreto HAPOSTO_… messo a mano (resta valido); chiave
+ * "default" delle chiavi nuove, che Supabase fornisce da sé come JSON (i progetti creati da
+ * novembre 2025 hanno solo queste); chiave legacy.
+ */
+function projectKey(manual: string, keySet: string, legacy: string): string {
+  const own = Deno.env.get(manual);
+  if (own) return own;
+  try {
+    const key = JSON.parse(Deno.env.get(keySet) ?? "{}")?.default;
+    if (typeof key === "string" && key) return key;
+  } catch {
+    // JSON non leggibile: si passa alla chiave legacy.
+  }
+  return requireEnv(legacy);
 }
 
-function publicKey(): string {
-  return Deno.env.get("HAPOSTO_PUBLISHABLE_KEY") ?? requireEnv("SUPABASE_ANON_KEY");
+export function serverKey(): string {
+  return projectKey("HAPOSTO_SECRET_KEY", "SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
+}
+
+export function publicKey(): string {
+  return projectKey("HAPOSTO_PUBLISHABLE_KEY", "SUPABASE_PUBLISHABLE_KEYS", "SUPABASE_ANON_KEY");
 }
 
 /** Accesso completo al database: solo per il codice del server, mai per dati scelti dall'utente. */

@@ -50,7 +50,7 @@ veri) e **Prod** (produzione). Configurazione: `HAPOSTO_GUIDA_CONFIGURAZIONE_COM
 | Dove sono i dati | nel telefono | progetto Supabase `haposto-dev` | progetto Supabase `haposto-prod` (nuovo) |
 | Locali | 10 fissi | 43 inventati + eventuali "prove sul campo" | reali (OpenStreetMap + partner) |
 | Chi pubblica | nessuno (solo in memoria) | simulatore + titolari/staff verificati | solo titolari e staff verificati |
-| Migration | — | 0001–0004, 0006–0013 | 0001–0004, 0006–0013 |
+| Migration | — | 0001–0013 (la 0014 è innocua ma non serve) | 0001–0014, compresa la 0005 |
 | Seed e `dev/` | — | sì | **mai** |
 | A cosa serve | provare le schermate | provare il prodotto, prove sul campo | pilot e lancio |
 
@@ -225,10 +225,10 @@ Quello che emerge qui vale più di qualsiasi funzione nuova.
 
 1. Supabase → **New project** `haposto-prod`, regione **Europa (Frankfurt)**, password del database
    salvata nel tuo gestore di password.
-2. SQL Editor: `0001`→`0004`, poi `0006`→`0013` (come in `HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` e
-   nella guida di configurazione, Parte 1). **Niente seed, niente `dev/`.**
+2. SQL Editor: `0001`→`0014` in ordine, compresa la `0005` (procedura completa e verifica: guida di
+   configurazione, Parte 10.2). **Niente seed, niente `dev/`.**
 3. Import OpenStreetMap delle zone del pilot (§3).
-4. Login Google, 2FA, credenziali admin, Edge Function e sito: guida di configurazione, Parti 2–10.
+4. Login Google, 2FA, credenziali admin, Edge Function e sito: guida di configurazione, Parte 10.
 5. Controllo finale:
 
    ```sql

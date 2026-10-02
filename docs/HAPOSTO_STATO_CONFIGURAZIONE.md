@@ -1,7 +1,8 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **2 ottobre 2026**. Questo file dice **dove siamo arrivati** seguendo
-`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una nuova sessione.
+Ultimo aggiornamento: **2 ottobre 2026** (Parte 10 iniziata). Questo file dice **dove siamo
+arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
+nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 
 > Nessun segreto, email personale o identificativo di progetto in questo file: il repository è
@@ -21,7 +22,7 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 | 7 — Google Play / Plus | ⏸ rimandata | richiede Play Console (25 $) e una carta sul progetto Google Cloud (Pub/Sub); da fare dopo le decisioni su nome e account Play |
 | 8 — Stripe / Pro | ⏸ rimandata | richiede i dati dell'attività (P.IVA); roadmap aprile 2027 |
 | 9 — Sito | ✅ fatta | Cloudflare Pages, indirizzo provvisorio `haposto-test.pages.dev`, collegato al progetto **DEV**; URL Configuration di Supabase, Branding di Google, segreti `HAPOSTO_SITE_URL` / `HAPOSTO_ALLOWED_ORIGINS`, `PUBLIC_SITE_URL` fatti; login ristoratori sul sito e QR dall'app provati |
-| 10 — Progetto di produzione | ▶ **prossima** | secondo progetto Supabase sul piano Free |
+| 10 — Progetto di produzione | ▶ **in corso** | secondo progetto Supabase sul piano Free; guida verificata e corretta con la PR #16 (migration 0014, chiavi delle Edge Function); passi 10.1–10.10 |
 | 11 — Procedure di tutti i giorni | da leggere | nessuna azione di configurazione |
 | 12 — Test finali | dopo la 10 (e la 7 per Play) | |
 
@@ -46,6 +47,9 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] Prova del **tempo reale fra due dispositivi** (stato pubblicato su uno, visibile sull'altro in
       1–2 secondi): serve un secondo telefono o l'emulatore.
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
+- [ ] Dopo la PR #16, ripubblicare le 6 funzioni anche sul **DEV** (`npx supabase link --project-ref
+      REF_DEV`, poi i 6 `deploy` del punto 6.1): passano alla *secret key* nuova prima che Supabase
+      spenga le chiavi legacy (fine 2026). Nessun segreto da cambiare.
 
 ## 4. Lezioni pratiche emerse nelle prove
 
@@ -58,6 +62,9 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - Sul sito, se il browser è collegato a più account Google, scegliere l'account giusto (dal 2 ottobre
   il sito lo chiede sempre e mostra l'email nella schermata del codice).
 - Il messaggio di Google "Continua su `….supabase.co`" durante il login dal sito è normale.
+- I progetti Supabase creati nel 2026 non hanno chiavi legacy e non danno permessi automatici sulle
+  tabelle: per questo esistono la migration 0014 e la lettura di `SUPABASE_SECRET_KEYS` nelle
+  funzioni (PR #16). Ogni tabella nuova deve avere i suoi `GRANT` espliciti.
 
 ## 5. Come riprendere in una nuova sessione
 
@@ -84,12 +91,14 @@ e non pubblicare password, token, chiavi segrete, file .env o local.properties; 
 
 - **CI** (`.github/workflows/android-ci.yml`): build delle tre varianti, test JVM, lint, test su
   emulatore API 34, job SQL (migration, seed, controlli step8_to_17 / step18 / dev_tools, ordine della
-  guida, KPI, import OSM, pulizia DEV) e job Deno delle Edge Function. Il sito ha il workflow
-  `website.yml` e la pubblicazione su Cloudflare Pages.
+  guida, KPI, import OSM, pulizia DEV, **progetto di produzione nuovo** senza permessi automatici:
+  stessi permessi del DEV, operazioni del server, controlli e import OSM) e job Deno delle Edge
+  Function. Il sito ha il workflow `website.yml` e la pubblicazione su Cloudflare Pages.
 - **Verifiche locali usate finora** (in un ambiente senza SDK Android, dove l'app si verifica solo in
-  CI): Postgres 16 + PostGIS per replicare il job SQL; immagine `supabase/postgres` 17 + Supabase Auth
-  (gotrue) in Docker per provare le migration come l'SQL Editor (utente `postgres`, file intero in una
-  richiesta); Deno da npm per `deno check` / `lint` / `test` delle funzioni; Supabase CLI da npm;
-  Chromium/Playwright per il sito (con un finto `supabase-js`).
+  CI): Postgres 16 + PostGIS per replicare il job SQL (anche eseguendo i passi `run` letti
+  direttamente dal workflow); immagine `supabase/postgres` 17 + Supabase Auth (gotrue) in Docker per
+  provare le migration come l'SQL Editor (utente `postgres`, file intero in una richiesta); Deno da
+  npm per `deno check` / `lint` / `test` delle funzioni; Supabase CLI da npm; Chromium/Playwright per
+  il sito (con un finto `supabase-js`).
 - **Prove sul progetto DEV vero** le fa sempre il titolare, seguendo la guida; Claude non ha accesso
   al progetto.
