@@ -19,6 +19,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.haposto.data.auth.AuthRepository
@@ -139,7 +140,7 @@ fun RestaurantManagerRoute(
         offerTermsAccepted = offerTermsAccepted,
         onAcceptOfferTerms = {
             offerTermsAccepted = true
-            prefs.edit().putBoolean(KEY_OFFER_TERMS, true).apply()
+            prefs.edit { putBoolean(KEY_OFFER_TERMS, true) }
         },
         quickNotes = quickNotes,
         canSaveQuickNotes = management != null,

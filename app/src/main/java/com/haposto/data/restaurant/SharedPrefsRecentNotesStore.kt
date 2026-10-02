@@ -1,6 +1,7 @@
 package com.haposto.data.restaurant
 
 import android.content.Context
+import androidx.core.content.edit
 
 /** Ultime note salvate nelle preferenze dell'app, una lista per locale (solo su questo telefono). */
 class SharedPrefsRecentNotesStore(context: Context, restaurantId: String) : RecentNotesStore {
@@ -12,7 +13,7 @@ class SharedPrefsRecentNotesStore(context: Context, restaurantId: String) : Rece
         prefs.getString(key, null)?.split(SEPARATOR)?.filter { it.isNotBlank() }.orEmpty()
 
     override fun save(notes: List<String>) {
-        prefs.edit().putString(key, notes.joinToString(SEPARATOR)).apply()
+        prefs.edit { putString(key, notes.joinToString(SEPARATOR)) }
     }
 
     private companion object {

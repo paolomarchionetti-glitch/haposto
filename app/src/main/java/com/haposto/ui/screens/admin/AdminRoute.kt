@@ -366,12 +366,12 @@ private fun ContentTab(state: AdminUiState, viewModel: AdminViewModel) {
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { viewModel.reviewExtras(row, "OK") }, enabled = !state.busy) { Text("Visto") }
+                        OutlinedButton(onClick = { viewModel.reviewExtras(row, "OK", showAll) }, enabled = !state.busy) { Text("Visto") }
                         if (row.websiteUrl != null || row.menuUrl != null) {
-                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_LINKS") }, enabled = !state.busy) { Text("Togli link") }
+                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_LINKS", showAll) }, enabled = !state.busy) { Text("Togli link") }
                         }
                         if (row.fileUrl != null) {
-                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_FILE") }, enabled = !state.busy) { Text("Togli file") }
+                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_FILE", showAll) }, enabled = !state.busy) { Text("Togli file") }
                         }
                     }
                 }

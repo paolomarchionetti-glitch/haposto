@@ -72,8 +72,11 @@
 ## Verifiche
 
 - Logica compilata e provata in locale con Kotlin 2.4.10 (progetto JVM di prova con gli stessi
-  file): **43 test verdi**, compresi i test già esistenti su orari di apertura e prenotazioni.
-- Nuovi test del ViewModel della dashboard (dettatura, ultime note dopo una pubblicazione) e la
-  compilazione delle schermate Compose: in CI (in questo ambiente l'SDK Android non si scarica).
+  file): test verdi su dettatura, orari, prenotazioni e ultime note, compresi i test già esistenti
+  su orari di apertura e prenotazioni (risultati complessivi nel registro
+  `2026-10-02_pr17-note-pronte-link-file-offerta.md`).
+- Test del ViewModel della dashboard (dettatura, ultime note dopo una pubblicazione) eseguiti in
+  locale con piccoli sostituti di `androidx.lifecycle`; la compilazione delle schermate Compose la
+  fa la CI (in questo ambiente l'SDK Android non si scarica).
 - Test strumentali esistenti non toccati: i nuovi parametri delle schermate hanno valori predefiniti;
   il campo `date` delle prenotazioni è facoltativo (i file salvati prima si leggono ancora).

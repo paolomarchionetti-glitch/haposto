@@ -58,6 +58,8 @@
 | `app/src/test/java/com/haposto/domain/AvailabilityResolverTest.kt` | modificato |
 | `app/src/test/java/com/haposto/domain/voice/DetailsDictationTest.kt` | modificato |
 | `app/src/test/java/com/haposto/data/remote/supabase/SupabaseRestaurantRepositoryTest.kt` | modificato |
+| `app/src/test/java/com/haposto/ui/screens/restaurant/RestaurantManagerViewModelTest.kt` | modificato |
+| `app/src/main/java/com/haposto/data/restaurant/SharedPrefsRecentNotesStore.kt` | modificato (`edit { }`) |
 | `web/src/404.html` | modificato |
 | `web/src/assets/style.css` | modificato |
 | `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` | modificato |
@@ -147,5 +149,27 @@ pagamento) non servono: le foto le riduce il telefono e la funzione rifiuta quel
 
 ## Verifiche
 
-Vedi la sezione "Verifiche" della PR #17 (risultati del job SQL completo, dei test Deno, dei test
-Kotlin e del sito, eseguiti in locale prima dell'invio, e della CI su GitHub).
+Eseguite in locale prima dell'invio (l'SDK Android qui non si scarica: build, lint e test su
+emulatore li fa la CI).
+
+- **Job "Supabase SQL" della CI** replicato per intero su Postgres 16 + PostGIS (passi letti dal
+  workflow): migration 0001–0015 e loro riesecuzione, controlli step8_to_17, step18 e **step19
+  (45 controlli nuovi)**, ordine della guida, KPI, import OSM, strumenti e pulizia DEV, **nuovo
+  progetto di produzione** senza permessi automatici (stessi permessi del DEV, step19 compreso):
+  tutto verde.
+- **Edge Function** (Deno 2): `deno check */index.ts`, `deno lint`, `deno test --allow-env`
+  (13 test, compresi quelli nuovi sul riconoscimento dei file) e `deno fmt --check` sui file nuovi.
+- **Kotlin** (2.4.10, progetti JVM di prova con gli stessi file dell'app):
+  - tutto il dominio: 60 test verdi (resolver con l'offerta, dettatura con «offerta …»);
+  - tutto il livello dati compilato contro supabase-kt 3.7.0 (repository Supabase compresi:
+    caricamento del file con `functions.invoke`, note pronte, link, pannello admin): 42 test verdi,
+    compreso il nuovo `theOfferTravelsWithTheStatus_butNeverWithFull`;
+  - ViewModel della dashboard (con piccoli sostituti di `androidx.lifecycle`): 6 test verdi, due
+    nuovi sull'offerta (pubblicata con lo stato, mai con Completo, tagliata a 60 caratteri).
+- **Schermate Compose** (non compilabili qui) rilette una per una: corretti un riferimento a
+  funzione locale (ora lambda), le preferenze scritte con `edit { }` di core-ktx come nel resto
+  dell'app e il filtro **Tutti** della scheda Contenuti, che dopo "Visto" tornava a "Da controllare".
+- **Sito**: `node web/build.mjs`, `node --test web/tests/*.test.mjs` (4 test) e prova in Chromium
+  della pagina `/r/…` con un finto Supabase: offerta e tasti Menù (PDF) / Sito del locale; un link
+  `javascript:` viene scartato; con **Completo** nessuna offerta e nessun "null".
+- CI su GitHub: vedi la PR.

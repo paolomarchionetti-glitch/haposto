@@ -1,7 +1,9 @@
 package com.haposto.ui.screens.restaurant
 
 import androidx.lifecycle.SavedStateHandle
+import com.haposto.data.Outcome
 import com.haposto.data.fake.FakeRestaurantRepository
+import com.haposto.data.repository.RestaurantRepository
 import com.haposto.data.restaurant.RecentNotesStore
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.testutil.FlakyRestaurantRepository
@@ -90,5 +92,64 @@ class RestaurantManagerViewModelTest {
 
         viewModel.uiState.first { it.recentNotes.firstOrNull() == "Solo esterni" }
         assertEquals(listOf("Solo esterni", "Bancone"), store.saved)
+    }
+
+    /** Ricorda l'offerta inviata a ogni pubblicazione; il resto lo fa il repository finto. */
+    private class OfferRecordingRepository(
+        private val inner: FakeRestaurantRepository = FakeRestaurantRepository(),
+    ) : RestaurantRepository by inner {
+        val offers = mutableListOf<String?>()
+
+        override suspend fun publishAvailabilityResult(
+            restaurantId: String,
+            status: AvailabilityStatus,
+            availableTables: Int?,
+            estimatedWaitMinutes: Int?,
+            note: String?,
+            offer: String?,
+        ): Outcome<Unit> {
+            offers += offer
+            return inner.publishAvailabilityResult(restaurantId, status, availableTables, estimatedWaitMinutes, note)
+        }
+    }
+
+    @Test
+    fun dictatedOffer_isPublishedWithTheStatus_butNotWithFull() = runTest {
+        val repository = OfferRecordingRepository()
+        val viewModel = RestaurantManagerViewModel(
+            restaurantId = "levante-demo",
+            repository = repository,
+            savedStateHandle = SavedStateHandle(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        viewModel.uiState.first { it.restaurant != null }
+
+        viewModel.applyDictation("due tavoli, offerta dolce offerto")
+        viewModel.uiState.first { it.offer == "Dolce offerto" }
+        viewModel.publishStatus(AvailabilityStatus.AVAILABLE)
+        viewModel.uiState.first { it.effectiveAvailability.status == AvailabilityStatus.AVAILABLE }
+        viewModel.publishStatus(AvailabilityStatus.FULL)
+        val state = viewModel.uiState.first { it.effectiveAvailability.status == AvailabilityStatus.FULL }
+
+        assertEquals(listOf("Dolce offerto", null), repository.offers)
+        // Resta nel campo per la prossima pubblicazione con posti liberi.
+        assertEquals("Dolce offerto", state.offer)
+    }
+
+    @Test
+    fun offerIsCutToTheMaximumLength() = runTest {
+        val viewModel = RestaurantManagerViewModel(
+            restaurantId = "levante-demo",
+            repository = FakeRestaurantRepository(),
+            savedStateHandle = SavedStateHandle(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        viewModel.uiState.first { it.restaurant != null }
+
+        viewModel.setOffer("x".repeat(100))
+
+        val state = viewModel.uiState.first { it.offer.isNotEmpty() }
+        assertEquals(60, state.offer.length)
+        assertEquals(0, state.offerRemaining)
     }
 }

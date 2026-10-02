@@ -596,7 +596,7 @@ private fun OptionalDetailsCard(
                     }
                     OutlinedTextField(
                         value = uiState.offer,
-                        onValueChange = ::changeOffer,
+                        onValueChange = { changeOffer(it) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Offerta") },
                         placeholder = { Text("Es. Dolce offerto a chi arriva entro le 21") },

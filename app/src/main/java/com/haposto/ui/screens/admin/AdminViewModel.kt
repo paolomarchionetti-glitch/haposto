@@ -144,8 +144,8 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
         }
     }
 
-    /** [action]: OK (visto), REMOVE_LINKS, REMOVE_FILE. */
-    fun reviewExtras(row: AdminExtrasRow, action: String) = act(
+    /** [action]: OK (visto), REMOVE_LINKS, REMOVE_FILE; [showAll] = filtro "Tutti" da mantenere. */
+    fun reviewExtras(row: AdminExtrasRow, action: String, showAll: Boolean = false) = act(
         success = when (action) {
             "OK" -> "✓ Segnato come controllato."
             "REMOVE_LINKS" -> "✓ Link tolti."
@@ -153,7 +153,7 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
         },
     ) {
         (admin.reviewRestaurantExtras(row.restaurantId, action, "Controllo contenuti") as? Outcome.Failure)
-            .also { if (it == null) loadTab(AdminTab.CONTENT) }
+            .also { if (it == null) loadTab(AdminTab.CONTENT, null, if (showAll) "ALL" else null) }
     }
 
     fun setConfig(key: String, json: String) = act(success = "✓ Impostazione salvata.") {
