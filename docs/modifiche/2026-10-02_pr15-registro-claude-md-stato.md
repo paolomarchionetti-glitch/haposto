@@ -2,7 +2,7 @@
 
 - **Data:** 2 ottobre 2026
 - **Branch:** `claude/haposto-setup-guide-8a512c`
-- **PR:** da aggiornare all'apertura
+- **PR:** [#15](https://github.com/paolomarchionetti-glitch/haposto/pull/15)
 - **Motivo:** richiesta del titolare: registrare in `docs/modifiche/` ogni modifica (anche quelle già
   fatte), scrivere la regola in `CLAUDE.md` e preparare il passaggio a una nuova sessione senza
   perdere il filo.
