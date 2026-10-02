@@ -412,6 +412,33 @@ se li avevi aggiunti, restano validi e hanno la precedenza; non servono più.)
    where u.email = 'LA_TUA_EMAIL';
    ```
 
+### 6.4 Ping automatico contro la pausa (GitHub Actions, gratis)
+
+Un progetto Supabase Free senza attività per 7 giorni va in pausa. Il workflow
+`.github/workflows/supabase-keepalive.yml` fa ogni mattina una lettura su ogni progetto configurato
+(un piano pubblico, con la chiave *publishable*: nessun dato personale, nessuna scrittura). Il
+workflow parte solo dopo che il file è su `main`.
+
+1. GitHub → repository `haposto` → **Settings → Secrets and variables → Actions** → scheda
+   **Secrets** → **New repository secret**, una volta per riga:
+
+   | Name | Secret |
+   |---|---|
+   | `SUPABASE_DEV_URL` | `https://REF_DEV.supabase.co` |
+   | `SUPABASE_DEV_PUBLISHABLE_KEY` | la *publishable key* del DEV (Supabase → **Project Settings → API Keys**) |
+
+   Usa **Secrets**, non *Variables*: così l'indirizzo del progetto non compare nei registri pubblici.
+2. Prova subito: **Actions** → **Supabase keep-alive** → **Run workflow** → **Run workflow**. Dopo un
+   minuto compare il segno verde; aprendo l'esecuzione c'è la riga `DEV: ok`.
+3. Per la produzione (Parte 10) aggiungi anche `SUPABASE_PROD_URL` e `SUPABASE_PROD_PUBLISHABLE_KEY`.
+
+- Se la lettura non riesce (progetto già in pausa, chiave sbagliata) il workflow diventa rosso e
+  GitHub manda un'email: Supabase → il progetto → **Restore project**.
+- GitHub spegne i workflow pianificati dopo 60 giorni senza modifiche al repository (avvisa per
+  email): **Actions → Supabase keep-alive → Enable workflow**.
+- È una pratica diffusa, non una funzione ufficiale di Supabase: se un giorno non bastasse, il
+  progetto si riattiva comunque gratis e senza perdere dati.
+
 ---
 
 ## Parte 7 — Google Play: HAPOSTO Plus
@@ -771,9 +798,10 @@ con l'app Dev non si aprono più sul sito. Le prove dell'app Dev continuano come
   (`restaurants_all_pro_until`). Per cambiare la data: pannello admin → **Impostazioni** → `beta`.
 - **Backup**: con il piano Free esporta periodicamente le tabelle principali (Table Editor →
   **Export → CSV**); con il piano Pro (a pagamento) i backup sono giornalieri.
-- **Pausa**: un progetto Free senza attività per 7 giorni viene messo in pausa (succederà alla
-  produzione finché non ci sono utenti). Dashboard → il progetto → **Restore project**: gratis, i dati
-  restano (entro 90 giorni dalla pausa).
+- **Pausa**: un progetto Free senza attività per 7 giorni viene messo in pausa (succederebbe alla
+  produzione finché non ci sono utenti). Lo evita il ping automatico del punto 6.4: aggiungi i due
+  segreti `SUPABASE_PROD_…`. Se succede lo stesso: Dashboard → il progetto → **Restore project**,
+  gratis, i dati restano (entro 90 giorni dalla pausa).
 
 ---
 

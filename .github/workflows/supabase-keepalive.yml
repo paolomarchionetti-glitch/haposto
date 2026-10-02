@@ -1,0 +1,61 @@
+name: Supabase keep-alive
+
+# Una lettura al giorno sui progetti Supabase, perché il piano Free non li metta in pausa dopo 7
+# giorni senza attività (guida di configurazione, punto 6.4). Legge un piano pubblico con la chiave
+# PUBBLICA: nessun dato personale, nessuna scrittura.
+# Segreti del repository (Settings → Secrets and variables → Actions → Secrets):
+#   SUPABASE_DEV_URL, SUPABASE_DEV_PUBLISHABLE_KEY    progetto DEV
+#   SUPABASE_PROD_URL, SUPABASE_PROD_PUBLISHABLE_KEY  progetto di produzione (quando esiste)
+# Un progetto senza segreti viene saltato. Se la lettura fallisce (progetto in pausa, chiave
+# sbagliata) il workflow diventa rosso e GitHub manda un'email.
+# Nota: GitHub spegne i workflow pianificati dopo 60 giorni senza modifiche al repository; si
+# riattivano da Actions → Supabase keep-alive → Enable workflow.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read one public row from each configured project
+        env:
+          DEV_URL: ${{ secrets.SUPABASE_DEV_URL }}
+          DEV_KEY: ${{ secrets.SUPABASE_DEV_PUBLISHABLE_KEY }}
+          PROD_URL: ${{ secrets.SUPABASE_PROD_URL }}
+          PROD_KEY: ${{ secrets.SUPABASE_PROD_PUBLISHABLE_KEY }}
+        run: |
+          set -u
+          failed=0
+          configured=0
+          ping() {
+            local name="$1" url="${2%/}" key="$3"
+            if [ -z "$url" ] || [ -z "$key" ]; then
+              echo "$name: non configurato, saltato"
+              return
+            fi
+            configured=$((configured + 1))
+            for attempt in 1 2 3; do
+              code=$(curl -sS -o /dev/null -w "%{http_code}" -m 30 \
+                -H "apikey: $key" "$url/rest/v1/plans?select=code&limit=1") || true
+              if [ "$code" = "200" ]; then
+                echo "$name: ok"
+                return
+              fi
+              echo "$name: tentativo $attempt, risposta HTTP $code"
+              sleep 20
+            done
+            echo "::error::$name: lettura non riuscita (progetto in pausa o chiave sbagliata?)"
+            failed=1
+          }
+          ping DEV "$DEV_URL" "$DEV_KEY"
+          ping PROD "$PROD_URL" "$PROD_KEY"
+          if [ "$configured" = 0 ]; then
+            echo "::warning::Nessun progetto configurato: aggiungi i segreti (guida, punto 6.4)."
+          fi
+          exit "$failed"
