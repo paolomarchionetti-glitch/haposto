@@ -147,9 +147,13 @@ Se non fai nulla per 30 minuti lo stato diventa **? Da aggiornare** per i client
 
 Tocca **Dettagli facoltativi** solo se vuoi:
 
+- **🎙 Detta i dettagli**: una frase sola, es. «tre tavoli, dieci minuti, solo tavoli fuori» →
+  tavoli 3, attesa 10 min, nota "Solo tavoli fuori". Compila solo quello che dici; controlla e
+  correggi a mano se serve;
 - **Tavoli liberi indicativi** con − e +;
 - **Attesa indicativa** (Non indicata, Nessuna, 10 min, 20 min, 30+ min);
-- **Nota breve** (max 80 caratteri), es. "Solo tavoli esterni", "Cucina fino alle 23".
+- **Nota breve** (max 80 caratteri), es. "Solo tavoli esterni", "Cucina fino alle 23". Sotto
+  compaiono le **ultime note** usate da questo telefono: un tocco per riusarle.
 
 Poi **Aggiorna dettagli e riconferma**: pubblica i dettagli e rinnova lo stato. Nella versione a
 pagamento (Pro) i dettagli sono inclusi; durante la beta sono gratis per tutti.
@@ -165,10 +169,16 @@ versione con account reale.
 Un **blocco note** per le prenotazioni prese al telefono o di persona. Resta solo su questo telefono
 e i clienti non lo vedono.
 
-1. **Nome** (oppure **🎙 Detta** per dettarlo), **Orario** (es. 20:30), **Persone** con − e +,
+1. In alto scegli il giorno: **Oggi**, **Domani** o **📅 Altro giorno**.
+2. **🎙 Detta la prenotazione** con una frase sola, es. «Rossi, quattro, alle venti e trenta,
+   tavolo dodici»: compila nome, persone, orario e tavolo. Capisce anche «domani», «sabato»,
+   «a pranzo», «alle otto e mezza», «tavolo da sei». Controlla e correggi se serve.
+3. Oppure a mano: **Nome**; **Orario** con un tocco sugli orari proposti (dagli orari del locale)
+   o scrivendo solo le cifre (2030 → 20:30, i due punti si mettono da soli); **Persone** con − e +;
    **Tavolo** facoltativo.
-2. **Aggiungi**. La lista è ordinata per orario.
-3. Tocca una prenotazione per **modificarla**; **Rimuovi** per cancellarla.
+4. **Aggiungi**. La lista mostra il giorno scelto, in ordine di orario, con il totale delle persone.
+5. Tocca una prenotazione per **modificarla**; **Rimuovi** per cancellarla. I giorni passati si
+   cancellano da soli.
 
 Con Pro, in futuro, le prenotazioni saranno condivise tra i telefoni dello staff.
 

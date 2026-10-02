@@ -248,6 +248,7 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
                 ReservationsRoute(
                     restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
                     onBack = navController::navigateUp,
+                    management = management,
                 )
             }
             composable(AppDestination.MFA) {

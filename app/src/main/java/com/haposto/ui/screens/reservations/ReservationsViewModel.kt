@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.haposto.data.reservations.Reservation
+import com.haposto.data.reservations.ReservationList
 import com.haposto.data.reservations.ReservationStore
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +21,7 @@ import java.util.UUID
 
 class ReservationsViewModel(
     private val store: ReservationStore,
+    private val today: () -> LocalDate = { LocalDate.now() },
 ) : ViewModel() {
 
     private val _items = MutableStateFlow<List<Reservation>>(emptyList())
@@ -29,12 +32,15 @@ class ReservationsViewModel(
 
     init {
         viewModelScope.launch {
-            val loaded = withContext(Dispatchers.IO) { store.load() }
+            val stored = withContext(Dispatchers.IO) { store.load() }
+            // Solo oggi e i giorni futuri: le prenotazioni passate si cancellano (minimizzazione dei dati).
+            val loaded = ReservationList.upcoming(stored, today())
             // Keep anything added/edited while the file was still loading.
             _items.update { current ->
                 val editedIds = current.mapTo(HashSet()) { it.id }
-                (loaded.filterNot { it.id in editedIds } + current).sortedBy { it.sortKey }
+                ReservationList.sorted(loaded.filterNot { it.id in editedIds } + current)
             }
+            if (loaded != stored) persist(_items.value)
         }
     }
 
@@ -44,6 +50,7 @@ class ReservationsViewModel(
         time: String,
         partySize: Int,
         table: String?,
+        date: LocalDate = today(),
     ) {
         val cleanName = name.trim()
         if (cleanName.isEmpty()) return
@@ -53,6 +60,7 @@ class ReservationsViewModel(
             time = time.trim(),
             partySize = partySize.coerceIn(1, MAX_PARTY_SIZE),
             table = table?.trim()?.ifBlank { null },
+            date = date.toString(),
         )
         val next = if (editingId != null && _items.value.any { it.id == editingId }) {
             _items.value.map { if (it.id == editingId) entry else it }
@@ -67,7 +75,7 @@ class ReservationsViewModel(
     }
 
     private fun persist(list: List<Reservation>) {
-        _items.value = list.sortedBy { it.sortKey }
+        _items.value = ReservationList.sorted(list)
         viewModelScope.launch {
             saveMutex.withLock {
                 // Always write the latest list, not the snapshot captured when this save was queued.

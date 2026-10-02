@@ -14,6 +14,8 @@ data class RestaurantManagerUiState(
     val note: String = "",
     val isSaving: Boolean = false,
     val message: String? = null,
+    /** Ultime note pubblicate da questo telefono, la più recente per prima. */
+    val recentNotes: List<String> = emptyList(),
 ) {
     val canManage: Boolean get() = restaurant != null
     val noteRemaining: Int get() = 80 - note.length

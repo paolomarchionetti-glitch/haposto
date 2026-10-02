@@ -9,10 +9,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.haposto.data.Outcome
 import com.haposto.data.repository.RestaurantRepository
+import com.haposto.data.restaurant.NoRecentNotes
+import com.haposto.data.restaurant.RecentNotes
+import com.haposto.data.restaurant.RecentNotesStore
 import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.EffectiveAvailability
 import com.haposto.domain.usecase.AvailabilityResolver
+import com.haposto.domain.voice.DetailsDictation
 import java.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +35,8 @@ class RestaurantManagerViewModel(
     private val savedStateHandle: SavedStateHandle,
     /** Chiamato dopo ogni pubblicazione riuscita (es. per programmare il promemoria). */
     private val onPublished: (AvailabilityStatus) -> Unit = {},
+    /** Ultime note usate su questo telefono (riusabili con un tocco). */
+    private val recentNotesStore: RecentNotesStore = NoRecentNotes,
 ) : ViewModel() {
 
     private val mfaMissing = MutableStateFlow(false)
@@ -44,6 +50,7 @@ class RestaurantManagerViewModel(
     private val note = MutableStateFlow(savedStateHandle[KEY_NOTE] ?: "")
     private val isSaving = MutableStateFlow(false)
     private val message = MutableStateFlow<String?>(null)
+    private val recentNotes = MutableStateFlow(recentNotesStore.load())
     private var draftInitialized = savedStateHandle[KEY_INITIALIZED] ?: false
 
     private val draft = combine(
@@ -62,7 +69,8 @@ class RestaurantManagerViewModel(
             .catch { emit(listOfNotNull(repository.findById(restaurantId))) },
         draft,
         clockTicker(),
-    ) { restaurants, draft, now ->
+        recentNotes,
+    ) { restaurants, draft, now, recent ->
         val restaurant = restaurants.firstOrNull { it.id == restaurantId }
         if (!draftInitialized && restaurant != null) {
             restaurant.liveAvailability?.let { live ->
@@ -83,6 +91,7 @@ class RestaurantManagerViewModel(
             note = draft.note,
             isSaving = draft.saving,
             message = draft.message,
+            recentNotes = recent,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -105,6 +114,7 @@ class RestaurantManagerViewModel(
                 },
                 note = savedStateHandle.get<String>(KEY_NOTE)
                     ?: restaurant.liveAvailability?.note.orEmpty(),
+                recentNotes = recentNotes.value,
             )
         } ?: RestaurantManagerUiState(),
     )
@@ -123,13 +133,18 @@ class RestaurantManagerViewModel(
             if (status == AvailabilityStatus.FULL) {
                 updateTables(null)
             }
+            val publishedNote = note.value.trim().takeIf { it.isNotEmpty() }
             val result = repository.publishAvailabilityResult(
                 restaurantId = restaurantId,
                 status = status,
                 availableTables = availableTables.value,
                 estimatedWaitMinutes = estimatedWaitMinutes.value,
-                note = note.value.trim().takeIf { it.isNotEmpty() },
+                note = publishedNote,
             )
+            if (result is Outcome.Success && publishedNote != null) {
+                recentNotes.value = RecentNotes.add(recentNotes.value, publishedNote)
+                recentNotesStore.save(recentNotes.value)
+            }
             isSaving.value = false
             mfaMissing.value = (result as? Outcome.Failure)?.code == "MFA_REQUIRED"
             message.value = when (result) {
@@ -174,6 +189,22 @@ class RestaurantManagerViewModel(
 
     fun setNote(value: String) {
         updateNote(value.take(AvailabilityRules.MAX_NOTE_LENGTH))
+    }
+
+    /**
+     * Frase dettata ("tre tavoli, dieci minuti, solo tavoli fuori"): compila solo i dettagli che
+     * nomina; gli altri restano come sono. Non pubblica: il ristoratore controlla e sceglie lo stato.
+     */
+    fun applyDictation(text: String) {
+        val draft = DetailsDictation.parse(text)
+        if (draft.isEmpty) {
+            message.value = "Non ho capito i dettagli: riprova o scrivili a mano."
+            return
+        }
+        message.value = null
+        draft.tables?.let { updateTables(it) }
+        draft.waitMinutes?.let { updateWait(it) }
+        draft.note?.let { setNote(it) }
     }
 
     fun setPhonePublic(isPublic: Boolean) {
@@ -239,6 +270,7 @@ fun RestaurantManagerViewModelFactory(
     restaurantId: String,
     repository: RestaurantRepository,
     onPublished: (AvailabilityStatus) -> Unit = {},
+    recentNotesStore: RecentNotesStore = NoRecentNotes,
 ): ViewModelProvider.Factory = viewModelFactory {
     initializer {
         RestaurantManagerViewModel(
@@ -246,6 +278,7 @@ fun RestaurantManagerViewModelFactory(
             repository = repository,
             savedStateHandle = createSavedStateHandle(),
             onPublished = onPublished,
+            recentNotesStore = recentNotesStore,
         )
     }
 }

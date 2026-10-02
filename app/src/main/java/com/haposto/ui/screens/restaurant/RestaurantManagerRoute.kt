@@ -25,6 +25,7 @@ import com.haposto.data.network.NetworkMonitor
 import com.haposto.data.repository.RestaurantAccessRepository
 import com.haposto.data.repository.RestaurantRepository
 import com.haposto.data.restaurant.RestaurantManagementRepository
+import com.haposto.data.restaurant.SharedPrefsRecentNotesStore
 import com.haposto.platform.notifications.HaPostoNotifications
 import com.haposto.platform.notifications.Reminders
 
@@ -84,6 +85,7 @@ fun RestaurantManagerRoute(
                 val name = repository.findById(restaurantId)?.name ?: "Il tuo locale"
                 Reminders.scheduleAfterPublish(context, restaurantId, name, status)
             },
+            recentNotesStore = SharedPrefsRecentNotesStore(context, restaurantId),
         ),
     )
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -118,5 +120,6 @@ fun RestaurantManagerRoute(
         onOpenSettings = if (management != null) onOpenSettings else null,
         mfaMissing = mfaMissing,
         onOpenMfa = onOpenMfa,
+        onDictateDetails = viewModel::applyDictation,
     )
 }

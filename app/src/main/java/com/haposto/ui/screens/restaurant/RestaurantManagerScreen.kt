@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
@@ -52,6 +54,7 @@ import com.haposto.ui.components.BigActionButton
 import com.haposto.ui.components.InfoDisclosure
 import com.haposto.ui.components.OfflineBanner
 import com.haposto.ui.components.StatusSymbol
+import com.haposto.ui.components.rememberSpeechInput
 import com.haposto.ui.components.statusPresentation
 import java.time.Duration
 
@@ -73,6 +76,8 @@ fun RestaurantManagerScreen(
     onOpenSettings: (() -> Unit)? = null,
     mfaMissing: Boolean = false,
     onOpenMfa: () -> Unit = {},
+    /** Frase dettata per i dettagli facoltativi (tavoli, attesa, nota). */
+    onDictateDetails: (String) -> Unit = {},
 ) {
     val realMode = onOpenSettings != null
     Scaffold(
@@ -198,6 +203,7 @@ fun RestaurantManagerScreen(
                 onWaitSelected = onWaitSelected,
                 onNoteChange = onNoteChange,
                 onRefreshCurrentStatus = onRefreshCurrentStatus,
+                onDictate = onDictateDetails,
             )
 
             // INFO LOCALE: sempre visibile ma ordinata
@@ -403,8 +409,15 @@ private fun OptionalDetailsCard(
     onWaitSelected: (Int?) -> Unit,
     onNoteChange: (String) -> Unit,
     onRefreshCurrentStatus: () -> Unit,
+    onDictate: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var voiceUnavailable by remember { mutableStateOf(false) }
+    val dictate = rememberSpeechInput(
+        prompt = "Es. «tre tavoli, dieci minuti, solo tavoli fuori»",
+        onText = { voiceUnavailable = false; onDictate(it) },
+        onUnavailable = { voiceUnavailable = true },
+    )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -435,6 +448,24 @@ private fun OptionalDetailsCard(
                     modifier = Modifier.padding(top = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    OutlinedButton(
+                        onClick = dictate,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 52.dp),
+                    ) {
+                        Text("🎙  Detta i dettagli", fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        text = if (voiceUnavailable) {
+                            "Dettatura non disponibile su questo telefono: scrivi a mano."
+                        } else {
+                            "Es. «tre tavoli, dieci minuti, solo tavoli fuori». Controlla prima di pubblicare."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (voiceUnavailable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
                     Text("Tavoli liberi indicativi", style = MaterialTheme.typography.labelLarge)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -481,6 +512,22 @@ private fun OptionalDetailsCard(
                         minLines = 2,
                         maxLines = 3,
                     )
+                    if (uiState.recentNotes.isNotEmpty()) {
+                        Text("Ultime note (un tocco per riusarle)", style = MaterialTheme.typography.labelLarge)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            uiState.recentNotes.forEach { recent ->
+                                SuggestionChip(
+                                    onClick = { onNoteChange(recent) },
+                                    label = { Text(recent, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                )
+                            }
+                        }
+                    }
 
                     HorizontalDivider()
                     OutlinedButton(
