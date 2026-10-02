@@ -81,7 +81,7 @@
     if (!session) return renderSignIn();
 
     const { data: aal } = await client.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal?.currentLevel !== "aal2") return renderMfa(aal?.nextLevel === "aal2");
+    if (aal?.currentLevel !== "aal2") return renderMfa(aal?.nextLevel === "aal2", session.user.email);
     return renderRestaurants(session.user);
   }
 
@@ -93,16 +93,21 @@
         class: "button",
         onclick: () => client.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: `${location.origin}/ristoratori/` },
+          // Chi ha più account Google nel browser sceglie sempre quale usare.
+          options: { redirectTo: `${location.origin}/ristoratori/`, queryParams: { prompt: "select_account" } },
         }),
       }, "Accedi con Google"),
     );
   }
 
-  function renderMfa(hasFactor) {
+  function renderMfa(hasFactor, email) {
+    // Con più account Google è facile entrare con quello sbagliato: lo si mostra sempre.
+    const account = el("p", { class: "muted" }, "Account: ", el("strong", {}, email ?? ""),
+      " · non è quello giusto? Premi «Esci» in alto e accedi con l'altro.");
     if (!hasFactor) {
       app.replaceChildren(
         el("h2", {}, "Serve la verifica in due passaggi"),
+        account,
         el("p", {}, "Per proteggere il tuo locale, attivala prima nell'app HAPOSTO: Account → ",
           el("strong", {}, "Verifica in due passaggi"), ". Poi torna qui e ricarica la pagina."),
       );
@@ -121,17 +126,19 @@
       const factor = factors?.totp?.find((f) => f.status === "verified");
       if (!factor) {
         button.disabled = false;
-        return renderMfa(false);
+        return renderMfa(false, email);
       }
       const { error } = await client.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
       button.disabled = false;
+      if (error?.status === 429) return show("Troppi tentativi: aspetta qualche minuto e riprova.", "error");
       if (error) return show("Codice sbagliato o scaduto: riprova con quello nuovo.", "error");
       messages.replaceChildren();
       render();
     });
     app.replaceChildren(
       el("h2", {}, "Verifica in due passaggi"),
-      el("p", {}, "Apri l'app di autenticazione (Google Authenticator, Microsoft Authenticator…) e scrivi il codice di HAPOSTO."),
+      account,
+      el("p", {}, "Apri l'app di autenticazione (Google Authenticator, Microsoft Authenticator…) e scrivi il codice di HAPOSTO con questa email."),
       input, el("p", {}, button),
     );
     input.focus();
