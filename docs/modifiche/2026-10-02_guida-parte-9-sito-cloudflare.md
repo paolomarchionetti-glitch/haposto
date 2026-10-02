@@ -2,6 +2,7 @@
 
 - **Data:** 2 ottobre 2026
 - **Branch:** `claude/haposto-setup-guide-8a512c`
+- **PR:** [#14](https://github.com/paolomarchionetti-glitch/haposto/pull/14)
 - **Motivo:** la Parte 9 è stata provata passo passo pubblicando il sito su Cloudflare Pages
   (`haposto-test.pages.dev`, progetto Supabase DEV); la guida è stata riscritta con i passi reali.
 
