@@ -14,6 +14,10 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 | Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe |
 | Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR, pagine legali, cancellazione account |
 
+**A che punto è la configurazione:** `docs/HAPOSTO_STATO_CONFIGURAZIONE.md` (parti fatte, prossima
+parte, come riprendere). Registro delle modifiche: `docs/modifiche/`. Regole per chi lavora al
+codice (anche Claude): `CLAUDE.md`.
+
 **Cosa manca (lo fai tu, con la guida):** eseguire le migration 0012–0013, attivare Google e la 2FA
 in Supabase, creare le chiavi (Google, Firebase, Play, Stripe), pubblicare Edge Function e sito,
 test finali → **`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`**.
