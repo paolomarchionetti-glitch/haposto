@@ -37,7 +37,8 @@ interface RestaurantRepository {
 
     /**
      * Like [publishAvailability] but with the reason of a failure (e.g. "MFA_REQUIRED"), so the
-     * dashboard can tell the manager exactly what to do.
+     * dashboard can tell the manager exactly what to do. [offer] (offerta della serata) is kept only
+     * by the server-backed repository; local repositories ignore it.
      */
     suspend fun publishAvailabilityResult(
         restaurantId: String,
@@ -45,6 +46,7 @@ interface RestaurantRepository {
         availableTables: Int? = null,
         estimatedWaitMinutes: Int? = null,
         note: String? = null,
+        offer: String? = null,
     ): Outcome<Unit> =
         if (publishAvailability(restaurantId, status, availableTables, estimatedWaitMinutes, note)) {
             Outcome.Success(Unit)

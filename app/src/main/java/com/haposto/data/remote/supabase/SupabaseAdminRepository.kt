@@ -5,6 +5,7 @@ import com.haposto.data.Outcome
 import com.haposto.data.admin.AdminActivity
 import com.haposto.data.admin.AdminClaim
 import com.haposto.data.admin.AdminClaimSummary
+import com.haposto.data.admin.AdminExtrasRow
 import com.haposto.data.admin.AdminMember
 import com.haposto.data.admin.AdminOverview
 import com.haposto.data.admin.AdminPaymentRow
@@ -252,6 +253,24 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
                 put("p_action", action?.trim()?.uppercase()?.takeIf(String::isNotEmpty))
             }),
         ).map { it.toDomain() }
+    }
+
+    override suspend fun restaurantExtras(onlyUnreviewed: Boolean): Outcome<List<AdminExtrasRow>> = outcomeOf {
+        json.decodeFromString<List<AdminExtrasDto>>(
+            rpc("admin_list_restaurant_extras", buildJsonObject {
+                put("p_only_unreviewed", onlyUnreviewed)
+                put("p_limit", 100)
+            }),
+        ).map { it.toDomain() }
+    }
+
+    override suspend fun reviewRestaurantExtras(restaurantId: String, action: String, reason: String?): Outcome<Unit> = outcomeOf {
+        rpc("admin_review_restaurant_extras", buildJsonObject {
+            put("p_restaurant_id", restaurantId)
+            put("p_action", action)
+            put("p_reason", reason?.trim()?.takeIf(String::isNotEmpty))
+        })
+        Unit
     }
 
     override suspend fun config(): Outcome<List<ConfigEntry>> = outcomeOf {
@@ -591,3 +610,32 @@ private data class ConfigDto(
     val value: JsonElement,
     val description: String? = null,
 )
+
+@Serializable
+private data class AdminExtrasDto(
+    @SerialName("restaurant_id") val restaurantId: String,
+    val name: String = "",
+    val city: String = "",
+    @SerialName("website_url") val websiteUrl: String? = null,
+    @SerialName("menu_url") val menuUrl: String? = null,
+    @SerialName("file_path") val filePath: String? = null,
+    @SerialName("file_mime") val fileMime: String? = null,
+    @SerialName("file_bytes") val fileBytes: Int? = null,
+    @SerialName("file_expires_at") val fileExpiresAt: String? = null,
+    @SerialName("changed_at") val changedAt: String? = null,
+    @SerialName("reviewed_at") val reviewedAt: String? = null,
+) {
+    fun toDomain() = AdminExtrasRow(
+        restaurantId = restaurantId,
+        name = name,
+        city = city,
+        websiteUrl = websiteUrl,
+        menuUrl = menuUrl,
+        fileUrl = filePath?.let(::publicFileUrl),
+        fileIsPdf = fileMime == "application/pdf",
+        fileBytes = fileBytes,
+        fileTodayOnly = fileExpiresAt != null,
+        changedAt = changedAt?.let(::parseTimestamp),
+        reviewedAt = reviewedAt?.let(::parseTimestamp),
+    )
+}

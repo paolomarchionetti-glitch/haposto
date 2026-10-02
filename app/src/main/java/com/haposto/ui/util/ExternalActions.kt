@@ -29,6 +29,13 @@ object ExternalActions {
         return launchSafely(context, intent)
     }
 
+    /** Apre nel browser un sito o un file messo dal locale (solo indirizzi http/https). */
+    fun openWebPage(context: Context, url: String): Boolean {
+        val uri = url.trim().toUri()
+        if (uri.scheme !in setOf("http", "https")) return false
+        return launchSafely(context, Intent(Intent.ACTION_VIEW, uri))
+    }
+
     fun openAppSettings(context: Context): Boolean {
         val intent = Intent(
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

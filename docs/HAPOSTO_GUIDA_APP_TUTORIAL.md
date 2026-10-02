@@ -66,6 +66,11 @@ Tocca un locale nella lista:
 
 - **Disponibilità adesso** con il simbolo e da quanto è aggiornato (es. *Aggiornato 5 min fa*);
 - se il locale li ha indicati: **tavoli liberi**, **attesa** e una **nota** (es. "Solo tavoli esterni");
+- **🏷 Offerta di stasera**, se il locale ne ha messa una (es. "Dolce offerto"): vale finché lo
+  stato è aggiornato e non compare mai quando il locale è al completo. Nella lista lo stesso
+  simbolo 🏷 segnala i locali con un'offerta;
+- **Menù e sito**: i tasti **📋 Menù**, **📄 Menù (PDF)** o **📄 Menù del giorno** e **🌐 Sito del
+  locale**, se il locale li ha messi;
 - **INDICAZIONI** apre Google Maps (o l'app di mappe che usi) verso il locale;
 - **CHIAMA** apre il telefono con il numero già scritto (solo se il locale ha reso pubblico il numero);
 - **☆ Salva nei preferiti** / **★ Nei preferiti · tocca per togliere**.
@@ -148,12 +153,18 @@ Se non fai nulla per 30 minuti lo stato diventa **? Da aggiornare** per i client
 Tocca **Dettagli facoltativi** solo se vuoi:
 
 - **🎙 Detta i dettagli**: una frase sola, es. «tre tavoli, dieci minuti, solo tavoli fuori» →
-  tavoli 3, attesa 10 min, nota "Solo tavoli fuori". Compila solo quello che dici; controlla e
-  correggi a mano se serve;
+  tavoli 3, attesa 10 min, nota "Solo tavoli fuori". Dopo la parola «offerta» detti l'offerta
+  («due tavoli, offerta dolce offerto»), dopo «nota» la nota. Compila solo quello che dici;
+  controlla e correggi a mano se serve;
 - **Tavoli liberi indicativi** con − e +;
 - **Attesa indicativa** (Non indicata, Nessuna, 10 min, 20 min, 30+ min);
 - **Nota breve** (max 80 caratteri), es. "Solo tavoli esterni", "Cucina fino alle 23". Sotto
-  compaiono le **ultime note** usate da questo telefono: un tocco per riusarle.
+  compaiono le **note pronte** del locale e le **ultime note** usate da questo telefono: un tocco
+  per riusarle. **＋ Salva questa nota tra le note pronte** la aggiunge per tutto il locale;
+- **Offerta della serata (facoltativa)**, max 60 caratteri: un tocco su **−10%**, **−20%**,
+  **Dolce offerto**, **Calice offerto**, oppure scrivila o dettala. La prima volta l'app ricorda
+  che è un tuo impegno: dev'essere vera e rispettata. Si vede solo con **C'è posto** o **Pochi
+  posti** e scade insieme allo stato (30 minuti senza conferma). Per toglierla svuota il campo.
 
 Poi **Aggiorna dettagli e riconferma**: pubblica i dettagli e rinnova lo stato. Nella versione a
 pagamento (Pro) i dettagli sono inclusi; durante la beta sono gratis per tutti.
@@ -163,6 +174,24 @@ pagamento (Pro) i dettagli sono inclusi; durante la beta sono gratis per tutti.
 Interruttore **Mostra il numero e il tasto Chiama**: se è spento i clienti non vedono il numero.
 Nome, indirizzo e orari per ora arrivano dalla scheda del locale; si potranno modificare dalla
 versione con account reale.
+
+### 4.5 bis Note pronte, menù, sito e file
+
+Dalla dashboard: **⚙ Gestisci il locale**.
+
+- **Note pronte** (fino a 8): le frasi che usi spesso nella nota, es. "Solo tavoli all'aperto".
+  Scrivi → **Aggiungi**; **Togli** per eliminarne una. Le vede anche lo staff nella dashboard.
+- **Menù, sito e file** (solo il titolare, con la verifica in due passaggi):
+  - **Sito del locale** e **Link al menù** (sito, Instagram, Google Drive…) → **Salva i link**.
+    Basta scrivere `www.…`: `https://` si aggiunge da solo;
+  - **Scegli foto o PDF**: **un file solo**. Una foto la rimpicciolisce il telefono prima di
+    inviarla; un PDF può pesare al massimo 2 MB. Poi l'app chiede **Vale solo per oggi?**:
+    **Solo oggi** per il menù del giorno scritto a mano (si cancella da solo la mattina dopo),
+    **No, resta** per un menù che vale sempre. Un file nuovo sostituisce il vecchio;
+    **Togli il file** lo elimina.
+
+Link e file li vedono i clienti nella scheda del locale e nella pagina del QR. HAPOSTO li
+controlla e può toglierli se non sono adatti.
 
 ### 4.6 Prenotazioni di sala
 

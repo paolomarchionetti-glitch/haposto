@@ -146,6 +146,14 @@ private fun rememberDetailExtras(
         patternLines = patternForToday(pattern),
         message = message,
         onTrack = { event -> scope.launch { consumer.trackEvent(restaurantId, event) } },
+        websiteUrl = details.websiteUrl,
+        menuUrl = details.menuUrl,
+        fileUrl = details.fileUrl,
+        fileLabel = when {
+            details.fileTodayOnly -> "📄 Menù del giorno"
+            details.fileIsPdf -> "📄 Menù (PDF)"
+            else -> "🖼 Foto del menù"
+        },
     )
 }
 

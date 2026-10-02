@@ -48,19 +48,18 @@ class RestaurantManagerViewModel(
         savedStateHandle.get<Int>(KEY_WAIT)?.let(::decodeOptionalInt),
     )
     private val note = MutableStateFlow(savedStateHandle[KEY_NOTE] ?: "")
+    private val offer = MutableStateFlow(savedStateHandle[KEY_OFFER] ?: "")
     private val isSaving = MutableStateFlow(false)
     private val message = MutableStateFlow<String?>(null)
     private val recentNotes = MutableStateFlow(recentNotesStore.load())
     private var draftInitialized = savedStateHandle[KEY_INITIALIZED] ?: false
 
-    private val draft = combine(
-        availableTables,
-        estimatedWaitMinutes,
-        note,
-        isSaving,
-        message,
-    ) { tables, wait, noteValue, saving, messageValue ->
-        DraftState(tables, wait, noteValue, saving, messageValue)
+    private val details = combine(availableTables, estimatedWaitMinutes, note, offer) { tables, wait, noteValue, offerValue ->
+        DraftState(tables, wait, noteValue, offerValue, saving = false, message = null)
+    }
+
+    private val draft = combine(details, isSaving, message) { detailsValue, saving, messageValue ->
+        detailsValue.copy(saving = saving, message = messageValue)
     }
 
     val uiState = combine(
@@ -77,6 +76,7 @@ class RestaurantManagerViewModel(
                 updateTables(live.availableTables)
                 updateWait(live.estimatedWaitMinutes)
                 updateNote(live.note.orEmpty())
+                updateOffer(live.offer.orEmpty())
             }
             draftInitialized = true
             savedStateHandle[KEY_INITIALIZED] = true
@@ -89,6 +89,7 @@ class RestaurantManagerViewModel(
             availableTables = draft.tables,
             estimatedWaitMinutes = draft.wait,
             note = draft.note,
+            offer = draft.offer,
             isSaving = draft.saving,
             message = draft.message,
             recentNotes = recent,
@@ -115,6 +116,8 @@ class RestaurantManagerViewModel(
                 note = savedStateHandle.get<String>(KEY_NOTE)
                     ?: restaurant.liveAvailability?.note.orEmpty(),
                 recentNotes = recentNotes.value,
+                offer = savedStateHandle.get<String>(KEY_OFFER)
+                    ?: restaurant.liveAvailability?.offer.orEmpty(),
             )
         } ?: RestaurantManagerUiState(),
     )
@@ -140,6 +143,8 @@ class RestaurantManagerViewModel(
                 availableTables = availableTables.value,
                 estimatedWaitMinutes = estimatedWaitMinutes.value,
                 note = publishedNote,
+                // Con "Completo" l'offerta non si pubblica (resta nel campo per la prossima volta).
+                offer = offer.value.trim().takeIf { it.isNotEmpty() && status != AvailabilityStatus.FULL },
             )
             if (result is Outcome.Success && publishedNote != null) {
                 recentNotes.value = RecentNotes.add(recentNotes.value, publishedNote)
@@ -191,6 +196,11 @@ class RestaurantManagerViewModel(
         updateNote(value.take(AvailabilityRules.MAX_NOTE_LENGTH))
     }
 
+    /** Offerta della serata (facoltativa): si pubblica con lo stato e scade con lo stato. */
+    fun setOffer(value: String) {
+        updateOffer(value.take(AvailabilityRules.MAX_OFFER_LENGTH))
+    }
+
     /**
      * Frase dettata ("tre tavoli, dieci minuti, solo tavoli fuori"): compila solo i dettagli che
      * nomina; gli altri restano come sono. Non pubblica: il ristoratore controlla e sceglie lo stato.
@@ -205,6 +215,7 @@ class RestaurantManagerViewModel(
         draft.tables?.let { updateTables(it) }
         draft.waitMinutes?.let { updateWait(it) }
         draft.note?.let { setNote(it) }
+        draft.offer?.let { setOffer(it) }
     }
 
     fun setPhonePublic(isPublic: Boolean) {
@@ -237,6 +248,11 @@ class RestaurantManagerViewModel(
         savedStateHandle[KEY_NOTE] = value
     }
 
+    private fun updateOffer(value: String) {
+        offer.value = value
+        savedStateHandle[KEY_OFFER] = value
+    }
+
     private fun encodeOptionalInt(value: Int?): Int = value ?: NULL_INT_SENTINEL
 
     private fun decodeOptionalInt(value: Int): Int? =
@@ -253,6 +269,7 @@ class RestaurantManagerViewModel(
         val tables: Int?,
         val wait: Int?,
         val note: String,
+        val offer: String,
         val saving: Boolean,
         val message: String?,
     )
@@ -261,6 +278,7 @@ class RestaurantManagerViewModel(
         private const val KEY_TABLES = "manager.tables"
         private const val KEY_WAIT = "manager.wait"
         private const val KEY_NOTE = "manager.note"
+        private const val KEY_OFFER = "manager.offer"
         private const val KEY_INITIALIZED = "manager.initialized"
         private const val NULL_INT_SENTINEL = -1
     }

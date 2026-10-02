@@ -9,10 +9,10 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 
 | Parte | Dove | Stato |
 |---|---|---|
-| App Android: versioni **Demo** / **Dev** / **Prod** | `app/` | completa: lista e mappa, preferiti, account Google, verifica in due passaggi per i ristoratori, area ristoratore reale (rivendicazione con codice telefonico, registrazione, dashboard, QR, statistiche, orari, staff), pannello admin nascosto con seconda password, HAPOSTO Plus (Google Play), notifiche push e promemoria, termini e privacy |
-| Database | `supabase/migrations/0001–0014` | completo, verificato dalla CI (151 controlli su permessi e regole) |
-| Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe |
-| Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR, pagine legali, cancellazione account |
+| App Android: versioni **Demo** / **Dev** / **Prod** | `app/` | completa: lista e mappa, preferiti, account Google, verifica in due passaggi per i ristoratori, area ristoratore reale (rivendicazione con codice telefonico, registrazione, dashboard, QR, statistiche, orari, staff, dettatura di dettagli e prenotazioni, note pronte, offerta della serata, link al menù e un file), pannello admin nascosto con seconda password, HAPOSTO Plus (Google Play), notifiche push e promemoria, termini e privacy |
+| Database | `supabase/migrations/0001–0015` | completo, verificato dalla CI (196 controlli su permessi e regole) |
+| Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe, foto o PDF del menù |
+| Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR (con offerta e menù), pagine legali, cancellazione account |
 
 **A che punto è la configurazione:** `docs/HAPOSTO_STATO_CONFIGURAZIONE.md` (parti fatte, prossima
 parte, come riprendere). Registro delle modifiche: `docs/modifiche/`. Regole per chi lavora al

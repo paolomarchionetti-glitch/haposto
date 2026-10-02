@@ -14,13 +14,22 @@ import com.haposto.data.restaurant.MyClaim
 import com.haposto.data.restaurant.NewRestaurantForm
 import com.haposto.data.restaurant.RestaurantManagementRepository
 import com.haposto.data.restaurant.RestaurantMember
+import com.haposto.data.restaurant.RestaurantExtras
+import com.haposto.data.restaurant.RestaurantFile
 import com.haposto.data.restaurant.RestaurantPlan
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.GeoPoint
 import com.haposto.domain.model.OpeningHours
 import com.haposto.domain.model.Restaurant
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.postgrest.postgrest
+import io.ktor.client.request.parameter
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.content.ByteArrayContent
+import io.ktor.http.isSuccess
 import java.time.LocalDate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -184,6 +193,7 @@ class SupabaseManagementRepository(private val client: SupabaseClient) : Restaur
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
+        offer: String?,
     ): Outcome<Unit> {
         if (status !in PUBLISHABLE) return ErrorMessages.failure("INVALID_STATUS")
         return outcomeOf {
@@ -195,10 +205,69 @@ class SupabaseManagementRepository(private val client: SupabaseClient) : Restaur
                     put("p_available_tables", if (status == AvailabilityStatus.FULL) null else availableTables)
                     put("p_estimated_wait_minutes", estimatedWaitMinutes)
                     put("p_note", note?.trim()?.takeIf(String::isNotEmpty))
+                    // Solo se c'è: la versione con l'offerta esiste dalla migration 0015; senza offerta
+                    // la pubblicazione funziona anche su un database che non l'ha ancora.
+                    val cleanOffer = offer?.trim()?.takeIf(String::isNotEmpty)
+                    if (status != AvailabilityStatus.FULL && cleanOffer != null) put("p_offer", cleanOffer)
                 },
             )
             Unit
         }
+    }
+
+    override suspend fun extras(restaurantId: String): Outcome<RestaurantExtras> = outcomeOf {
+        client.postgrest.rpc("restaurant_extras", buildJsonObject { put("p_restaurant_id", restaurantId) })
+            .decodeList<ExtrasDto>()
+            .firstOrNull()
+            ?.toDomain()
+            ?: RestaurantExtras()
+    }
+
+    override suspend fun setQuickNotes(restaurantId: String, notes: List<String>): Outcome<List<String>> = outcomeOf {
+        client.postgrest.rpc(
+            "set_restaurant_quick_notes",
+            buildJsonObject {
+                put("p_restaurant_id", restaurantId)
+                put("p_notes", JsonArray(notes.map(::JsonPrimitive)))
+            },
+        ).decodeAs<List<String>>()
+    }
+
+    override suspend fun setLinks(restaurantId: String, websiteUrl: String?, menuUrl: String?): Outcome<Unit> = outcomeOf {
+        client.postgrest.rpc(
+            "set_restaurant_links",
+            buildJsonObject {
+                put("p_restaurant_id", restaurantId)
+                put("p_website_url", websiteUrl?.trim()?.takeIf(String::isNotEmpty))
+                put("p_menu_url", menuUrl?.trim()?.takeIf(String::isNotEmpty))
+            },
+        )
+        Unit
+    }
+
+    override suspend fun uploadFile(
+        restaurantId: String,
+        bytes: ByteArray,
+        mimeType: String,
+        todayOnly: Boolean,
+    ): Outcome<Unit> = outcomeOf {
+        // Edge Function restaurant-file: controlla tipo vero, peso e dimensioni, poi salva.
+        val response = client.functions.invoke("restaurant-file") {
+            parameter("restaurant_id", restaurantId)
+            parameter("today_only", todayOnly)
+            setBody(ByteArrayContent(bytes, ContentType.parse(mimeType)))
+        }
+        if (!response.status.isSuccess()) error(response.bodyAsText().take(200))
+        Unit
+    }
+
+    override suspend fun removeFile(restaurantId: String): Outcome<Unit> = outcomeOf {
+        val response = client.functions.invoke("restaurant-file") {
+            parameter("restaurant_id", restaurantId)
+            parameter("action", "remove")
+        }
+        if (!response.status.isSuccess()) error(response.bodyAsText().take(200))
+        Unit
     }
 
     private companion object {
@@ -359,3 +428,24 @@ internal data class DailyStatDto(
     }.getOrNull()
 }
 
+@Serializable
+internal data class ExtrasDto(
+    @SerialName("quick_notes") val quickNotes: List<String>? = null,
+    @SerialName("website_url") val websiteUrl: String? = null,
+    @SerialName("menu_url") val menuUrl: String? = null,
+    @SerialName("file_path") val filePath: String? = null,
+    @SerialName("file_mime") val fileMime: String? = null,
+    @SerialName("file_bytes") val fileBytes: Int? = null,
+    @SerialName("file_expires_at") val fileExpiresAt: String? = null,
+) {
+    fun toDomain() = RestaurantExtras(
+        quickNotes = quickNotes.orEmpty(),
+        websiteUrl = websiteUrl,
+        menuUrl = menuUrl,
+        file = if (filePath != null && fileMime != null) {
+            RestaurantFile(filePath, fileMime, fileBytes ?: 0, fileExpiresAt?.let(::parseTimestamp))
+        } else {
+            null
+        },
+    )
+}

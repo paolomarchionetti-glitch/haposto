@@ -38,12 +38,26 @@ interface RestaurantManagementRepository {
     suspend fun activity(restaurantId: String, limit: Int = 60): Outcome<List<ActivityEntry>>
     suspend fun stats(restaurantId: String, days: Int): Outcome<List<DailyStat>>
 
-    /** Pubblicazione protetta (titolare o staff, con 2FA). */
+    /** Pubblicazione protetta (titolare o staff, con 2FA), con l'eventuale offerta della serata. */
     suspend fun publish(
         restaurantId: String,
         status: AvailabilityStatus,
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
+        offer: String? = null,
     ): Outcome<Unit>
+
+    /** Note pronte, link e file del locale (titolare e staff). */
+    suspend fun extras(restaurantId: String): Outcome<RestaurantExtras>
+
+    /** Note pronte (titolare e staff, al massimo 8): restituisce la lista salvata. */
+    suspend fun setQuickNotes(restaurantId: String, notes: List<String>): Outcome<List<String>>
+
+    /** Link del sito e del menù (solo titolare); vuoto = nessun link. */
+    suspend fun setLinks(restaurantId: String, websiteUrl: String?, menuUrl: String?): Outcome<Unit>
+
+    /** File del locale (solo titolare): foto già ridotta (JPEG) o PDF; [todayOnly] = si cancella la notte dopo. */
+    suspend fun uploadFile(restaurantId: String, bytes: ByteArray, mimeType: String, todayOnly: Boolean): Outcome<Unit>
+    suspend fun removeFile(restaurantId: String): Outcome<Unit>
 }

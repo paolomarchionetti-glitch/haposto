@@ -9,4 +9,6 @@ data class EffectiveAvailability(
     val availableTables: Int? = null,
     val estimatedWaitMinutes: Int? = null,
     val note: String? = null,
+    /** Offerta della serata: solo finché lo stato è valido e c'è posto. */
+    val offer: String? = null,
 )

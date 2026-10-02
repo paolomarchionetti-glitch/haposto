@@ -53,6 +53,8 @@ alter table public.restaurants add constraint restaurants_opening_hours_valid
 grant select (opening_hours) on table public.restaurants to anon, authenticated;
 
 -- Dati pubblici aggiuntivi per la scheda (link condivisibile e orari).
+-- (Dalla 0015 restituisce anche link e file: si ricrea da capo, così questo file resta rieseguibile.)
+drop function if exists public.restaurant_public_details(uuid);
 create or replace function public.restaurant_public_details(p_restaurant_id uuid)
 returns table (slug text, opening_hours jsonb)
 language sql

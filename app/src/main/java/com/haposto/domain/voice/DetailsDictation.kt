@@ -7,14 +7,16 @@ data class DetailsDraft(
     val tables: Int? = null,
     val waitMinutes: Int? = null,
     val note: String? = null,
+    val offer: String? = null,
 ) {
-    val isEmpty: Boolean get() = tables == null && waitMinutes == null && note == null
+    val isEmpty: Boolean get() = tables == null && waitMinutes == null && note == null && offer == null
 }
 
 /**
  * "Tre tavoli, dieci minuti, solo tavoli fuori" → tavoli 3, attesa 10 minuti, nota "Solo tavoli
  * fuori". L'attesa diventa uno dei valori che l'app propone (0, 10, 20, 30 minuti); quello che
- * resta della frase diventa la nota (o tutto quello che segue la parola "nota").
+ * resta della frase diventa la nota (o quello che segue la parola "nota"). Quello che segue la
+ * parola "offerta" diventa l'offerta della serata ("offerta dolce offerto").
  */
 object DetailsDictation {
 
@@ -25,7 +27,14 @@ object DetailsDictation {
     private val OPTIONS = setOf(RegexOption.IGNORE_CASE)
     private const val WAIT_SUFFIX = "(?:\\s+di\\s+attesa$WORD_END)?"
 
-    private val NOTE_KEYWORD = Regex("${WORD_START}nota$WORD_END\\s*[:,.-]?\\s*(.+)$", OPTIONS)
+    private val NOTE_KEYWORD = Regex(
+        "${WORD_START}nota$WORD_END\\s*[:,.-]?\\s*(.+?)(?=\\s*[,.;]?\\s*${WORD_START}offerta$WORD_END|$)",
+        OPTIONS,
+    )
+    private val OFFER_KEYWORD = Regex(
+        "${WORD_START}offerta$WORD_END\\s*[:,.-]?\\s*(.+?)(?=\\s*[,.;]?\\s*${WORD_START}nota$WORD_END|$)",
+        OPTIONS,
+    )
     private val NO_TABLES = Regex("$WORD_START(?:nessun|zero)\\s+tavol[oi](?:\\s+liber[oi])?$WORD_END", OPTIONS)
     private val TABLES_BEFORE = Regex("$WORD_START$N\\s+tavol[oi](?:\\s+liber[oi])?$WORD_END", OPTIONS)
     private val TABLES_AFTER = Regex("${WORD_START}tavol[oi]\\s+(?:liber[oi]\\s+)?$N$WORD_END(?!\\s*min)", OPTIONS)
@@ -43,6 +52,10 @@ object DetailsDictation {
 
     fun parse(text: String): DetailsDraft {
         val dictated = DictationText(text)
+        var offer: String? = null
+        dictated.take(OFFER_KEYWORD) { match ->
+            cleanText(match.groupValues[1], AvailabilityRules.MAX_OFFER_LENGTH)?.also { offer = it } != null
+        }
         var note: String? = null
         dictated.take(NOTE_KEYWORD) { match -> cleanNote(match.groupValues[1])?.also { note = it } != null }
 
@@ -68,7 +81,7 @@ object DetailsDictation {
                     .joinToString(", "),
             )
         }
-        return DetailsDraft(tables = tables, waitMinutes = wait, note = note)
+        return DetailsDraft(tables = tables, waitMinutes = wait, note = note, offer = offer)
     }
 
     /** Minuti detti → valore più vicino tra quelli dei tasti (a metà strada si arrotonda in su). */
@@ -82,9 +95,12 @@ object DetailsDictation {
     private fun tablesFrom(match: MatchResult): Int? =
         ItalianNumbers.parse(match.groupValues[1])?.takeIf { it <= AvailabilityRules.MAX_AVAILABLE_TABLES }
 
-    private fun cleanNote(raw: String): String? {
-        val text = raw.trim().replace(Regex("\\s+"), " ").trim(',', ';', ' ')
+    private fun cleanNote(raw: String): String? = cleanText(raw, AvailabilityRules.MAX_NOTE_LENGTH)
+
+    private fun cleanText(raw: String, max: Int): String? {
+        // \u2063 segna i pezzi già riconosciuti (vedi DictationText): qui conta come spazio.
+        val text = raw.replace('\u2063', ' ').replace(Regex("\\s+"), " ").trim(',', ';', '.', ' ')
         if (text.none(Char::isLetter)) return null
-        return text.capitalizedFirst().limitTo(AvailabilityRules.MAX_NOTE_LENGTH)
+        return text.capitalizedFirst().limitTo(max)
     }
 }

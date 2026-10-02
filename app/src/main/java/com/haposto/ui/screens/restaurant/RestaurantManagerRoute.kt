@@ -1,6 +1,7 @@
 package com.haposto.ui.screens.restaurant
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +30,7 @@ import com.haposto.data.restaurant.RestaurantManagementRepository
 import com.haposto.data.restaurant.SharedPrefsRecentNotesStore
 import com.haposto.platform.notifications.HaPostoNotifications
 import com.haposto.platform.notifications.Reminders
+import kotlinx.coroutines.launch
 
 /**
  * Dashboard del locale.
@@ -105,6 +108,17 @@ fun RestaurantManagerRoute(
         }
     }
 
+    // Note pronte del locale (solo con account vero): le vede e le usa anche lo staff.
+    val scope = rememberCoroutineScope()
+    var quickNotes by remember(restaurantId) { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(management, restaurantId) {
+        if (management != null) {
+            management.extras(restaurantId).valueOrNull?.let { quickNotes = it.quickNotes }
+        }
+    }
+    val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+    var offerTermsAccepted by remember { mutableStateOf(prefs.getBoolean(KEY_OFFER_TERMS, false)) }
+
     RestaurantManagerScreen(
         uiState = uiState,
         isOnline = isOnline,
@@ -121,5 +135,23 @@ fun RestaurantManagerRoute(
         mfaMissing = mfaMissing,
         onOpenMfa = onOpenMfa,
         onDictateDetails = viewModel::applyDictation,
+        onOfferChange = viewModel::setOffer,
+        offerTermsAccepted = offerTermsAccepted,
+        onAcceptOfferTerms = {
+            offerTermsAccepted = true
+            prefs.edit().putBoolean(KEY_OFFER_TERMS, true).apply()
+        },
+        quickNotes = quickNotes,
+        canSaveQuickNotes = management != null,
+        onSaveQuickNote = { note ->
+            if (management != null) {
+                scope.launch {
+                    management.setQuickNotes(restaurantId, quickNotes + note).valueOrNull?.let { quickNotes = it }
+                }
+            }
+        },
     )
 }
+
+private const val PREFS = "restaurant_manager"
+private const val KEY_OFFER_TERMS = "offer_terms_accepted"

@@ -2,7 +2,8 @@
 
 - **Data:** 2 ottobre 2026
 - **Branch:** `claude/amazing-pasteur-dull9l`
-- **PR:** [#18](https://github.com/paolomarchionetti-glitch/haposto/pull/18)
+- **PR:** [#17](https://github.com/paolomarchionetti-glitch/haposto/pull/17) (insieme al ping anti-pausa e
+  a note pronte, link, file e offerta)
 - **Motivo:** richiesta del titolare: il ristoratore deve fare il meno possibile. In "Dettagli
   facoltativi" la nota si deve poter dettare; nelle prenotazioni di sala si poteva dettare solo il
   nome e l'orario andava scritto per intero ("20:30", con i due punti). Serve una compilazione
@@ -36,7 +37,7 @@
 | `app/src/test/java/com/haposto/data/restaurant/RecentNotesTest.kt` | aggiunto |
 | `app/src/test/java/com/haposto/ui/screens/restaurant/RestaurantManagerViewModelTest.kt` | modificato |
 | `docs/HAPOSTO_GUIDA_APP_TUTORIAL.md` | modificato |
-| `docs/modifiche/2026-10-02_pr18-dettatura-e-prenotazioni-veloci.md` | aggiunto (questo file) |
+| `docs/modifiche/2026-10-02_pr17-dettatura-e-prenotazioni-veloci.md` | aggiunto (questo file) |
 
 ## Dettaglio delle modifiche
 

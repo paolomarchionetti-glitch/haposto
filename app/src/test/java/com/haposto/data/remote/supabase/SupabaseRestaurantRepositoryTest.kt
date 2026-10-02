@@ -32,6 +32,7 @@ class SupabaseRestaurantRepositoryTest {
         var publishAttempts = 0
         /** null = the database accepts the publication and stores it like the real function. */
         var publishError: String? = null
+        val publishedOffers = mutableListOf<String?>()
 
         override suspend fun nearby(latitude: Double, longitude: Double, radiusMeters: Int): List<Restaurant> {
             nearbyCalls += latitude to longitude
@@ -49,8 +50,10 @@ class SupabaseRestaurantRepositoryTest {
             availableTables: Int?,
             estimatedWaitMinutes: Int?,
             note: String?,
+            offer: String?,
         ): Outcome<Unit> {
             publishAttempts++
+            publishedOffers += offer
             publishError?.let { return ErrorMessages.failure(it) }
             rows = rows.map { if (it.id == restaurantId) it.withStatus(status) else it }
             return Outcome.Success(Unit)
@@ -154,6 +157,20 @@ class SupabaseRestaurantRepositoryTest {
         advanceTimeBy(60_001)
         runCurrent()
         assertEquals(AvailabilityStatus.LIMITED, emissions.lastStatus())
+    }
+
+    @Test
+    fun theOfferTravelsWithTheStatus_butNeverWithFull() = runTest {
+        val api = FakeDirectoryApi(listOf(levante))
+        val repository = repository(api)
+        collect(repository)
+
+        repository.publishAvailabilityResult(levante.id, AvailabilityStatus.AVAILABLE, offer = "  Dolce offerto ")
+        repository.publishAvailabilityResult(levante.id, AvailabilityStatus.FULL, offer = "Dolce offerto")
+        repository.publishAvailabilityResult(levante.id, AvailabilityStatus.LIMITED, offer = "   ")
+        runCurrent()
+
+        assertEquals(listOf("Dolce offerto", null, null), api.publishedOffers)
     }
 
     @Test

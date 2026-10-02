@@ -23,3 +23,6 @@ secrets.properties
 /web/dist/
 /supabase/.temp/
 /supabase/.branches/
+
+# Log dei controlli SQL (job "Supabase SQL" della CI) eseguiti in locale
+/*.log

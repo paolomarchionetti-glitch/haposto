@@ -162,3 +162,18 @@ data class RestaurantEdit(
     val phoneNumber: String? = null,
     val phonePublic: Boolean? = null,
 )
+
+/** Link e file di un locale da controllare (migration 0015). */
+data class AdminExtrasRow(
+    val restaurantId: String,
+    val name: String,
+    val city: String,
+    val websiteUrl: String?,
+    val menuUrl: String?,
+    val fileUrl: String?,
+    val fileIsPdf: Boolean,
+    val fileBytes: Int?,
+    val fileTodayOnly: Boolean,
+    val changedAt: Instant?,
+    val reviewedAt: Instant?,
+)

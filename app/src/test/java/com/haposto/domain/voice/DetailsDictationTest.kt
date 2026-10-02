@@ -72,6 +72,24 @@ class DetailsDictationTest {
     }
 
     @Test
+    fun offerKeyword_fillsTheOfferOnly() {
+        val draft = DetailsDictation.parse("due tavoli, offerta dolce offerto a chi arriva entro le 21")
+        assertEquals(2, draft.tables)
+        assertEquals("Dolce offerto a chi arriva entro le 21", draft.offer)
+        assertNull(draft.note)
+    }
+
+    @Test
+    fun noteAndOfferInTheSameSentence_inAnyOrder() {
+        val first = DetailsDictation.parse("nota solo esterni, offerta calice offerto")
+        assertEquals("Solo esterni", first.note)
+        assertEquals("Calice offerto", first.offer)
+        val second = DetailsDictation.parse("offerta meno 10 per cento. nota cucina fino alle 23")
+        assertEquals("Meno 10 per cento", second.offer)
+        assertEquals("Cucina fino alle 23", second.note)
+    }
+
+    @Test
     fun emptyDictation_changesNothing() {
         assertTrue(DetailsDictation.parse("  ").isEmpty)
         assertTrue(DetailsDictation.parse("e, con").isEmpty)

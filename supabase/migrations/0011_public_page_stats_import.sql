@@ -63,6 +63,9 @@ create trigger restaurants_assign_slug
 update public.restaurants set slug = null where slug is null;
 
 -- Dati per la pagina pubblica: stessa forma di nearby_restaurants (senza distanza) + slug.
+-- (Dalla 0015 restituisce anche offerta, link e file: si ricrea da capo, così questo file resta
+-- rieseguibile.)
+drop function if exists public.public_restaurant_page(text);
 create or replace function public.public_restaurant_page(p_slug text)
 returns table (
     id uuid,
