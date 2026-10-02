@@ -11,7 +11,7 @@
 | File | Tipo |
 |---|---|
 | `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` | modificato |
-| `docs/modifiche/2026-10-02_guida-parte-9-sito-cloudflare.md` | aggiunto (questo file) |
+| `docs/modifiche/2026-10-02_pr14-guida-parte-9-sito-cloudflare.md` | aggiunto (questo file; nome uniformato agli altri il 2 ottobre 2026) |
 
 ## Dettaglio delle modifiche
 
