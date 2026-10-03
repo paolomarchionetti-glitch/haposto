@@ -73,6 +73,10 @@ data class AdminRestaurantDetail(
     val subscriptions: List<AdminSubscriptionSummary>,
     val recentPublishes: List<AdminPublish>,
     val stats30Days: Map<String, Int>,
+    /** BETA, TRIAL, STRIPE, MANUAL, NONE (migration 0016); null sui database precedenti. */
+    val planSource: String? = null,
+    val planValidUntil: Instant? = null,
+    val partnerSince: Instant? = null,
 )
 
 data class AdminUserRow(

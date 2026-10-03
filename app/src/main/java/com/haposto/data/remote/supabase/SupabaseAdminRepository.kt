@@ -434,6 +434,9 @@ private data class DetailPublishDto(
 private data class AdminRestaurantDetailDto(
     val restaurant: DetailRestaurantDto,
     @SerialName("plan_code") val planCode: String = "",
+    @SerialName("plan_source") val planSource: String? = null,
+    @SerialName("plan_valid_until") val planValidUntil: String? = null,
+    @SerialName("partner_since") val partnerSince: String? = null,
     val members: List<DetailMemberDto> = emptyList(),
     val claims: List<DetailClaimDto> = emptyList(),
     val subscriptions: List<DetailSubscriptionDto> = emptyList(),
@@ -462,6 +465,9 @@ private data class AdminRestaurantDetailDto(
         subscriptions = subscriptions.map { it.toDomain() },
         recentPublishes = recentPublishes.map { AdminPublish(it.status, it.updatedAt?.let(::parseTimestamp), it.updatedVia, it.byEmail) },
         stats30Days = stats.orEmpty().mapValues { (_, v) -> v.jsonPrimitive.intOrNull ?: 0 },
+        planSource = planSource,
+        planValidUntil = planValidUntil?.let(::parseTimestamp),
+        partnerSince = partnerSince?.let(::parseTimestamp),
     )
 }
 

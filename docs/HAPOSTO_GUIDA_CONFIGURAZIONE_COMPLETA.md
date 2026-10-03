@@ -669,11 +669,11 @@ DEV); restano gli stessi solo il client Google *Web*, il progetto Google Cloud/F
 3. **Project Settings → API Keys**: c'è la *publishable key* (`sb_publishable_…`, pubblica: andrà
    nell'app e nel sito). La *secret key* non va copiata. È normale che le chiavi *legacy* manchino.
 
-### 10.2 Database: migration 0001–0016
+### 10.2 Database: migration 0001–0017
 
 Supabase (**produzione**: controlla il nome del progetto in alto) → **SQL Editor** → **New query** →
 incolla il file intero → **Run**, **uno alla volta, in ordine**: `supabase/migrations/0001_extensions.sql`
-… `0016_paid_plans_and_trial.sql` (16 file, compresa la 0005). Se compare *Potential issue detected…
+… `0017_rome_dates_admin_plan.sql` (17 file, compresa la 0005). Se compare *Potential issue detected…
 destructive operation* premi **Run this query**. Se un file dà errore, fermati e mandami la riga.
 
 Verifica (nuova query):

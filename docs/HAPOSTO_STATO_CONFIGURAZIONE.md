@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **3 ottobre 2026** (Parte 10 in sospeso; migliorie 1–3 nella PR #17, la 4 nella PR #18). Questo file dice **dove siamo
+Ultimo aggiornamento: **3 ottobre 2026** (Parte 10 in sospeso; PR #16, #17 e #18 collaudate sul DEV; migliorie della dettatura nella PR #19). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -18,7 +18,7 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 | 3 — Android Studio | ✅ fatta | variante `devDebug`; `local.properties` con le chiavi DEV, `GOOGLE_WEB_CLIENT_ID`, `FIREBASE_DEV_*`, `PUBLIC_SITE_URL` |
 | 4 — Admin e prova ristoratore | ✅ fatta | credenziali del pannello create; un locale di prova rivendicato, approvato e gestito dall'account "ristoratore"; prova fatta con **un solo telefono** alternando gli account |
 | 5 — Firebase (notifiche) | ✅ fatta (DEV) | piano Spark (gratis), aggiunto al progetto Google Cloud della Parte 2; app `com.haposto.dev` registrata |
-| 6 — Edge Function e lavori pianificati | ✅ fatta (DEV) | 6 funzioni pubblicate; segreti `HAPOSTO_CRON_SECRET`, `FIREBASE_SERVICE_ACCOUNT`; vault, `scheduled_jobs.sql`, `push_dispatch_cron.sql`; notifica di prova arrivata ad app chiusa; **dopo la PR #17 da fare**: 6.4 (ping anti-pausa) e la settima funzione `restaurant-file` con la sua pulizia notturna (sezione 3) |
+| 6 — Edge Function e lavori pianificati | ✅ fatta (DEV) | **7 funzioni** pubblicate (ripubblicate il 3 ottobre dopo le PR #16–#18, chiavi nuove); segreti `HAPOSTO_CRON_SECRET`, `FIREBASE_SERVICE_ACCOUNT`; vault; `scheduled_jobs.sql` (9 lavori, avvisi di scadenza compresi), `push_dispatch_cron.sql`, `restaurant_files_cron.sql`; notifica di prova arrivata ad app chiusa (`"delivered":1`); **6.4 ping anti-pausa attivo** (segreti `SUPABASE_DEV_URL` / `SUPABASE_DEV_PUBLISHABLE_KEY`, esecuzione manuale verde) |
 | 7 — Google Play / Plus | ⏸ rimandata | richiede Play Console (25 $) e una carta sul progetto Google Cloud (Pub/Sub); da fare dopo le decisioni su nome e account Play |
 | 8 — Stripe / Pro | ⏸ rimandata | richiede i dati dell'attività (P.IVA); roadmap aprile 2027 |
 | 9 — Sito | ✅ fatta | Cloudflare Pages, indirizzo provvisorio `haposto-test.pages.dev`, collegato al progetto **DEV**; URL Configuration di Supabase, Branding di Google, segreti `HAPOSTO_SITE_URL` / `HAPOSTO_ALLOWED_ORIGINS`, `PUBLIC_SITE_URL` fatti; login ristoratori sul sito e QR dall'app provati |
@@ -52,40 +52,26 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 
 ## 3. Cose rimaste aperte (piccole)
 
-- [ ] Ripubblicare `push-dispatch` dopo la PR #12, se non già fatto:
-      `npx supabase functions deploy push-dispatch --no-verify-jwt --use-api`
-      (la risposta deve contenere `delivered` / `no_device`).
 - [ ] Facoltativo: Cloudflare → *Preview branch* **None** (oggi le anteprime dei branch sono attive).
 - [ ] Prova del **tempo reale fra due dispositivi** (stato pubblicato su uno, visibile sull'altro in
       1–2 secondi): serve un secondo telefono o l'emulatore.
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
-- [ ] Dopo la PR #17, sul **DEV**, in quest'ordine:
-      1. SQL Editor: `supabase/migrations/0015_notes_links_file_offer.sql` (in fondo
-         `colonne_nuove` 5 e `versioni_pubblicazione` 2);
-      2. `npx supabase functions deploy restaurant-file --no-verify-jwt --use-api` (guida 6.1);
-      3. SQL Editor: `supabase/ops/restaurant_files_cron.sql` (guida 6.3, punto 5);
-      4. segreti del ping anti-pausa e prova (guida 6.4);
-      5. app **Dev** aggiornata (Git → Pull, ▶ Run) e prova di dettatura, prenotazioni, note pronte,
-         offerta, link e file, scheda **Contenuti** del pannello.
-- [ ] Dopo la PR #18, sul **DEV**:
-      1. SQL Editor: `supabase/migrations/0016_paid_plans_and_trial.sql` (in fondo `prezzi_pro`
-         1990/9990/19990, `prezzi_plus` 99/499/999, `giorni_di_prova` 30, `controlli` 2);
-      2. SQL Editor: rieseguire `supabase/ops/scheduled_jobs.sql` (nuovo lavoro
-         `haposto-plan-expiry-notices`);
-      3. `npx supabase functions deploy stripe-checkout --no-verify-jwt --use-api`;
-      4. app **Dev** aggiornata: in **Gestisci il locale → Il tuo piano** si legge "Gratis durante la
-         beta" (fino al 30/06/2027). Il resto si vede solo a beta finita: si può provare dal
-         pannello admin cambiando `beta` e `restaurant_trial`, poi rimettendoli come prima.
-- [ ] Dopo la PR #16, ripubblicare le 6 funzioni anche sul **DEV** (`npx supabase link --project-ref
-      REF_DEV`, poi i 6 `deploy` del punto 6.1): passano alla *secret key* nuova prima che Supabase
-      spenga le chiavi legacy (fine 2026). Nessun segreto da cambiare.
+- [ ] Dopo la PR #19, sul **DEV**: SQL Editor → `supabase/migrations/0017_rome_dates_admin_plan.sql`
+      (in fondo `oggi_in_italia` = la data di oggi, `funzione_nuova` = 1); app **Dev** aggiornata
+      (Git → Pull, ▶ Run) e prova delle frasi nuove della dettatura (tutorial 4.4 e 4.6).
+
+Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
+ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
+(`{"removed":0}`) e della notifica (`"delivered":1`); ping anti-pausa; prove nell'app (dettatura,
+prenotazioni, note pronte, offerta, menù/sito/file, pagina del QR, scheda **Contenuti**, "Il tuo
+piano": "Gratis durante la beta"). Tutto come previsto.
 
 ## 3 bis. Migliorie in programma (sul DEV, in quest'ordine)
 
 Regola: poche opzioni, semplici e immediate; dettatura dove possibile, sempre correggibile a mano.
 
-I punti 1–3 sono **tutti nella PR #17** (un solo ramo di lavoro: la CI verifica insieme il
-codice Android, il database e il sito).
+Stato: 1–3 nella PR #17, 4 nella PR #18, **tutti collaudati sul DEV il 3 ottobre 2026**; 5 nella
+PR #19.
 
 1. **Ping automatico** contro la pausa dei progetti Free (guida 6.4) e questo stato.
 2. **Dettatura e prenotazioni veloci** (solo app): in *Dettagli facoltativi* un solo 🎙 che compila
@@ -100,6 +86,19 @@ codice Android, il database e il sito).
 4. **Modello di pagamento** (vedi sezione 2), **PR #18**: prezzi, prova di 30 giorni modificabile,
    avvisi prima della scadenza, "Non collegato" senza piano, abbonamento semestrale su Stripe e
    Google Play.
+5. **Dettatura più intelligente e date italiane** (richieste del titolare durante il collaudo),
+   **PR #19**:
+   - attesa "Nessuna" e "Non indicata" a voce in ogni ordine ("attesa nessuna", "attesa non
+     indicata", "togli l'attesa"), comandi per svuotare tavoli, nota e offerta, stime ("una
+     ventina di minuti", "un paio di tavoli", "10-15 minuti");
+   - prenotazioni: qualsiasi orario ("alle 13.17", "alle 1317", "alle 13 17"), date ("il 15",
+     "sabato 15 ottobre"), "una coppia", "famiglia di 4", titoli tolti dal nome;
+   - l'offerta dettata a voce passa anche lei dall'avviso di responsabilità della prima volta;
+   - migration 0017: "oggi" in ora italiana nelle pulizie e nel pannello; nella scheda del locale
+     del pannello admin fonte e scadenza del piano e "Partner dal".
+
+Prossimi passi possibili (da decidere con il titolare): definire meglio i vantaggi di **Plus**;
+quando l'app è pronta, la **Parte 10** (produzione); poi le Parti 7–8 (Play e Stripe).
 
 ## 4. Lezioni pratiche emerse nelle prove
 
@@ -112,6 +111,11 @@ codice Android, il database e il sito).
 - Sul sito, se il browser è collegato a più account Google, scegliere l'account giusto (dal 2 ottobre
   il sito lo chiede sempre e mostra l'email nella schermata del codice).
 - Il messaggio di Google "Continua su `….supabase.co`" durante il login dal sito è normale.
+- Nel pannello di Supabase (tabelle, risultati del SQL Editor, log) gli orari sono in **UTC**: in
+  Italia sono 2 ore in più d'estate, 1 d'inverno. App, sito e pannello admin mostrano sempre l'ora
+  del telefono o del browser; dove conta "il giorno italiano" il database usa `Europe/Rome`.
+- **Actions → Run workflow** su GitHub: repository → scheda **Actions** → a sinistra il workflow →
+  a destra il pulsante **Run workflow** → **Run workflow**.
 - I progetti Supabase creati nel 2026 non hanno chiavi legacy e non danno permessi automatici sulle
   tabelle: per questo esistono la migration 0014 e la lettura di `SUPABASE_SECRET_KEYS` nelle
   funzioni (PR #16). Ogni tabella nuova deve avere i suoi `GRANT` espliciti.
@@ -141,7 +145,7 @@ e non pubblicare password, token, chiavi segrete, file .env o local.properties; 
 
 - **CI** (`.github/workflows/android-ci.yml`): build delle tre varianti, test JVM, lint, test su
   emulatore API 34, job SQL (migration, seed, controlli step8_to_17 / step18 / dev_tools, ordine della
-  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), piani e prova (step20), **progetto di produzione nuovo** senza permessi automatici:
+  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), piani e prova (step20), date italiane (step21), **progetto di produzione nuovo** senza permessi automatici:
   stessi permessi del DEV, operazioni del server, controlli e import OSM) e job Deno delle Edge
   Function. Il sito ha il workflow `website.yml` e la pubblicazione su Cloudflare Pages.
 - **Verifiche locali usate finora** (in un ambiente senza SDK Android, dove l'app si verifica solo in

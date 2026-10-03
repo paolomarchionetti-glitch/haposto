@@ -106,7 +106,15 @@ fun AdminRestaurantRoute(restaurantId: String, admin: AdminRepository, onBack: (
 
         SectionCard(title = "Scheda") {
             LabeledValue("Stato", statusLabel(detail.partnershipStatus))
-            LabeledValue("Piano", planLabel(detail.planCode))
+            LabeledValue(
+                "Piano",
+                buildString {
+                    append(planLabel(detail.planCode))
+                    detail.planSource?.let { append(" · ").append(planSourceLabel(it)) }
+                    detail.planValidUntil?.let { append(" · fino al ").append(DATE.format(it.atZone(ZoneId.systemDefault()))) }
+                },
+            )
+            detail.partnerSince?.let { LabeledValue("Partner dal", DATE.format(it.atZone(ZoneId.systemDefault()))) }
             LabeledValue("Indirizzo", "${detail.address}, ${detail.city} (${detail.province})")
             LabeledValue("Telefono", "${detail.phoneNumber ?: "—"}${if (detail.phonePublic) " · pubblico" else ""}")
             LabeledValue("Fonte", detail.dataSource)

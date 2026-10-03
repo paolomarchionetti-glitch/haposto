@@ -19,9 +19,11 @@ data class ReservationDraft(
 
 /**
  * "Rossi, quattro, alle venti e trenta, tavolo dodici" → nome Rossi, 4 persone, 20:30, tavolo 12.
- * Capisce anche "domani", "sabato", "a pranzo", "alle otto e mezza", "tavolo da 6", "4 adulti e 2
- * bambini". "Alle 8" diventa 20:00 se il locale a quell'ora è aperto la sera (orari del locale o,
- * se mancano, regola semplice: da 1 a 10 è pomeriggio/sera). Tutto avviene sul telefono.
+ * Capisce anche "domani", "sabato", "il 15", "sabato 15 ottobre", "a pranzo", "alle otto e mezza",
+ * qualsiasi orario ("alle 13.17", "alle 1317", "alle 13 17", "alle tredici e diciassette"),
+ * "tavolo da 6", "4 adulti e 2 bambini", "una coppia", "famiglia di 4". "Alle 8" diventa 20:00 se
+ * il locale a quell'ora è aperto la sera (orari del locale o, se mancano, regola semplice: da 1 a
+ * 10 è pomeriggio/sera). Tutto avviene sul telefono.
  */
 object ReservationDictation {
 
@@ -31,6 +33,22 @@ object ReservationDictation {
     private val OPTIONS = setOf(RegexOption.IGNORE_CASE)
     private val MINUTES = "(mezza|mezzo|un\\s+quarto|quarto|tre\\s+quarti|${ItalianNumbers.PATTERN})"
 
+    private const val WEEKDAY = "luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica"
+    private const val MONTH = "gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre"
+    private const val PEOPLE_WORDS = "persone|persona|pax|coperti|coperto|posti|ospiti|adulti|adulto|bambini|bambino"
+
+    // "il 15 ottobre", "sabato 15 ottobre", "15 ottobre".
+    private val DATE_WITH_MONTH = Regex(
+        "$WORD_START(?:(?:il|per\\s+il|giorno|$WEEKDAY)\\s+)?$N\\s+($MONTH)$WORD_END",
+        OPTIONS,
+    )
+    private const val NOT_TIME_OR_PEOPLE = "(?!\\s*[:.]\\s*\\d)(?!\\s+e\\s)(?!\\s+(?:$PEOPLE_WORDS)$WORD_END)"
+
+    // "il 15", "per il 15" (non "il 15 persone", non un orario).
+    private val DATE_DAY_ONLY = Regex("$WORD_START(?:il|per\\s+il|giorno)\\s+$N$WORD_END$NOT_TIME_OR_PEOPLE", OPTIONS)
+
+    // "sabato 15": è una data solo se quel sabato cade davvero il 15 (altrimenti "domenica 3" sono persone).
+    private val DATE_WEEKDAY_NUMBER = Regex("$WORD_START($WEEKDAY)\\s+$N$WORD_END$NOT_TIME_OR_PEOPLE", OPTIONS)
     private val DAY = Regex(
         "$WORD_START(oggi|stasera|stamattina|stamani|domani|dopodomani|" +
             "luned[iì]|marted[iì]|mercoled[iì]|gioved[iì]|venerd[iì]|sabato|domenica)$WORD_END",
@@ -42,6 +60,16 @@ object ReservationDictation {
         "$WORD_START(?:(?:alle|ore|per\\s+le|verso\\s+le|dalle)\\s+)?(\\d{1,2})\\s*[:.]\\s*(\\d{2})$WORD_END",
         OPTIONS,
     )
+    // "alle 1317", "ore 930": cifre attaccate dopo "alle"/"ore".
+    private val TIME_COMPACT = Regex(
+        "$WORD_START(?:alle|ore|per\\s+le|verso\\s+le|dalle)\\s+(\\d{1,2})(\\d{2})$WORD_END",
+        OPTIONS,
+    )
+    // "alle 13 17": ora e minuti separati da uno spazio (non "alle 8 10 persone").
+    private val TIME_SPACED = Regex(
+        "$WORD_START(?:alle|ore|per\\s+le|verso\\s+le|dalle)\\s+(\\d{1,2})\\s+(\\d{2})$WORD_END(?!\\s+(?:$PEOPLE_WORDS)$WORD_END)",
+        OPTIONS,
+    )
     private val TIME_WORDS = Regex(
         "$WORD_START(?:alle|ore|per\\s+le|verso\\s+le|all')\\s*$N(?:\\s+e\\s+$MINUTES)?" +
             "(?:\\s+meno\\s+(un\\s+quarto|quarto|${ItalianNumbers.PATTERN}))?$WORD_END",
@@ -49,13 +77,15 @@ object ReservationDictation {
     )
     private val TIME_BARE = Regex("$WORD_START$N\\s+e\\s+$MINUTES$WORD_END", OPTIONS)
     private val PEOPLE = Regex(
-        "$WORD_START$N\\s+(?:persone|persona|pax|coperti|coperto|posti|ospiti|adulti|adulto|bambini|bambino)$WORD_END",
+        "$WORD_START$N\\s+(?:$PEOPLE_WORDS)$WORD_END",
         OPTIONS,
     )
     private val PEOPLE_AFTER_WORD = Regex(
-        "$WORD_START(?:tavolo\\s+(?:da|per)|siamo\\s+in|saremo\\s+in|in|per)\\s+$N$WORD_END(?!\\s*[:.]\\s*\\d)(?!\\s+e\\s)",
+        "$WORD_START(?:tavolo\\s+(?:da|per)|siamo\\s+in|saremo\\s+in|(?:famiglia|gruppo|comitiva|tavolata)\\s+di|in|per)\\s+$N$WORD_END" +
+            "(?!\\s*[:.]\\s*\\d)(?!\\s+e\\s)",
         OPTIONS,
     )
+    private val COUPLE = Regex("$WORD_START(?:una\\s+coppia|in\\s+coppia)$WORD_END", OPTIONS)
     private val TABLE = Regex(
         "${WORD_START}tavolo\\s+(?:numero\\s+|n\\.?\\s*)?(\\d{1,3}[a-z]?|${ItalianNumbers.PATTERN}|" +
             "fuori|esterno|interno|dentro|dehors|veranda|giardino|terrazza|bancone|sala)$WORD_END",
@@ -64,7 +94,8 @@ object ReservationDictation {
     private val LONE_NUMBER = Regex("$WORD_START(${ItalianNumbers.PATTERN_FROM_TWO})$WORD_END", OPTIONS)
     private val BOOKING_WORDS = Regex(
         "$WORD_START(?:(?:a|al)\\s+nome(?:\\s+di)?|prenotazione|prenota|prenotare|segna|aggiungi|" +
-            "signora|signor|sig\\.ra|sig\\.)$WORD_END",
+            "signora|signor|sig\\.ra|sig\\.|dottoressa|dottore|dottor|dott\\.|ingegnere|ingegner|ing\\.|" +
+            "avvocato|avv\\.|professoressa|professore|professor|prof\\.)$WORD_END",
         OPTIONS,
     )
 
@@ -88,9 +119,17 @@ object ReservationDictation {
 
         var date: LocalDate? = null
         var moment: Moment? = null
+        dictated.take(DATE_WITH_MONTH) { match ->
+            dayOfMonth(match.groupValues[1], MONTHS.indexOf(match.groupValues[2].lowercase()) + 1, today)
+                ?.also { date = it } != null
+        } || dictated.take(DATE_DAY_ONLY) { match ->
+            dayOfMonth(match.groupValues[1], null, today)?.also { date = it } != null
+        } || dictated.take(DATE_WEEKDAY_NUMBER) { match ->
+            weekdayOn(match.groupValues[1], match.groupValues[2], today)?.also { date = it } != null
+        }
         dictated.take(DAY) { match ->
             val word = match.groupValues[1].lowercase()
-            date = dateFor(word, today)
+            if (date == null) date = dateFor(word, today)
             if (word == "stasera") moment = Moment.EVENING
             if (word == "stamattina" || word == "stamani") moment = Moment.MORNING
             true
@@ -116,6 +155,12 @@ object ReservationDictation {
             dictated.take(TIME_DIGITS) { match ->
                 accept(match.groupValues[1].toIntOrNull(), match.groupValues[2].toIntOrNull())
             } ||
+            dictated.take(TIME_COMPACT) { match ->
+                accept(match.groupValues[1].toIntOrNull(), match.groupValues[2].toIntOrNull())
+            } ||
+            dictated.take(TIME_SPACED) { match ->
+                accept(match.groupValues[1].toIntOrNull(), match.groupValues[2].toIntOrNull())
+            } ||
             dictated.take(TIME_WORDS) { match -> acceptWords(match, ::accept) } ||
             dictated.take(TIME_BARE) { match -> acceptWords(match, ::accept) }
 
@@ -126,9 +171,10 @@ object ReservationDictation {
             count != null
         }
         if (people == 0) {
-            dictated.take(PEOPLE_AFTER_WORD) { match ->
-                ItalianNumbers.parse(match.groupValues[1])?.takeIf { it in 1..MAX_PARTY }?.also { people = it } != null
-            }
+            dictated.take(COUPLE) { people = 2; true } ||
+                dictated.take(PEOPLE_AFTER_WORD) { match ->
+                    ItalianNumbers.parse(match.groupValues[1])?.takeIf { it in 1..MAX_PARTY }?.also { people = it } != null
+                }
         }
 
         var table: String? = null
@@ -205,6 +251,34 @@ object ReservationDictation {
             if (morningOpen && !afternoonOpen) return hour
         }
         return if (hour <= 10) hour + 12 else hour
+    }
+
+    private val MONTHS = MONTH.split('|')
+
+    /**
+     * Giorno [dayText] del mese [month] (null = questo mese, o il prossimo se il giorno è già
+     * passato); con il mese, quest'anno o il prossimo se la data è già passata. Null se non esiste.
+     */
+    private fun dayOfMonth(dayText: String, month: Int?, today: LocalDate): LocalDate? {
+        val day = ItalianNumbers.parse(dayText)?.takeIf { it in 1..31 } ?: return null
+        return runCatching {
+            if (month != null) {
+                val thisYear = LocalDate.of(today.year, month, day)
+                if (thisYear.isBefore(today)) thisYear.plusYears(1) else thisYear
+            } else {
+                val thisMonth = today.withDayOfMonth(1)
+                val base = if (day >= today.dayOfMonth) thisMonth else thisMonth.plusMonths(1)
+                base.withDayOfMonth(day)
+            }
+        }.getOrNull()
+    }
+
+    /** Il primo [weekdayText] (entro 6 settimane) che cade il giorno [dayText] del mese. */
+    private fun weekdayOn(weekdayText: String, dayText: String, today: LocalDate): LocalDate? {
+        val day = ItalianNumbers.parse(dayText)?.takeIf { it in 1..31 } ?: return null
+        val weekday = WEEKDAYS[weekdayText.lowercase().replace('ì', 'i')] ?: return null
+        val first = today.with(TemporalAdjusters.nextOrSame(weekday))
+        return (0L..5L).map { first.plusWeeks(it) }.firstOrNull { it.dayOfMonth == day }
     }
 
     private fun dateFor(word: String, today: LocalDate): LocalDate = when (word) {

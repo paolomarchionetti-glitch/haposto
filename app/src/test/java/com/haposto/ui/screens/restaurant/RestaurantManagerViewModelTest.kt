@@ -70,6 +70,24 @@ class RestaurantManagerViewModelTest {
     }
 
     @Test
+    fun dictation_canClearWaitAndNote() = runTest {
+        val viewModel = RestaurantManagerViewModel(
+            restaurantId = "levante-demo",
+            repository = FakeRestaurantRepository(),
+            savedStateHandle = SavedStateHandle(),
+        )
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        viewModel.uiState.first { it.restaurant != null }
+
+        viewModel.applyDictation("due tavoli, venti minuti, solo esterni")
+        viewModel.uiState.first { it.estimatedWaitMinutes == 20 && it.note == "Solo esterni" }
+        viewModel.applyDictation("attesa non indicata, togli la nota")
+
+        val state = viewModel.uiState.first { it.estimatedWaitMinutes == null && it.note.isEmpty() }
+        assertEquals(2, state.availableTables)
+    }
+
+    @Test
     fun publishedNote_isRememberedForNextTime() = runTest {
         val store = object : RecentNotesStore {
             var saved = listOf("Bancone")

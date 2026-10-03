@@ -622,12 +622,22 @@ internal fun statusLabel(status: String): String = when (status) {
 }
 
 internal fun planLabel(code: String): String = when (code) {
-    "RESTAURANT_BASIC" -> "Basic"
+    "RESTAURANT_BASIC" -> "Nessun piano"
     "RESTAURANT_PRO" -> "Pro"
     "RESTAURANT_PRO_PLUS" -> "Pro+"
     "CONSUMER_FREE" -> "Gratis"
     "CONSUMER_PLUS" -> "Plus"
     else -> code
+}
+
+/** Da dove viene il piano del locale (migration 0016). */
+internal fun planSourceLabel(source: String): String = when (source) {
+    "BETA" -> "beta"
+    "TRIAL" -> "prova"
+    "STRIPE" -> "Stripe"
+    "MANUAL" -> "regalato"
+    "NONE" -> "Non collegato"
+    else -> source.lowercase()
 }
 
 internal val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

@@ -51,6 +51,7 @@ import com.haposto.data.restaurant.RestaurantExtras
 import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
+import com.haposto.domain.voice.DetailsDictation
 import com.haposto.ui.components.AdaptiveScrollableContent
 import com.haposto.ui.components.BigActionButton
 import com.haposto.ui.components.InfoDisclosure
@@ -453,12 +454,16 @@ private fun OptionalDetailsCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var voiceUnavailable by remember { mutableStateOf(false) }
-    // Prima offerta su questo telefono: si conferma l'avviso, poi l'azione rimasta in sospeso.
-    var pendingOffer by remember { mutableStateOf<String?>(null) }
+    // Prima offerta su questo telefono (scritta, scelta o dettata): si conferma l'avviso, poi
+    // l'azione rimasta in sospeso.
+    var pendingOffer by remember { mutableStateOf<(() -> Unit)?>(null) }
     fun changeOffer(value: String) {
-        if (offerTermsAccepted || value.isBlank()) onOfferChange(value) else pendingOffer = value
+        if (offerTermsAccepted || value.isBlank()) onOfferChange(value) else pendingOffer = { onOfferChange(value) }
     }
-    pendingOffer?.let { value ->
+    fun handleDictation(text: String) {
+        if (offerTermsAccepted || DetailsDictation.parse(text).offer == null) onDictate(text) else pendingOffer = { onDictate(text) }
+    }
+    pendingOffer?.let { action ->
         AlertDialog(
             onDismissRequest = { pendingOffer = null },
             title = { Text("Offerta della serata") },
@@ -472,7 +477,7 @@ private fun OptionalDetailsCard(
             confirmButton = {
                 TextButton(onClick = {
                     onAcceptOfferTerms()
-                    onOfferChange(value)
+                    action()
                     pendingOffer = null
                 }) { Text("Ho capito") }
             },
@@ -481,7 +486,7 @@ private fun OptionalDetailsCard(
     }
     val dictate = rememberSpeechInput(
         prompt = "Es. «tre tavoli, dieci minuti, solo tavoli fuori»",
-        onText = { voiceUnavailable = false; onDictate(it) },
+        onText = { voiceUnavailable = false; handleDictation(it) },
         onUnavailable = { voiceUnavailable = true },
     )
 
