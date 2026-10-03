@@ -10,7 +10,7 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 | Parte | Dove | Stato |
 |---|---|---|
 | App Android: versioni **Demo** / **Dev** / **Prod** | `app/` | completa: lista e mappa, preferiti, account Google, verifica in due passaggi per i ristoratori, area ristoratore reale (rivendicazione con codice telefonico, registrazione, dashboard, QR, statistiche, orari, staff, dettatura di dettagli e prenotazioni, note pronte, offerta della serata, link al menù e un file), pannello admin nascosto con seconda password, HAPOSTO Plus (Google Play), notifiche push e promemoria, termini e privacy |
-| Database | `supabase/migrations/0001–0015` | completo, verificato dalla CI (196 controlli su permessi e regole) |
+| Database | `supabase/migrations/0001–0016` | completo, verificato dalla CI (238 controlli su permessi e regole) |
 | Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe, foto o PDF del menù |
 | Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR (con offerta e menù), pagine legali, cancellazione account |
 
@@ -239,7 +239,7 @@ Da dove partire (settembre 2026):
 - `docs/HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md` — provare l'app con 36 locali che cambiano da soli, anche con due telefoni
 - `docs/HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo (0012–0013: guida di configurazione, Parte 1)
 - `docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
-- `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Basic/Pro e Gratis/Plus, registrazione, acquisti
+- `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Pro (prova, poi "Non collegato" senza abbonamento) e Gratis/Plus, registrazione, acquisti
 - `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
 - `docs/HAPOSTO_ROADMAP_COMPLETA.md` — **tutte** le attività da oggi alla fine del progetto: login, privacy, pagamenti, Play Store, pilot, calendario
 - `docs/HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa ha aggiunto lo Step 7.9

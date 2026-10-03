@@ -114,7 +114,8 @@ where key = 'beta';
 select pg_temp.act_as(null);
 select pg_temp.expect((select count(*) from public.nearby_restaurants(43.9125, 12.9138, 60000, null)) >= 1,
     'anon: vede la directory vicina');
-select pg_temp.expect((select count(*) from public.plans) = 4, 'anon: vede i 4 piani pubblici (Pro+ nascosto)');
+select pg_temp.expect((select count(*) from public.plans) = 3,
+    'anon: vede i 3 piani in vendita (Pro, Gratis, Plus; "nessun piano" e Pro+ nascosti)');
 select pg_temp.expect((select plan_code from public.my_entitlements()) = 'CONSUMER_FREE', 'anon: piano Gratis');
 select pg_temp.expect((select value ->> 'restaurants_all_pro_until' from public.app_config where key = 'beta') is not null,
     'anon: legge la configurazione pubblica');
@@ -196,20 +197,22 @@ select pg_temp.expect_error(
     $q$select public.add_restaurant_staff('10000000-0000-0000-0000-000000000005', 'test-user@haposto.test')$q$,
     'OWNER_REQUIRED', 'staff: non può aggiungere altro staff');
 
--- Fine beta → piano Basic: niente dettagli, niente staff nuovo.
+-- Fine beta e fine della prova del locale (migration 0016) → nessun piano: non si pubblica,
+-- niente staff nuovo. I dettagli completi sono in step20_paid_plans_trial_checks.sql.
 select pg_temp.act_as('postgres');
 update public.app_config set value = '{"restaurants_all_pro_until": "2000-01-01T00:00:00Z"}' where key = 'beta';
+update public.app_config set value = '{"days": 0}' where key = 'restaurant_trial';
 select pg_temp.act_as('test-owner@haposto.test');
 select pg_temp.expect((select plan_code from public.restaurant_entitlements('10000000-0000-0000-0000-000000000005')) = 'RESTAURANT_BASIC',
-    'titolare: finita la beta passa a Basic');
-select public.set_restaurant_live_status('10000000-0000-0000-0000-000000000005', 'AVAILABLE', 4::smallint, 10::smallint, 'Nota');
-select pg_temp.expect(
-    (select available_tables is null and estimated_wait_minutes is null and note is null
-     from public.restaurant_live_status where restaurant_id = '10000000-0000-0000-0000-000000000005'),
-    'titolare Basic: lo stato si pubblica, tavoli/attesa/nota no (sono Pro)');
+    'titolare: finite beta e prova resta senza piano');
+select pg_temp.expect_error(
+    $q$select public.set_restaurant_live_status('10000000-0000-0000-0000-000000000005', 'AVAILABLE', 4::smallint, 10::smallint, 'Nota')$q$,
+    'SUBSCRIPTION_REQUIRED', 'titolare senza piano: lo stato non si pubblica');
 select pg_temp.expect_error(
     $q$select public.add_restaurant_staff('10000000-0000-0000-0000-000000000005', 'test-user@haposto.test')$q$,
-    'PLAN_UPGRADE_REQUIRED', 'titolare Basic: lo staff richiede Pro');
+    'PLAN_UPGRADE_REQUIRED', 'titolare senza piano: lo staff richiede Pro');
+select pg_temp.act_as('postgres');
+update public.app_config set value = '{"days": 30}' where key = 'restaurant_trial';
 
 -- Il server dei pagamenti (webhook Stripe) attiva Pro a pagamento.
 select pg_temp.act_as('service_role');
@@ -323,7 +326,8 @@ select pg_temp.expect((select count(*) from public.reservations) = 0, 'utente: n
 -- 7. Statistiche: solo membri; Basic limitato, Pro completo.
 -- ---------------------------------------------------------------------------
 select pg_temp.act_as('test-owner@haposto.test');
-select pg_temp.expect((select sum(live_updates) from public.restaurant_stats('10000000-0000-0000-0000-000000000005')) >= 5,
+-- (4: la pubblicazione senza piano della sezione 4 è rifiutata dalla 0016.)
+select pg_temp.expect((select sum(live_updates) from public.restaurant_stats('10000000-0000-0000-0000-000000000005')) >= 4,
     'titolare: vede gli aggiornamenti pubblicati oggi');
 select pg_temp.act_as('test-user@haposto.test');
 select pg_temp.expect_error(

@@ -66,13 +66,14 @@
 
   async function loadPrice() {
     const { data } = await client.from("plans")
-      .select("price_month_cents, price_year_cents")
+      .select("price_month_cents, price_semester_cents, price_year_cents, prices_include_vat")
       .eq("code", "RESTAURANT_PRO")
       .maybeSingle();
     if (!data?.price_month_cents) return;
-    const euro = (cents) => (cents / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+    const semester = data.price_semester_cents != null ? `, ${euro(data.price_semester_cents)} per 6 mesi` : "";
     document.getElementById("price").textContent =
-      `${euro(data.price_month_cents)}/mese o ${euro(data.price_year_cents)}/anno + IVA`;
+      `${euro(data.price_month_cents)} al mese${semester} o ${euro(data.price_year_cents)} l'anno` +
+      (data.prices_include_vat ? ", IVA inclusa" : " + IVA");
   }
 
   async function render() {
@@ -171,9 +172,11 @@
     const info = infoRows?.[0];
     if (!info) return show("Locale non trovato.", "error");
 
-    const [{ data: billing }, { data: profileRows }] = await Promise.all([
+    const [{ data: billing }, { data: profileRows }, { data: proPlan }] = await Promise.all([
       client.from("restaurant_billing_profiles").select("*").eq("restaurant_id", restaurantId).maybeSingle(),
       client.rpc("my_profile"),
+      client.from("plans").select("price_month_cents, price_semester_cents, price_year_cents")
+        .eq("code", "RESTAURANT_PRO").maybeSingle(),
     ]);
     const profile = profileRows?.[0] ?? {};
     const termsOk = profile.accepted_restaurant_terms_version &&
@@ -181,12 +184,22 @@
 
     const isStripe = info.plan_source === "STRIPE";
     const validUntil = info.plan_valid_until ? new Date(info.plan_valid_until).toLocaleDateString("it-IT") : null;
+    const warning = planWarning(info);
+    const canPay = billing && termsOk;
+    // Prezzi dal database (IVA inclusa); il semestrale c'è dalla migration 0016.
+    const periods = [
+      ["MONTH", "mensile", proPlan?.price_month_cents, "al mese"],
+      ["SEMESTER", "semestrale", proPlan?.price_semester_cents, "ogni 6 mesi"],
+      ["YEAR", "annuale", proPlan?.price_year_cents, "all'anno"],
+    ].filter(([interval, , cents]) => interval !== "SEMESTER" || cents != null);
 
-    app.replaceChildren(
+    // replaceChildren scriverebbe "null" al posto delle parti assenti: si tolgono prima.
+    app.replaceChildren(...[
       el("h2", {}, info.name),
       el("p", {}, "Piano attuale: ", el("strong", {}, info.plan_name || info.plan_code),
         validUntil ? ` · fino al ${validUntil}` : "",
         info.plan_source && info.plan_source !== "STRIPE" ? ` (${sourceLabel(info.plan_source)})` : ""),
+      warning ? el("div", { class: "banner warn" }, warning) : null,
       termsOk ? null : termsCard(profile.current_restaurant_terms_version, () => renderRestaurant(restaurantId)),
       billingForm(restaurantId, billing, () => renderRestaurant(restaurantId)),
       el("div", { class: "card" },
@@ -196,18 +209,47 @@
           : el("p", {}, "Rinnovo automatico, disdici quando vuoi. Il pagamento avviene sulla pagina sicura di Stripe."),
         isStripe
           ? el("button", { class: "button", onclick: () => openPortal(restaurantId) }, "Gestisci abbonamento")
-          : el("p", {},
-              el("button", { class: "button", disabled: !billing || !termsOk, onclick: () => checkout(restaurantId, "MONTH") }, "Attiva Pro mensile"), " ",
-              el("button", { class: "button secondary", disabled: !billing || !termsOk, onclick: () => checkout(restaurantId, "YEAR") }, "Attiva Pro annuale")),
+          : el("p", {}, periods.flatMap(([interval, label, cents, per], index) => [
+              el("button", {
+                class: index === 0 ? "button" : "button secondary",
+                disabled: !canPay,
+                onclick: () => checkout(restaurantId, interval),
+              }, `Attiva Pro ${label}${cents != null ? ` · ${euro(cents)} ${per}` : ""}`),
+              " ",
+            ])),
+        isStripe ? null : el("p", { class: "muted small" }, "Prezzi IVA inclusa. Senza piano, finita la prova, il locale resta nella lista come «Non collegato»."),
         !isStripe && (!billing || !termsOk)
           ? el("p", { class: "muted small" }, "Prima accetta le condizioni e salva i dati di fatturazione.")
           : null,
       ),
-    );
+    ].filter(Boolean));
   }
 
   function sourceLabel(source) {
-    return { BETA: "beta gratuita", MANUAL: "attivato da HAPOSTO", FREE: "gratuito" }[source] ?? source.toLowerCase();
+    return {
+      BETA: "beta gratuita",
+      TRIAL: "prova gratuita",
+      MANUAL: "attivato da HAPOSTO",
+      NONE: "nessun piano: il locale appare «Non collegato»",
+      FREE: "gratuito",
+    }[source] ?? source.toLowerCase();
+  }
+
+  function euro(cents) {
+    return (cents / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+  }
+
+  // Come l'app: piano finito, oppure periodo gratuito o dato da HAPOSTO che finisce entro 7 giorni.
+  function planWarning(info) {
+    if (info.plan_source === "NONE") {
+      return "Il periodo gratuito è finito: il locale appare «Non collegato» e lo stato non si pubblica. Attiva Pro qui sotto.";
+    }
+    if (!info.plan_valid_until || info.plan_source === "STRIPE") return null;
+    const end = new Date(info.plan_valid_until);
+    const days = (end.getTime() - Date.now()) / 86400000;
+    if (days < 0 || days > 7) return null;
+    const what = info.plan_source === "MANUAL" ? "Il piano" : "Il periodo gratuito";
+    return `${what} finisce il ${end.toLocaleDateString("it-IT")}: poi il locale appare «Non collegato». Per restare collegato attiva Pro qui sotto.`;
   }
 
   function termsCard(version, onDone) {

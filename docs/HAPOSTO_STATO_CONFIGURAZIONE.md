@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **2 ottobre 2026** (Parte 10 in sospeso; migliorie 1–3 nella PR #17, la 4 in preparazione). Questo file dice **dove siamo
+Ultimo aggiornamento: **3 ottobre 2026** (Parte 10 in sospeso; migliorie 1–3 nella PR #17, la 4 nella PR #18). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -46,7 +46,9 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
   - prova: quella generale fino alla data `beta` (oggi 30/06/2027); chi entra dopo ha **30 giorni**,
     modificabili dal pannello admin;
   - utenti, **Plus**: 0,99 € al mese, 4,99 € per 6 mesi, 9,99 € l'anno (vantaggi da definire meglio;
-    oggi: avvisi "si è liberato", preferiti illimitati, raggio esteso, storico).
+    oggi: avvisi "si è liberato", preferiti illimitati, raggio esteso, storico);
+  - **nell'app niente inviti né link al pagamento di Pro** (regole di Google Play): l'app informa
+    (piano, data di fine, avvisi, contatto email); Pro si attiva sul sito, area ristoratori.
 
 ## 3. Cose rimaste aperte (piccole)
 
@@ -65,6 +67,15 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
       4. segreti del ping anti-pausa e prova (guida 6.4);
       5. app **Dev** aggiornata (Git → Pull, ▶ Run) e prova di dettatura, prenotazioni, note pronte,
          offerta, link e file, scheda **Contenuti** del pannello.
+- [ ] Dopo la PR #18, sul **DEV**:
+      1. SQL Editor: `supabase/migrations/0016_paid_plans_and_trial.sql` (in fondo `prezzi_pro`
+         1990/9990/19990, `prezzi_plus` 99/499/999, `giorni_di_prova` 30, `controlli` 2);
+      2. SQL Editor: rieseguire `supabase/ops/scheduled_jobs.sql` (nuovo lavoro
+         `haposto-plan-expiry-notices`);
+      3. `npx supabase functions deploy stripe-checkout --no-verify-jwt --use-api`;
+      4. app **Dev** aggiornata: in **Gestisci il locale → Il tuo piano** si legge "Gratis durante la
+         beta" (fino al 30/06/2027). Il resto si vede solo a beta finita: si può provare dal
+         pannello admin cambiando `beta` e `restaurant_trial`, poi rimettendoli come prima.
 - [ ] Dopo la PR #16, ripubblicare le 6 funzioni anche sul **DEV** (`npx supabase link --project-ref
       REF_DEV`, poi i 6 `deploy` del punto 6.1): passano alla *secret key* nuova prima che Supabase
       spenga le chiavi legacy (fine 2026). Nessun segreto da cambiare.
@@ -86,8 +97,9 @@ codice Android, il database e il sito).
    ridotta dal telefono o PDF piccolo) con l'opzione "solo per oggi" (si cancella la notte dopo) e
    controllo dell'admin dopo la pubblicazione; offerta della serata facoltativa (scelte pronte o
    dettata), sotto la responsabilità del ristoratore, che scade con lo stato. Mai menù scritto a mano.
-4. **Modello di pagamento** (vedi sezione 2): prezzi, prova di 30 giorni modificabile, avvisi prima
-   della scadenza, "Non collegato" senza piano, abbonamento semestrale su Stripe e Google Play.
+4. **Modello di pagamento** (vedi sezione 2), **PR #18**: prezzi, prova di 30 giorni modificabile,
+   avvisi prima della scadenza, "Non collegato" senza piano, abbonamento semestrale su Stripe e
+   Google Play.
 
 ## 4. Lezioni pratiche emerse nelle prove
 
@@ -129,7 +141,7 @@ e non pubblicare password, token, chiavi segrete, file .env o local.properties; 
 
 - **CI** (`.github/workflows/android-ci.yml`): build delle tre varianti, test JVM, lint, test su
   emulatore API 34, job SQL (migration, seed, controlli step8_to_17 / step18 / dev_tools, ordine della
-  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), **progetto di produzione nuovo** senza permessi automatici:
+  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), piani e prova (step20), **progetto di produzione nuovo** senza permessi automatici:
   stessi permessi del DEV, operazioni del server, controlli e import OSM) e job Deno delle Edge
   Function. Il sito ha il workflow `website.yml` e la pubblicazione su Cloudflare Pages.
 - **Verifiche locali usate finora** (in un ambiente senza SDK Android, dove l'app si verifica solo in

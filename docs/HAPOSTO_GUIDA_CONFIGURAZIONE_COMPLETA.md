@@ -458,9 +458,10 @@ workflow parte solo dopo che il file è su `main`.
    Per provare Plus in DEV crea allo stesso modo un'app separata `com.haposto.dev` (facoltativo:
    puoi provare Plus direttamente sulla versione di produzione in Test interno).
 2. **Monetizza → Prodotti → Abbonamenti → Crea abbonamento**: ID prodotto **`haposto_plus`**
-   (esattamente così). Aggiungi due **piani base**: `mensile` (rinnovo automatico ogni mese,
-   1,49 €) e `annuale` (ogni anno, 9,99 €). Facoltativo: un'offerta con prova gratuita di 7 giorni.
-   Attiva i piani.
+   (esattamente così). Aggiungi tre **piani base** (prezzi IVA inclusa, decisi il 2 ottobre 2026 e
+   uguali a quelli nel database): `mensile` (rinnovo automatico ogni mese, 0,99 €), `semestrale`
+   (ogni 6 mesi, 4,99 €) e `annuale` (ogni anno, 9,99 €). L'app mostra da sola i piani attivi.
+   Facoltativo: un'offerta con prova gratuita di 7 giorni. Attiva i piani.
 3. **Google Cloud** (stesso progetto del punto 2.1) → **APIs & Services → Library** → abilita
    **Google Play Android Developer API**.
 4. **IAM & Admin → Service Accounts → Create**: nome `haposto-play`, nessun ruolo → apri l'account →
@@ -491,17 +492,22 @@ Pro **si compra sul sito**, non nell'app (regole di Google Play sui pagamenti). 
 **modalità test** (interruttore "Test mode" in Stripe), poi dal vivo con gli stessi passi.
 
 1. <https://dashboard.stripe.com> → crea l'account (gratis) e completa i dati dell'attività.
-2. **Catalogo prodotti → Aggiungi prodotto** "HAPOSTO Pro" con due prezzi ricorrenti in EUR,
-   comportamento fiscale **IVA esclusa**: 12,90 €/mese e 99 €/anno. Copia i due ID `price_…` e
-   salvali nel database (SQL Editor):
+2. **Catalogo prodotti → Aggiungi prodotto** "HAPOSTO Pro" con tre prezzi ricorrenti in EUR,
+   comportamento fiscale **IVA inclusa** (gli stessi della migration 0016): 19,90 € ogni mese,
+   99,90 € ogni **6 mesi** (periodo personalizzato: ogni 6 mesi) e 199,90 € ogni anno. Copia i tre
+   ID `price_…` e salvali nel database (SQL Editor):
    ```sql
    update public.plans
-   set stripe_price_month = 'price_MENSILE', stripe_price_year = 'price_ANNUALE'
+   set stripe_price_month = 'price_MENSILE', stripe_price_semester = 'price_SEMESTRALE',
+       stripe_price_year = 'price_ANNUALE'
    where code = 'RESTAURANT_PRO';
    ```
-3. **IVA**: Catalogo prodotti → *Aliquote fiscali* → nuova "IVA 22%", Italia, esclusa → copia
-   `txr_…` nel segreto `STRIPE_TAX_RATE_ID`. (Casi particolari come clienti esteri: chiedi al
-   commercialista.)
+   Se un giorno cambi i prezzi, crea prezzi nuovi su Stripe, aggiorna gli ID qui sopra e gli
+   importi in `public.plans` (`price_month_cents`, `price_semester_cents`, `price_year_cents`):
+   il sito li legge da lì. Chi è già abbonato resta al prezzo vecchio finché non cambia piano.
+3. **IVA**: Catalogo prodotti → *Aliquote fiscali* → nuova "IVA 22%", Italia, **inclusa nel
+   prezzo** → copia `txr_…` nel segreto `STRIPE_TAX_RATE_ID`. (Casi particolari come clienti
+   esteri: chiedi al commercialista.)
 4. **Impostazioni → Fatturazione → Portale clienti**: attiva aggiornamento metodo di pagamento,
    cronologia fatture, **cancellazione a fine periodo**; inserisci i link a termini e privacy.
 5. **Sviluppatori → Chiavi API**: crea una **chiave con restrizioni** (consigliato) con permessi di
@@ -663,11 +669,11 @@ DEV); restano gli stessi solo il client Google *Web*, il progetto Google Cloud/F
 3. **Project Settings → API Keys**: c'è la *publishable key* (`sb_publishable_…`, pubblica: andrà
    nell'app e nel sito). La *secret key* non va copiata. È normale che le chiavi *legacy* manchino.
 
-### 10.2 Database: migration 0001–0015
+### 10.2 Database: migration 0001–0016
 
 Supabase (**produzione**: controlla il nome del progetto in alto) → **SQL Editor** → **New query** →
 incolla il file intero → **Run**, **uno alla volta, in ordine**: `supabase/migrations/0001_extensions.sql`
-… `0015_notes_links_file_offer.sql` (15 file, compresa la 0005). Se compare *Potential issue detected…
+… `0016_paid_plans_and_trial.sql` (16 file, compresa la 0005). Se compare *Potential issue detected…
 destructive operation* premi **Run this query**. Se un file dà errore, fermati e mandami la riga.
 
 Verifica (nuova query):
@@ -686,7 +692,7 @@ select
 ```
 
 Atteso: `locali` 0 · `impostazioni` `beta, dev_tools_enabled, legal, min_supported_app_version,
-public_links, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0 ·
+public_links, restaurant_trial, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0 ·
 `contenitore_file` 1.
 
 In produzione **mai**: `supabase/seeds/*`, `supabase/dev/*`, `supabase/tests/*`. (Sul DEV la 0014
@@ -846,6 +852,15 @@ sito, poi pannello → Impostazioni → `legal` → nuova versione (es. `2027-03
 l'app chiede a tutti di riaccettare.
 
 **Credenziali admin dimenticate.** Riesegui `admin_set_credentials` (punto 4.2) dal SQL Editor.
+
+**Durata della prova gratuita dei locali.** Pannello → Impostazioni → `restaurant_trial` →
+`{"days": 30}` (da 0 a 365) → **Salva**. Vale per ogni locale da quando è diventato partner, anche
+per chi è già in prova; durante la beta (`beta`) tutti hanno comunque Pro. Finita la prova, senza
+abbonamento il locale appare **"Non collegato"** e non pubblica lo stato; il titolare riceve un
+avviso 7 giorni e 1 giorno prima (lavoro pianificato `haposto-plan-expiry-notices`).
+
+**Regalare mesi di Pro a un locale.** Pannello → Locali → il locale → **Regala un piano** → 1, 3,
+6 o 12 mesi → **Attiva Pro per … mesi**: utile per prolungare la prova di un singolo locale.
 
 **Link e file dei locali.** Pannello → **Contenuti**: compaiono i locali che hanno cambiato link o
 file e che non hai ancora guardato (**Tutti** per vederli tutti). Tocca i link per aprirli; poi

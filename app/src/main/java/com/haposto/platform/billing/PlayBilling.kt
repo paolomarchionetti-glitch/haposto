@@ -32,6 +32,7 @@ data class PlusOffer(
     val periodLabel: String
         get() = when (billingPeriod) {
             "P1M" -> "al mese"
+            "P6M" -> "ogni 6 mesi"
             "P1Y" -> "all'anno"
             else -> billingPeriod
         }

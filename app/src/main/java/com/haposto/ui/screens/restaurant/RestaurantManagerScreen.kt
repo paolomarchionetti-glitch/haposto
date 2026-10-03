@@ -88,6 +88,8 @@ fun RestaurantManagerScreen(
     quickNotes: List<String> = emptyList(),
     canSaveQuickNotes: Boolean = false,
     onSaveQuickNote: (String) -> Unit = {},
+    /** Piano finito o in scadenza entro 7 giorni (null = niente da dire). */
+    planWarning: String? = null,
 ) {
     val realMode = onOpenSettings != null
     Scaffold(
@@ -133,6 +135,22 @@ fun RestaurantManagerScreen(
             }
 
             if (!isOnline) OfflineBanner()
+
+            planWarning?.let { warning ->
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    shape = MaterialTheme.shapes.large,
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(warning, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        onOpenSettings?.let { open ->
+                            OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth()) { Text("Vedi il tuo piano") }
+                        }
+                    }
+                }
+            }
 
             if (mfaMissing) {
                 Surface(

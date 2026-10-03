@@ -83,6 +83,18 @@ const STATUS: Record<string, string | null> = {
   paused: "EXPIRED",
 };
 
+/** Periodo di rinnovo del prezzo Stripe: annuale, semestrale (6 mesi) o mensile. */
+export function billingInterval(recurring: StripeObject | null | undefined): "MONTH" | "SEMESTER" | "YEAR" {
+  if (recurring?.interval === "year") return "YEAR";
+  if (recurring?.interval === "month" && Number(recurring?.interval_count) === 6) return "SEMESTER";
+  return "MONTH";
+}
+
+/** Intervallo chiesto dal sito: MONTH (predefinito), SEMESTER o YEAR. */
+export function requestedInterval(value: unknown): "MONTH" | "SEMESTER" | "YEAR" {
+  return value === "YEAR" || value === "SEMESTER" ? value : "MONTH";
+}
+
 function toIso(seconds: unknown): string | null {
   return typeof seconds === "number" ? new Date(seconds * 1000).toISOString() : null;
 }
@@ -98,7 +110,7 @@ export async function applyStripeSubscription(db: SupabaseClient, subscription: 
   if (!status) return null;
 
   const item = subscription.items?.data?.[0] ?? {};
-  const interval = item.price?.recurring?.interval === "year" ? "YEAR" : "MONTH";
+  const interval = billingInterval(item.price?.recurring);
   // Dalle versioni API 2025 i periodi stanno sulle voci dell'abbonamento.
   const periodStart = toIso(subscription.current_period_start ?? item.current_period_start);
   const periodEnd = toIso(subscription.current_period_end ?? item.current_period_end);

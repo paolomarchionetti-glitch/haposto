@@ -38,6 +38,7 @@ object ErrorMessages {
         "ADMIN_REQUIRED" to "Pannello chiuso: sbloccalo di nuovo.",
         "OWNER_REQUIRED" to "Solo il titolare del locale può farlo.",
         "PLAN_UPGRADE_REQUIRED" to "Disponibile con il piano Pro.",
+        "SUBSCRIPTION_REQUIRED" to "Il periodo gratuito è finito: il locale appare «Non collegato» e lo stato non si pubblica. Per informazioni sui piani scrivi a info@haposto.app.",
         "PLUS_REQUIRED" to "È una funzione di HAPOSTO Plus.",
         "FAVORITES_LIMIT_REACHED" to "Hai raggiunto il numero massimo di preferiti sincronizzati: con Plus sono illimitati.",
         "ALERTS_LIMIT_REACHED" to "Hai già il numero massimo di avvisi attivi.",

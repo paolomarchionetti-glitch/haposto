@@ -51,7 +51,7 @@ data class NewRestaurantForm(
 data class RestaurantPlan(
     val code: String,
     val name: String,
-    /** STRIPE, MANUAL, BETA, FREE. */
+    /** STRIPE, MANUAL, BETA, TRIAL (prova del locale), NONE (nessun piano); FREE sui database prima della 0016. */
     val source: String,
     val validUntil: Instant?,
     val features: Set<String>,
@@ -59,6 +59,8 @@ data class RestaurantPlan(
     val analyticsDays: Int,
 ) {
     val isPro: Boolean get() = "LIVE_DETAILS" in features
+    /** Con un piano il locale si vede "collegato" e pubblica lo stato; senza appare "Non collegato". */
+    val isConnected: Boolean get() = "LIVE_STATUS" in features
     fun has(feature: String): Boolean = feature in features
 }
 

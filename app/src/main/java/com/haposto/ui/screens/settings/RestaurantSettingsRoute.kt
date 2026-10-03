@@ -55,6 +55,7 @@ import com.haposto.data.restaurant.ActivityEntry
 import com.haposto.data.restaurant.DailyStat
 import com.haposto.data.restaurant.ManagerInfo
 import com.haposto.data.restaurant.MemberRole
+import com.haposto.data.restaurant.PlanNotices
 import com.haposto.data.restaurant.RestaurantManagementRepository
 import com.haposto.data.restaurant.RestaurantExtras
 import com.haposto.data.restaurant.RestaurantMember
@@ -70,6 +71,7 @@ import com.haposto.ui.components.MessageBanner
 import com.haposto.ui.components.SectionCard
 import com.haposto.ui.components.SimpleScreen
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.Dispatchers
@@ -245,22 +247,20 @@ private fun PlanSection(info: ManagerInfo) {
     val plan = info.plan
     SectionCard(title = "Il tuo piano") {
         LabeledValue("Piano", plan.name)
-        val source = when (plan.source) {
-            "BETA" -> "Gratis durante la beta"
-            "STRIPE" -> "Abbonamento attivo"
-            "MANUAL" -> "Attivato da HAPOSTO"
-            else -> "Gratuito"
-        }
-        LabeledValue("Stato", source)
+        LabeledValue("Stato", PlanNotices.sourceLabel(plan))
         plan.validUntil?.let { LabeledValue("Valido fino al", DATE.format(it.atZone(ZoneId.systemDefault()))) }
+        PlanNotices.warning(plan, Instant.now())?.let { warning ->
+            Text(warning, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold)
+        }
         Text(
             if (plan.isPro) {
-                "Incluso: dettagli (tavoli, attesa, nota), collaboratori, promemoria, statistiche fino a ${plan.analyticsDays} giorni."
+                "Incluso: stato con un tocco, dettagli (tavoli, attesa, nota, offerta), menù e sito, collaboratori, promemoria, statistiche fino a ${plan.analyticsDays} giorni."
             } else {
-                "Basic: stato con un tocco, telefono pubblico, QR, statistiche di 7 giorni. Con Pro: dettagli, collaboratori, promemoria e statistiche complete."
+                "Senza piano il locale resta nella lista come «Non collegato»: niente stato, offerta, menù e sito. Con Pro torna tutto subito."
             },
             style = MaterialTheme.typography.bodyMedium,
         )
+        // Nessun invito né link al pagamento nell'app (regole di Google Play): solo informazioni.
         Text(
             "Per informazioni sui piani scrivi a info@haposto.app.",
             style = MaterialTheme.typography.bodySmall,
