@@ -40,7 +40,16 @@ data class PatternCell(
     val fullShare: Double,
 )
 
-data class PublicDetails(val slug: String?, val openingHours: OpeningHours?)
+data class PublicDetails(
+    val slug: String?,
+    val openingHours: OpeningHours?,
+    /** Link e file messi dal locale (migration 0015). */
+    val websiteUrl: String? = null,
+    val menuUrl: String? = null,
+    val fileUrl: String? = null,
+    val fileIsPdf: Boolean = false,
+    val fileTodayOnly: Boolean = false,
+)
 
 enum class RestaurantEvent { DETAIL_VIEW, DIRECTIONS_TAP, CALL_TAP, SHARE }
 

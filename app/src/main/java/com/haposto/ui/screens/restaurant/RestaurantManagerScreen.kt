@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -43,7 +45,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.haposto.data.restaurant.RestaurantExtras
 import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
@@ -52,6 +56,7 @@ import com.haposto.ui.components.BigActionButton
 import com.haposto.ui.components.InfoDisclosure
 import com.haposto.ui.components.OfflineBanner
 import com.haposto.ui.components.StatusSymbol
+import com.haposto.ui.components.rememberSpeechInput
 import com.haposto.ui.components.statusPresentation
 import java.time.Duration
 
@@ -73,6 +78,16 @@ fun RestaurantManagerScreen(
     onOpenSettings: (() -> Unit)? = null,
     mfaMissing: Boolean = false,
     onOpenMfa: () -> Unit = {},
+    /** Frase dettata per i dettagli facoltativi (tavoli, attesa, nota, offerta). */
+    onDictateDetails: (String) -> Unit = {},
+    onOfferChange: (String) -> Unit = {},
+    /** L'avviso sulla responsabilità dell'offerta è già stato confermato su questo telefono. */
+    offerTermsAccepted: Boolean = true,
+    onAcceptOfferTerms: () -> Unit = {},
+    /** Note pronte del locale (versioni DEV/PROD), condivise con lo staff. */
+    quickNotes: List<String> = emptyList(),
+    canSaveQuickNotes: Boolean = false,
+    onSaveQuickNote: (String) -> Unit = {},
 ) {
     val realMode = onOpenSettings != null
     Scaffold(
@@ -198,6 +213,13 @@ fun RestaurantManagerScreen(
                 onWaitSelected = onWaitSelected,
                 onNoteChange = onNoteChange,
                 onRefreshCurrentStatus = onRefreshCurrentStatus,
+                onDictate = onDictateDetails,
+                onOfferChange = onOfferChange,
+                offerTermsAccepted = offerTermsAccepted,
+                onAcceptOfferTerms = onAcceptOfferTerms,
+                quickNotes = quickNotes,
+                canSaveQuickNotes = canSaveQuickNotes,
+                onSaveQuickNote = onSaveQuickNote,
             )
 
             // INFO LOCALE: sempre visibile ma ordinata
@@ -403,8 +425,47 @@ private fun OptionalDetailsCard(
     onWaitSelected: (Int?) -> Unit,
     onNoteChange: (String) -> Unit,
     onRefreshCurrentStatus: () -> Unit,
+    onDictate: (String) -> Unit,
+    onOfferChange: (String) -> Unit,
+    offerTermsAccepted: Boolean,
+    onAcceptOfferTerms: () -> Unit,
+    quickNotes: List<String>,
+    canSaveQuickNotes: Boolean,
+    onSaveQuickNote: (String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var voiceUnavailable by remember { mutableStateOf(false) }
+    // Prima offerta su questo telefono: si conferma l'avviso, poi l'azione rimasta in sospeso.
+    var pendingOffer by remember { mutableStateOf<String?>(null) }
+    fun changeOffer(value: String) {
+        if (offerTermsAccepted || value.isBlank()) onOfferChange(value) else pendingOffer = value
+    }
+    pendingOffer?.let { value ->
+        AlertDialog(
+            onDismissRequest = { pendingOffer = null },
+            title = { Text("Offerta della serata") },
+            text = {
+                Text(
+                    "L'offerta è un tuo impegno verso i clienti: dev'essere vera e rispettata finché lo stato è " +
+                        "valido (30 minuti, poi scade da sola). HAPOSTO la mostra così come la scrivi, sotto la tua " +
+                        "responsabilità.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onAcceptOfferTerms()
+                    onOfferChange(value)
+                    pendingOffer = null
+                }) { Text("Ho capito") }
+            },
+            dismissButton = { TextButton(onClick = { pendingOffer = null }) { Text("Annulla") } },
+        )
+    }
+    val dictate = rememberSpeechInput(
+        prompt = "Es. «tre tavoli, dieci minuti, solo tavoli fuori»",
+        onText = { voiceUnavailable = false; onDictate(it) },
+        onUnavailable = { voiceUnavailable = true },
+    )
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -420,7 +481,7 @@ private fun OptionalDetailsCard(
                 Column(Modifier.weight(1f)) {
                     Text("Dettagli facoltativi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(
-                        "Tavoli, attesa, nota — puoi ignorarli",
+                        "Tavoli, attesa, nota, offerta — puoi ignorarli",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -435,6 +496,24 @@ private fun OptionalDetailsCard(
                     modifier = Modifier.padding(top = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    OutlinedButton(
+                        onClick = dictate,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 52.dp),
+                    ) {
+                        Text("🎙  Detta i dettagli", fontWeight = FontWeight.Bold)
+                    }
+                    Text(
+                        text = if (voiceUnavailable) {
+                            "Dettatura non disponibile su questo telefono: scrivi a mano."
+                        } else {
+                            "Es. «tre tavoli, dieci minuti, solo tavoli fuori». Controlla prima di pubblicare."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (voiceUnavailable) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
                     Text("Tavoli liberi indicativi", style = MaterialTheme.typography.labelLarge)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -480,6 +559,51 @@ private fun OptionalDetailsCard(
                         supportingText = { Text("${uiState.noteRemaining} caratteri disponibili") },
                         minLines = 2,
                         maxLines = 3,
+                    )
+                    if (quickNotes.isNotEmpty()) {
+                        Text("Note pronte", style = MaterialTheme.typography.labelLarge)
+                        NoteChips(quickNotes, onNoteChange)
+                    }
+                    val currentNote = uiState.note.trim()
+                    if (canSaveQuickNotes && currentNote.isNotEmpty() &&
+                        quickNotes.none { it.equals(currentNote, ignoreCase = true) } &&
+                        quickNotes.size < RestaurantExtras.MAX_QUICK_NOTES
+                    ) {
+                        TextButton(onClick = { onSaveQuickNote(currentNote) }) {
+                            Text("＋ Salva questa nota tra le note pronte")
+                        }
+                    }
+                    val recent = uiState.recentNotes.filter { note -> quickNotes.none { it.equals(note, ignoreCase = true) } }
+                    if (recent.isNotEmpty()) {
+                        Text("Ultime note (un tocco per riusarle)", style = MaterialTheme.typography.labelLarge)
+                        NoteChips(recent, onNoteChange)
+                    }
+
+                    Text("Offerta della serata (facoltativa)", style = MaterialTheme.typography.labelLarge)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OFFER_CHOICES.forEach { choice ->
+                            FilterChip(
+                                selected = uiState.offer == choice,
+                                onClick = { changeOffer(if (uiState.offer == choice) "" else choice) },
+                                label = { Text(choice) },
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = uiState.offer,
+                        onValueChange = { changeOffer(it) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Offerta") },
+                        placeholder = { Text("Es. Dolce offerto a chi arriva entro le 21") },
+                        supportingText = {
+                            Text("${uiState.offerRemaining} caratteri · solo con C'è posto o Pochi posti · scade con lo stato")
+                        },
+                        singleLine = true,
                     )
 
                     HorizontalDivider()
@@ -566,3 +690,23 @@ private val LIVE = setOf(
     AvailabilityStatus.LIMITED,
     AvailabilityStatus.FULL,
 )
+
+/** Offerte pronte a un tocco (si possono sempre scrivere o dettare). */
+private val OFFER_CHOICES = listOf("−10%", "−20%", "Dolce offerto", "Calice offerto")
+
+@Composable
+private fun NoteChips(notes: List<String>, onPick: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        notes.forEach { note ->
+            SuggestionChip(
+                onClick = { onPick(note) },
+                label = { Text(note, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            )
+        }
+    }
+}

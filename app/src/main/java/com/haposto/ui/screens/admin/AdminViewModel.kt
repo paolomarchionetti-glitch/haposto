@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.haposto.data.Outcome
 import com.haposto.data.admin.AdminClaim
+import com.haposto.data.admin.AdminExtrasRow
 import com.haposto.data.admin.AdminOverview
 import com.haposto.data.admin.AdminPaymentRow
 import com.haposto.data.admin.AdminRepository
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 enum class AdminTab(val label: String) {
     OVERVIEW("Panoramica"),
     CLAIMS("Richieste"),
+    CONTENT("Contenuti"),
     RESTAURANTS("Locali"),
     USERS("Utenti"),
     SUBSCRIPTIONS("Abbonamenti"),
@@ -36,6 +38,8 @@ data class AdminUiState(
     val tab: AdminTab = AdminTab.OVERVIEW,
     val overview: AdminOverview? = null,
     val claims: List<AdminClaim> = emptyList(),
+    /** Link e file dei locali da controllare. */
+    val extras: List<AdminExtrasRow> = emptyList(),
     val restaurants: List<AdminRestaurantRow> = emptyList(),
     val users: List<AdminUserRow> = emptyList(),
     val subscriptions: List<AdminSubscriptionRow> = emptyList(),
@@ -103,6 +107,8 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
             val failure: Outcome.Failure? = when (tab) {
                 AdminTab.OVERVIEW -> admin.overview().onValue { v -> mutable.update { it.copy(overview = v) } }
                 AdminTab.CLAIMS -> admin.pendingClaims().onValue { v -> mutable.update { it.copy(claims = v) } }
+                AdminTab.CONTENT -> admin.restaurantExtras(onlyUnreviewed = filter != "ALL")
+                    .onValue { v -> mutable.update { it.copy(extras = v) } }
                 AdminTab.RESTAURANTS -> admin.restaurants(query, filter).onValue { v -> mutable.update { it.copy(restaurants = v) } }
                 AdminTab.USERS -> admin.users(query, filter ?: "ALL").onValue { v -> mutable.update { it.copy(users = v) } }
                 AdminTab.SUBSCRIPTIONS -> admin.subscriptions(filter ?: "ALL").onValue { v -> mutable.update { it.copy(subscriptions = v) } }
@@ -136,6 +142,18 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
         (admin.reviewClaim(claim.claimId, approve, note, skipPhoneCheck) as? Outcome.Failure).also {
             if (it == null) loadTab(AdminTab.CLAIMS)
         }
+    }
+
+    /** [action]: OK (visto), REMOVE_LINKS, REMOVE_FILE; [showAll] = filtro "Tutti" da mantenere. */
+    fun reviewExtras(row: AdminExtrasRow, action: String, showAll: Boolean = false) = act(
+        success = when (action) {
+            "OK" -> "✓ Segnato come controllato."
+            "REMOVE_LINKS" -> "✓ Link tolti."
+            else -> "✓ File tolto (si cancella stanotte)."
+        },
+    ) {
+        (admin.reviewRestaurantExtras(row.restaurantId, action, "Controllo contenuti") as? Outcome.Failure)
+            .also { if (it == null) loadTab(AdminTab.CONTENT, null, if (showAll) "ALL" else null) }
     }
 
     fun setConfig(key: String, json: String) = act(success = "✓ Impostazione salvata.") {

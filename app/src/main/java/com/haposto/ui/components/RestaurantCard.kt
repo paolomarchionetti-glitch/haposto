@@ -122,6 +122,15 @@ fun RestaurantCard(
                 )
             }
 
+            effective.offer?.takeIf(String::isNotBlank)?.let { offer ->
+                Text(
+                    text = "🏷 $offer",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+
             // Meta: categoria · distanza (+ città se diversa da Pesaro)
             Text(
                 text = buildString {

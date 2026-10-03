@@ -112,7 +112,17 @@ class SupabaseConsumerRepository(private val client: SupabaseClient) : ConsumerR
             "restaurant_public_details",
             buildJsonObject { put("p_restaurant_id", restaurantId) },
         ).decodeList<PublicDetailsDto>().firstOrNull()
-            ?.let { PublicDetails(it.slug, openingHoursFrom(it.openingHours)) }
+            ?.let {
+                PublicDetails(
+                    slug = it.slug,
+                    openingHours = openingHoursFrom(it.openingHours),
+                    websiteUrl = it.websiteUrl,
+                    menuUrl = it.menuUrl,
+                    fileUrl = it.filePath?.let(::publicFileUrl),
+                    fileIsPdf = it.fileMime == "application/pdf",
+                    fileTodayOnly = it.fileTodayOnly == true,
+                )
+            }
             ?: PublicDetails(null, null)
     }
 
@@ -221,4 +231,13 @@ private data class PatternDto(
 private data class PublicDetailsDto(
     val slug: String? = null,
     @SerialName("opening_hours") val openingHours: JsonElement? = null,
+    @SerialName("website_url") val websiteUrl: String? = null,
+    @SerialName("menu_url") val menuUrl: String? = null,
+    @SerialName("file_path") val filePath: String? = null,
+    @SerialName("file_mime") val fileMime: String? = null,
+    @SerialName("file_today_only") val fileTodayOnly: Boolean? = null,
 )
+
+/** Indirizzo pubblico di un file del locale (contenitore "restaurant-files", lettura libera). */
+internal fun publicFileUrl(path: String): String =
+    "${SupabaseClientProvider.configuration.url}/storage/v1/object/public/restaurant-files/$path"

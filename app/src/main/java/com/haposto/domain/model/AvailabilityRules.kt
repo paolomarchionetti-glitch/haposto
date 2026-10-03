@@ -11,4 +11,7 @@ object AvailabilityRules {
     const val MAX_AVAILABLE_TABLES = 99
     const val MAX_ESTIMATED_WAIT_MINUTES = 240
     const val MAX_NOTE_LENGTH = 80
+
+    /** Offerta della serata (migration 0015): facoltativa, solo con "C'è posto" o "Pochi posti". */
+    const val MAX_OFFER_LENGTH = 60
 }

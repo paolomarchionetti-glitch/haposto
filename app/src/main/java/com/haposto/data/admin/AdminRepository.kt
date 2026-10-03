@@ -36,6 +36,12 @@ interface AdminRepository {
 
     suspend fun auditLog(beforeId: Long?, action: String?): Outcome<List<AuditRow>>
 
+    /** Link e file dei locali: da controllare (o tutti). */
+    suspend fun restaurantExtras(onlyUnreviewed: Boolean = true): Outcome<List<AdminExtrasRow>>
+
+    /** [action]: OK (visto), REMOVE_LINKS, REMOVE_FILE, REMOVE_ALL. */
+    suspend fun reviewRestaurantExtras(restaurantId: String, action: String, reason: String?): Outcome<Unit>
+
     suspend fun config(): Outcome<List<ConfigEntry>>
     suspend fun setConfig(key: String, valueJson: String): Outcome<Unit>
 }

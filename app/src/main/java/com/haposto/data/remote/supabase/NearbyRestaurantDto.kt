@@ -1,5 +1,6 @@
 package com.haposto.data.remote.supabase
 
+import com.haposto.domain.model.AvailabilityRules
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.model.GeoPoint
 import com.haposto.domain.model.LiveAvailability
@@ -31,6 +32,7 @@ internal data class NearbyRestaurantDto(
     val latitude: Double,
     val longitude: Double,
     @SerialName("distance_meters") val distanceMeters: Double,
+    val offer: String? = null,
 )
 
 internal fun NearbyRestaurantDto.toDomain(): Restaurant {
@@ -73,6 +75,11 @@ private fun NearbyRestaurantDto.toLiveAvailability(): LiveAvailability? {
             availableTables = if (status == AvailabilityStatus.FULL) null else availableTables,
             estimatedWaitMinutes = estimatedWaitMinutes,
             note = note?.trim()?.takeIf(String::isNotEmpty),
+            offer = if (status == AvailabilityStatus.FULL) {
+                null
+            } else {
+                offer?.trim()?.takeIf(String::isNotEmpty)?.take(AvailabilityRules.MAX_OFFER_LENGTH)
+            },
         )
     }.getOrNull()
 }

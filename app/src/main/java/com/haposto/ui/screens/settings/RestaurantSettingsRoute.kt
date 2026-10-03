@@ -1,6 +1,10 @@
 package com.haposto.ui.screens.settings
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -51,9 +56,12 @@ import com.haposto.data.restaurant.DailyStat
 import com.haposto.data.restaurant.ManagerInfo
 import com.haposto.data.restaurant.MemberRole
 import com.haposto.data.restaurant.RestaurantManagementRepository
+import com.haposto.data.restaurant.RestaurantExtras
 import com.haposto.data.restaurant.RestaurantMember
 import com.haposto.domain.model.OpeningHours
 import com.haposto.domain.model.TimeRange
+import com.haposto.platform.files.PreparedFile
+import com.haposto.platform.files.RestaurantFileReader
 import com.haposto.platform.qr.QrCodes
 import com.haposto.ui.components.BannerKind
 import com.haposto.ui.components.BigActionButton
@@ -64,9 +72,11 @@ import com.haposto.ui.components.SimpleScreen
 import java.time.DayOfWeek
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class SettingsData(
     val info: ManagerInfo? = null,
@@ -76,6 +86,10 @@ data class SettingsData(
     val statsDays: Int = 7,
     val loading: Boolean = true,
     val busy: Boolean = false,
+    /** Note pronte, link e file del locale. */
+    val extras: RestaurantExtras = RestaurantExtras(),
+    /** File scelto e già preparato, in attesa della risposta "vale solo per oggi?". */
+    val pendingFile: PreparedFile? = null,
     val message: String? = null,
     val messageIsError: Boolean = false,
 )
@@ -100,11 +114,13 @@ class RestaurantSettingsViewModel(
             val activity = management.activity(restaurantId).valueOrNull.orEmpty()
             val days = mutable.value.statsDays
             val stats = management.stats(restaurantId, days).valueOrNull.orEmpty()
+            val extras = management.extras(restaurantId).valueOrNull ?: RestaurantExtras()
             mutable.value = mutable.value.copy(
                 info = info,
                 members = members,
                 activity = activity,
                 stats = stats,
+                extras = extras,
                 loading = false,
                 message = (infoResult as? Outcome.Failure)?.message,
                 messageIsError = infoResult is Outcome.Failure,
@@ -128,6 +144,40 @@ class RestaurantSettingsViewModel(
     }
 
     fun removeStaff(userId: String) = act("✓ Collaboratore rimosso.") { management.removeStaff(restaurantId, userId) }
+
+    fun setQuickNotes(notes: List<String>) = act("✓ Note pronte aggiornate.") {
+        management.setQuickNotes(restaurantId, notes)
+    }
+
+    fun saveLinks(websiteUrl: String, menuUrl: String) = act("✓ Link salvati: li vedono i clienti nella scheda del locale.") {
+        management.setLinks(restaurantId, websiteUrl, menuUrl)
+    }
+
+    /** Legge e riduce il file scelto (fuori dal thread principale), poi chiede "solo per oggi?". */
+    fun prepareFile(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            mutable.value = mutable.value.copy(busy = true, message = null)
+            val result = withContext(Dispatchers.IO) { RestaurantFileReader.read(context.applicationContext, uri) }
+            mutable.value = when (result) {
+                is RestaurantFileReader.Result.Ready -> mutable.value.copy(busy = false, pendingFile = result.file)
+                is RestaurantFileReader.Result.Error -> mutable.value.copy(busy = false, message = result.message, messageIsError = true)
+            }
+        }
+    }
+
+    fun cancelFile() {
+        mutable.value = mutable.value.copy(pendingFile = null)
+    }
+
+    fun uploadFile(todayOnly: Boolean) {
+        val file = mutable.value.pendingFile ?: return
+        mutable.value = mutable.value.copy(pendingFile = null)
+        act(if (todayOnly) "✓ File pubblicato: domattina si cancella da solo." else "✓ File pubblicato.") {
+            management.uploadFile(restaurantId, file.bytes, file.mimeType, todayOnly)
+        }
+    }
+
+    fun removeFile() = act("✓ File tolto.") { management.removeFile(restaurantId) }
 
     fun show(text: String, error: Boolean = false) {
         mutable.value = mutable.value.copy(message = text, messageIsError = error)
@@ -176,6 +226,8 @@ fun RestaurantSettingsRoute(
                 QrSection(info)
                 val owner = info.myRole == MemberRole.OWNER
                 if (owner) ProfileSection(info, state.busy, viewModel)
+                if (info.mfaOk) QuickNotesSection(state.extras, state.busy, viewModel)
+                if (owner && info.mfaOk) LinksAndFileSection(state, viewModel)
                 StatsSection(state, viewModel::loadStats)
                 if (owner) StaffSection(info, state, viewModel)
                 ActivitySection(state.activity)
@@ -484,3 +536,118 @@ private fun ActivitySection(entries: List<ActivityEntry>) {
 
 private val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 private val DATE_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM HH:mm")
+
+@Composable
+private fun QuickNotesSection(extras: RestaurantExtras, busy: Boolean, viewModel: RestaurantSettingsViewModel) {
+    var newNote by rememberSaveable { mutableStateOf("") }
+    SectionCard(title = "Note pronte") {
+        Text(
+            "Frasi che usi spesso nella nota dello stato: nella dashboard le scegli con un tocco. Le vede anche lo staff. Al massimo ${RestaurantExtras.MAX_QUICK_NOTES}.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        extras.quickNotes.forEach { note ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(note, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                TextButton(onClick = { viewModel.setQuickNotes(extras.quickNotes - note) }, enabled = !busy) { Text("Togli") }
+            }
+        }
+        if (extras.quickNotes.size < RestaurantExtras.MAX_QUICK_NOTES) {
+            OutlinedTextField(
+                value = newNote,
+                onValueChange = { newNote = it.take(80) },
+                label = { Text("Nuova nota pronta") },
+                placeholder = { Text("Es. Solo tavoli all'aperto") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedButton(
+                onClick = {
+                    viewModel.setQuickNotes(extras.quickNotes + newNote.trim())
+                    newNote = ""
+                },
+                enabled = newNote.isNotBlank() && !busy,
+            ) { Text("Aggiungi") }
+        }
+    }
+}
+
+@Composable
+private fun LinksAndFileSection(state: SettingsData, viewModel: RestaurantSettingsViewModel) {
+    val extras = state.extras
+    val context = LocalContext.current
+    var website by rememberSaveable(extras.websiteUrl) { mutableStateOf(extras.websiteUrl.orEmpty()) }
+    var menu by rememberSaveable(extras.menuUrl) { mutableStateOf(extras.menuUrl.orEmpty()) }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) viewModel.prepareFile(context, uri)
+    }
+
+    SectionCard(title = "Menù, sito e file") {
+        Text(
+            "Li vedono i clienti nella scheda del locale e nella pagina del QR. HAPOSTO li controlla e può toglierli se non sono adatti.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        OutlinedTextField(
+            value = website,
+            onValueChange = { website = it.take(300) },
+            label = { Text("Sito del locale (facoltativo)") },
+            placeholder = { Text("www.tuolocale.it") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = menu,
+            onValueChange = { menu = it.take(300) },
+            label = { Text("Link al menù (facoltativo)") },
+            placeholder = { Text("Sito, Instagram, Google Drive…") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(
+            onClick = { viewModel.saveLinks(website, menu) },
+            enabled = !state.busy && (website != extras.websiteUrl.orEmpty() || menu != extras.menuUrl.orEmpty()),
+        ) { Text("Salva i link") }
+
+        HorizontalDivider()
+        val file = extras.file
+        Text(
+            text = when {
+                file == null -> "Foto o PDF: nessun file."
+                else -> buildString {
+                    append(if (file.isPdf) "PDF" else "Foto")
+                    append(" · ").append((file.bytes + 1023) / 1024).append(" KB")
+                    if (file.todayOnly) append(" · solo per oggi")
+                }
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        OutlinedButton(
+            onClick = { picker.launch(arrayOf("image/*", "application/pdf")) },
+            enabled = !state.busy,
+        ) { Text(if (file == null) "Scegli foto o PDF" else "Sostituisci con un'altra foto o PDF") }
+        if (file != null) {
+            TextButton(onClick = viewModel::removeFile, enabled = !state.busy) { Text("Togli il file") }
+        }
+        Text(
+            "Un file solo: quello nuovo sostituisce il vecchio. Le foto le riduce il telefono; PDF fino a 2 MB.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+
+    state.pendingFile?.let { pending ->
+        AlertDialog(
+            onDismissRequest = viewModel::cancelFile,
+            title = { Text("Vale solo per oggi?") },
+            text = {
+                Text(
+                    (if (pending.isPdf) "PDF pronto" else "Foto pronta") +
+                        ". Per il menù del giorno scegli «Solo oggi»: domattina si cancella da solo.",
+                )
+            },
+            confirmButton = { TextButton(onClick = { viewModel.uploadFile(todayOnly = true) }) { Text("Solo oggi") } },
+            dismissButton = { TextButton(onClick = { viewModel.uploadFile(todayOnly = false) }) { Text("No, resta") } },
+        )
+    }
+}

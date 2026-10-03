@@ -105,3 +105,26 @@ data class DailyStat(
     val shares: Int,
     val liveUpdates: Int,
 )
+
+/** Note pronte, link e file del locale (migration 0015). */
+data class RestaurantExtras(
+    val quickNotes: List<String> = emptyList(),
+    val websiteUrl: String? = null,
+    val menuUrl: String? = null,
+    val file: RestaurantFile? = null,
+) {
+    companion object {
+        const val MAX_QUICK_NOTES = 8
+    }
+}
+
+/** Il file facoltativo del locale; [expiresAt] non nullo = "solo per oggi". */
+data class RestaurantFile(
+    val path: String,
+    val mimeType: String,
+    val bytes: Int,
+    val expiresAt: java.time.Instant?,
+) {
+    val isPdf: Boolean get() = mimeType == "application/pdf"
+    val todayOnly: Boolean get() = expiresAt != null
+}

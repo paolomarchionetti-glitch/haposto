@@ -35,6 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -46,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.haposto.data.admin.AdminClaim
+import com.haposto.data.admin.AdminExtrasRow
 import com.haposto.data.admin.AdminRepository
 import com.haposto.data.admin.AdminSubscriptionRow
 import com.haposto.data.auth.AuthRepository
@@ -56,6 +58,7 @@ import com.haposto.ui.components.LabeledValue
 import com.haposto.ui.components.MessageBanner
 import com.haposto.ui.components.SectionCard
 import com.haposto.ui.components.SimpleScreen
+import com.haposto.ui.util.ExternalActions
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -210,6 +213,7 @@ private fun AdminHome(
             when (state.tab) {
                 AdminTab.OVERVIEW -> OverviewTab(state)
                 AdminTab.CLAIMS -> ClaimsTab(state, viewModel)
+                AdminTab.CONTENT -> ContentTab(state, viewModel)
                 AdminTab.RESTAURANTS -> RestaurantsTab(state, viewModel, onOpenRestaurant)
                 AdminTab.USERS -> UsersTab(state, viewModel, onOpenUser)
                 AdminTab.SUBSCRIPTIONS -> SubscriptionsTab(state, viewModel)
@@ -320,6 +324,59 @@ private fun ClaimsTab(state: AdminUiState, viewModel: AdminViewModel) {
                 reviewing = null
             },
         )
+    }
+}
+
+@Composable
+private fun ContentTab(state: AdminUiState, viewModel: AdminViewModel) {
+    val context = LocalContext.current
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    Column {
+        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(false to "Da controllare", true to "Tutti").forEach { (all, label) ->
+                FilterChip(
+                    selected = showAll == all,
+                    onClick = {
+                        showAll = all
+                        viewModel.loadTab(AdminTab.CONTENT, null, if (all) "ALL" else null)
+                    },
+                    label = { Text(label) },
+                )
+            }
+        }
+        AdminList {
+            if (state.extras.isEmpty()) item { Text("Niente da controllare. 🎉") }
+            items(state.extras, key = { it.restaurantId }) { row: AdminExtrasRow ->
+                RowCard {
+                    Text("${row.name} · ${row.city}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    row.changedAt?.let {
+                        Text("Cambiato ${DATE_TIME.format(it.atZone(ZoneId.systemDefault()))}", style = MaterialTheme.typography.bodySmall)
+                    }
+                    listOfNotNull(
+                        row.websiteUrl?.let { "Sito" to it },
+                        row.menuUrl?.let { "Menù" to it },
+                        row.fileUrl?.let {
+                            val kind = if (row.fileIsPdf) "PDF" else "Foto"
+                            val size = row.fileBytes?.let { bytes -> " · ${(bytes + 1023) / 1024} KB" }.orEmpty()
+                            "$kind$size${if (row.fileTodayOnly) " · solo oggi" else ""}" to it
+                        },
+                    ).forEach { (label, url) ->
+                        TextButton(onClick = { ExternalActions.openWebPage(context, url) }) {
+                            Text("Apri: $label", maxLines = 1)
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { viewModel.reviewExtras(row, "OK", showAll) }, enabled = !state.busy) { Text("Visto") }
+                        if (row.websiteUrl != null || row.menuUrl != null) {
+                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_LINKS", showAll) }, enabled = !state.busy) { Text("Togli link") }
+                        }
+                        if (row.fileUrl != null) {
+                            TextButton(onClick = { viewModel.reviewExtras(row, "REMOVE_FILE", showAll) }, enabled = !state.busy) { Text("Togli file") }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -9,6 +9,8 @@ data class LiveAvailability(
     val availableTables: Int? = null,
     val estimatedWaitMinutes: Int? = null,
     val note: String? = null,
+    /** Offerta della serata; scade con lo stato. */
+    val offer: String? = null,
 ) {
     init {
         require(status in setOf(
@@ -20,6 +22,7 @@ data class LiveAvailability(
         require(availableTables == null || availableTables in 0..AvailabilityRules.MAX_AVAILABLE_TABLES)
         require(estimatedWaitMinutes == null || estimatedWaitMinutes in 0..AvailabilityRules.MAX_ESTIMATED_WAIT_MINUTES)
         require(note == null || note.length <= AvailabilityRules.MAX_NOTE_LENGTH)
+        require(offer == null || offer.length <= AvailabilityRules.MAX_OFFER_LENGTH)
         require(status != AvailabilityStatus.FULL || availableTables == null) {
             "FULL cannot expose available tables."
         }

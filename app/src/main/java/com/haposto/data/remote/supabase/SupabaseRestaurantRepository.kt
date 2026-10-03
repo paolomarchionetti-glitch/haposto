@@ -52,6 +52,7 @@ internal interface DirectoryApi {
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
+        offer: String?,
     ): Outcome<Unit>
 }
 
@@ -79,7 +80,8 @@ internal class SupabaseDirectoryApi(private val client: SupabaseClient) : Direct
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
-    ): Outcome<Unit> = management.publish(restaurantId, status, availableTables, estimatedWaitMinutes, note)
+        offer: String?,
+    ): Outcome<Unit> = management.publish(restaurantId, status, availableTables, estimatedWaitMinutes, note, offer)
 }
 
 /**
@@ -156,6 +158,7 @@ class SupabaseRestaurantRepository internal constructor(
         availableTables: Int?,
         estimatedWaitMinutes: Int?,
         note: String?,
+        offer: String?,
     ): Outcome<Unit> {
         require(status in PUBLISHABLE_STATUSES)
         require(availableTables == null || availableTables in 0..AvailabilityRules.MAX_AVAILABLE_TABLES)
@@ -169,7 +172,12 @@ class SupabaseRestaurantRepository internal constructor(
 
         val cleanNote = note?.trim()?.takeIf(String::isNotEmpty)
         val tables = if (status == AvailabilityStatus.FULL) null else availableTables
-        val result = api.publishLiveStatus(restaurantId, status, tables, estimatedWaitMinutes, cleanNote)
+        val cleanOffer = if (status == AvailabilityStatus.FULL) {
+            null
+        } else {
+            offer?.trim()?.takeIf(String::isNotEmpty)?.take(AvailabilityRules.MAX_OFFER_LENGTH)
+        }
+        val result = api.publishLiveStatus(restaurantId, status, tables, estimatedWaitMinutes, cleanNote, cleanOffer)
         if (result is Outcome.Success) {
             // Shown at once; the next refresh (requested now) brings the server's own values.
             val now = clock.instant()
@@ -181,6 +189,7 @@ class SupabaseRestaurantRepository internal constructor(
                     availableTables = tables,
                     estimatedWaitMinutes = estimatedWaitMinutes,
                     note = cleanNote,
+                    offer = cleanOffer,
                 ),
             )
             putOverride(updated, serverWriteSeq = writeSequence.incrementAndGet())

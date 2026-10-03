@@ -89,6 +89,16 @@ object ErrorMessages {
         "NOT_CONFIGURED" to "Funzione non ancora configurata in questa versione dell'app.",
         "BILLING_UNAVAILABLE" to "Google Play non è disponibile per gli acquisti su questo telefono.",
         "DEMO_MODE" to "Nella versione demo questa funzione è simulata.",
+        // Note pronte, link, file e offerta (migration 0015, Edge Function restaurant-file).
+        "QUICK_NOTES_LIMIT" to "Al massimo 8 note pronte: togline una per aggiungerne un'altra.",
+        "NOTE_TOO_LONG" to "Una nota può avere al massimo 80 caratteri.",
+        "OFFER_TOO_LONG" to "L'offerta può avere al massimo 60 caratteri.",
+        "INVALID_LINK" to "Indirizzo non valido: scrivi un sito, es. www.tuolocale.it.",
+        "FILE_TOO_LARGE" to "File troppo grande: foto fino a 1 MB, PDF fino a 2 MB. Per un PDF più grande, fotografa il menù.",
+        "FILE_TYPE_NOT_ALLOWED" to "Si possono caricare solo foto (JPG) o PDF.",
+        "IMAGE_NOT_RESIZED" to "Foto troppo grande: riprova, l'app la riduce da sola.",
+        "FILE_EMPTY" to "Il file è vuoto.",
+        "STORAGE_ERROR" to "Caricamento non riuscito: riprova tra poco.",
         // Edge Function play-verify (acquisto HAPOSTO Plus).
         "PURCHASE_NOT_VALID" to "Google Play non riconosce questo acquisto.",
         "PURCHASE_OTHER_ACCOUNT" to "Questo abbonamento è legato a un altro account HAPOSTO.",

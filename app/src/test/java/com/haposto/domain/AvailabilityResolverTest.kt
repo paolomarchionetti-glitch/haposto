@@ -31,6 +31,20 @@ class AvailabilityResolverTest {
     }
 
     @Test
+    fun offer_isShownOnlyWhileTheStatusIsValid() {
+        fun withOffer(validUntil: String) = partner(
+            live = LiveAvailability(
+                status = AvailabilityStatus.AVAILABLE,
+                updatedAt = Instant.parse("2026-08-24T17:40:00Z"),
+                validUntil = Instant.parse(validUntil),
+                offer = "Dolce offerto",
+            ),
+        )
+        assertEquals("Dolce offerto", AvailabilityResolver.resolve(withOffer("2026-08-24T18:10:00Z"), now).offer)
+        assertEquals(null, AvailabilityResolver.resolve(withOffer("2026-08-24T17:55:00Z"), now).offer)
+    }
+
+    @Test
     fun expired_partner_status_becomes_stale() {
         val restaurant = partner(
             live = LiveAvailability(

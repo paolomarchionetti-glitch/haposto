@@ -1,12 +1,8 @@
 package com.haposto.ui.screens.reservations
 
-import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.speech.RecognizerIntent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,10 +14,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -30,66 +29,118 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.haposto.data.reservations.Reservation
+import com.haposto.data.reservations.ReservationList
+import com.haposto.domain.model.OpeningHours
+import com.haposto.domain.reservations.ReservationTimes
+import com.haposto.domain.voice.ReservationDictation
 import com.haposto.ui.components.BigActionButton
 import com.haposto.ui.components.InfoDisclosure
+import com.haposto.ui.components.rememberSpeechInput
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservationsScreen(
     items: List<Reservation>,
-    onAddOrUpdate: (editingId: String?, name: String, time: String, partySize: Int, table: String?) -> Unit,
+    onAddOrUpdate: (
+        editingId: String?,
+        name: String,
+        time: String,
+        partySize: Int,
+        table: String?,
+        date: LocalDate,
+    ) -> Unit,
     onRemove: (String) -> Unit,
     onBack: () -> Unit,
+    today: LocalDate = LocalDate.now(),
+    /** Orari del locale: decidono gli orari proposti a un tocco (null = pranzo e cena standard). */
+    openingHours: OpeningHours? = null,
 ) {
     // Saveable: a rotation or a trip to the voice-recognition activity must not wipe the form.
+    var selectedDayEpoch by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
+    val selectedDay = LocalDate.ofEpochDay(selectedDayEpoch).let { if (it.isBefore(today)) today else it }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var name by rememberSaveable { mutableStateOf("") }
-    var time by rememberSaveable { mutableStateOf("") }
+    var time by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
     var party by rememberSaveable { mutableIntStateOf(2) }
     var table by rememberSaveable { mutableStateOf("") }
-    var voiceError by remember { mutableStateOf<String?>(null) }
+    var voiceMessage by remember { mutableStateOf<String?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    fun setTime(text: String) {
+        time = TextFieldValue(text, TextRange(text.length))
+    }
 
     fun resetForm() {
-        editingId = null; name = ""; time = ""; party = 2; table = ""
+        editingId = null; name = ""; setTime(""); party = 2; table = ""
     }
 
-    val speechLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val spoken = result.data
-                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                ?.firstOrNull()
-                ?.trim()
-            if (!spoken.isNullOrEmpty()) {
-                name = if (name.isBlank()) spoken else "$name $spoken"
+    val dictate = rememberSpeechInput(
+        prompt = "Es. «Rossi, quattro, alle venti e trenta, tavolo dodici»",
+        onText = { spoken ->
+            val draft = ReservationDictation.parse(spoken, today, openingHours, selectedDay)
+            if (draft.isEmpty) {
+                voiceMessage = "Non ho capito: riprova o scrivi a mano."
+            } else {
+                draft.name?.let { name = it }
+                draft.time?.let { setTime(ReservationTimes.format(it)) }
+                draft.partySize?.let { party = it.coerceIn(1, ReservationsViewModel.MAX_PARTY_SIZE) }
+                draft.table?.let { table = it }
+                draft.date?.let { if (!it.isBefore(today)) selectedDayEpoch = it.toEpochDay() }
+                voiceMessage = "Controlla i dati e premi Aggiungi."
             }
-        }
-    }
+        },
+        onUnavailable = { voiceMessage = "Dettatura non disponibile su questo telefono: scrivi a mano." },
+    )
 
-    fun dictateName() {
-        voiceError = null
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Detta il nome…")
-        }
-        try {
-            speechLauncher.launch(intent)
-        } catch (e: ActivityNotFoundException) {
-            voiceError = "Riconoscimento vocale non disponibile su questo dispositivo. Puoi scrivere il nome."
+    val slots = remember(selectedDay, openingHours) {
+        ReservationTimes.slots(openingHours, selectedDay, now = LocalDateTime.now()).map(ReservationTimes::format)
+    }
+    val dayItems = ReservationList.forDay(items, selectedDay)
+
+    if (showDatePicker) {
+        val pickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDay.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pickerState.selectedDateMillis?.let { millis ->
+                            val picked = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                            selectedDayEpoch = (if (picked.isBefore(today)) today else picked).toEpochDay()
+                        }
+                        showDatePicker = false
+                    },
+                ) { Text("Scegli") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Annulla") } },
+        ) {
+            DatePicker(state = pickerState)
         }
     }
 
@@ -112,8 +163,36 @@ fun ReservationsScreen(
                 Spacer(Modifier.height(4.dp))
                 InfoDisclosure(
                     label = "A cosa serve",
-                    text = "Un blocco note privato per le prenotazioni extra (telefono, walk-in, fuori da altri sistemi). Resta solo su questo dispositivo. Facoltativo: usalo come e quando vuoi.",
+                    text = "Un blocco note privato per le prenotazioni extra (telefono, walk-in, fuori da altri sistemi). Resta solo su questo dispositivo; i giorni passati si cancellano da soli. Facoltativo: usalo come e quando vuoi.",
                 )
+            }
+
+            // Giorno: oggi, domani o un altro.
+            item {
+                val tomorrow = today.plusDays(1)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = selectedDay == today,
+                        onClick = { selectedDayEpoch = today.toEpochDay() },
+                        label = { Text("Oggi") },
+                    )
+                    FilterChip(
+                        selected = selectedDay == tomorrow,
+                        onClick = { selectedDayEpoch = tomorrow.toEpochDay() },
+                        label = { Text("Domani") },
+                    )
+                    val otherDay = selectedDay != today && selectedDay != tomorrow
+                    FilterChip(
+                        selected = otherDay,
+                        onClick = { showDatePicker = true },
+                        label = { Text(if (otherDay) "📅 ${dayLabel(selectedDay)}" else "📅 Altro giorno") },
+                    )
+                }
             }
 
             // Form aggiungi / modifica
@@ -129,9 +208,27 @@ fun ReservationsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
-                            text = if (editingId == null) "Aggiungi prenotazione" else "Modifica prenotazione",
+                            text = if (editingId == null) {
+                                "Aggiungi prenotazione · ${dayTitle(selectedDay, today)}"
+                            } else {
+                                "Modifica prenotazione"
+                            },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
+                        )
+
+                        OutlinedButton(
+                            onClick = dictate,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 52.dp),
+                        ) {
+                            Text("🎙  Detta la prenotazione", fontWeight = FontWeight.Bold)
+                        }
+                        Text(
+                            text = voiceMessage ?: "Es. «Rossi, quattro, alle venti e trenta, tavolo dodici». Oppure scrivi qui sotto.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
 
                         OutlinedTextField(
@@ -141,19 +238,35 @@ fun ReservationsScreen(
                             singleLine = true,
                             label = { Text("Nome") },
                             placeholder = { Text("Es. Mario Rossi") },
-                            trailingIcon = {
-                                TextButton(onClick = { dictateName() }) { Text("🎙 Detta") }
-                            },
                         )
+
+                        if (slots.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                val current = ReservationTimes.normalize(time.text)
+                                slots.forEach { slot ->
+                                    FilterChip(
+                                        selected = current == slot,
+                                        onClick = { setTime(slot) },
+                                        label = { Text(slot) },
+                                    )
+                                }
+                            }
+                        }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedTextField(
                                 value = time,
-                                onValueChange = { time = it },
+                                onValueChange = { typed -> setTime(ReservationTimes.formatTyped(typed.text)) },
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 label = { Text("Orario") },
-                                placeholder = { Text("20:30") },
+                                placeholder = { Text("2030") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             )
                             OutlinedTextField(
                                 value = table,
@@ -173,7 +286,7 @@ fun ReservationsScreen(
                                 modifier = Modifier.width(48.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                textAlign = TextAlign.Center,
                             )
                             OutlinedButton(
                                 onClick = { if (party < ReservationsViewModel.MAX_PARTY_SIZE) party++ },
@@ -181,15 +294,13 @@ fun ReservationsScreen(
                             ) { Text("+") }
                         }
 
-                        voiceError?.let {
-                            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                        }
-
                         BigActionButton(
                             text = if (editingId == null) "Aggiungi" else "Salva modifica",
                             onClick = {
-                                onAddOrUpdate(editingId, name, time, party, table)
+                                val cleanTime = ReservationTimes.normalize(time.text) ?: time.text.trim()
+                                onAddOrUpdate(editingId, name, cleanTime, party, table, selectedDay)
                                 resetForm()
+                                voiceMessage = null
                             },
                             enabled = name.isNotBlank(),
                         )
@@ -202,10 +313,10 @@ fun ReservationsScreen(
                 }
             }
 
-            if (items.isEmpty()) {
+            if (dayItems.isEmpty()) {
                 item {
                     Text(
-                        text = "Nessuna prenotazione annotata. Aggiungine una qui sopra.",
+                        text = "Nessuna prenotazione per ${dayTitle(selectedDay, today).lowercase()}. Aggiungine una qui sopra.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 8.dp),
@@ -213,21 +324,25 @@ fun ReservationsScreen(
                 }
             } else {
                 item {
+                    val people = dayItems.sumOf { it.partySize }
                     Text(
-                        text = "${items.size} in lista",
+                        text = "${dayTitle(selectedDay, today)}: ${dayItems.size} " +
+                            (if (dayItems.size == 1) "prenotazione" else "prenotazioni") +
+                            " · $people " + (if (people == 1) "persona" else "persone"),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                items(items = items, key = { it.id }) { r ->
+                items(items = dayItems, key = { it.id }) { r ->
                     ReservationRow(
                         reservation = r,
                         onEdit = {
                             editingId = r.id
                             name = r.name
-                            time = r.time
+                            setTime(r.time)
                             party = r.partySize
                             table = r.table ?: ""
+                            r.localDate?.let { selectedDayEpoch = it.toEpochDay() }
                         },
                         onRemove = { onRemove(r.id) },
                     )
@@ -237,6 +352,16 @@ fun ReservationsScreen(
             item { Spacer(Modifier.height(24.dp)) }
         }
     }
+}
+
+private val DAY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ITALIAN)
+
+private fun dayLabel(day: LocalDate): String = DAY_FORMAT.format(day)
+
+private fun dayTitle(day: LocalDate, today: LocalDate): String = when (day) {
+    today -> "Oggi"
+    today.plusDays(1) -> "Domani"
+    else -> dayLabel(day).replaceFirstChar { it.titlecase(Locale.ITALIAN) }
 }
 
 @Composable

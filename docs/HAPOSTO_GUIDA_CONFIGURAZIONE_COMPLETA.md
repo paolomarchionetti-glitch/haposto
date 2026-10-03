@@ -318,6 +318,7 @@ utente, segreto condiviso o firma di Stripe), quindi si pubblicano tutte con `--
 | `stripe-checkout` | il sito (titolare con 2FA) | pagina di pagamento Pro |
 | `billing-portal` | il sito (titolare con 2FA) | cambiare carta, fatture, disdetta |
 | `stripe-webhook` | Stripe | registrare abbonamenti e pagamenti Pro |
+| `restaurant-file` | l'app (titolare con 2FA) e pg_cron, ogni notte | foto o PDF del menù: controllo, caricamento, pulizia |
 
 ### 6.1 Pubblicazione (una volta, poi a ogni aggiornamento delle funzioni)
 
@@ -333,6 +334,7 @@ npx supabase functions deploy play-rtdn --no-verify-jwt --use-api
 npx supabase functions deploy stripe-checkout --no-verify-jwt --use-api
 npx supabase functions deploy billing-portal --no-verify-jwt --use-api
 npx supabase functions deploy stripe-webhook --no-verify-jwt --use-api
+npx supabase functions deploy restaurant-file --no-verify-jwt --use-api
 ```
 
 - `login` apre il browser: accedi a Supabase e conferma. Se `link` chiede la password del database
@@ -341,7 +343,10 @@ npx supabase functions deploy stripe-webhook --no-verify-jwt --use-api
   `https://REF_DEV.supabase.co`.
 - Si possono pubblicare tutte subito: finché mancano i loro segreti (Parti 7–9) ogni funzione
   rifiuta le chiamate.
-- Controllo: Supabase → **Edge Functions** → compaiono le 6 funzioni.
+- Controllo: Supabase → **Edge Functions** → compaiono le 7 funzioni.
+- Dopo un aggiornamento del repository che tocca `supabase/functions/` ripubblica le funzioni
+  cambiate (rieseguire il comando di una funzione già pubblicata la sostituisce; nel dubbio
+  ripubblicale tutte).
 
 ### 6.2 Segreti delle funzioni
 
@@ -384,8 +389,12 @@ se li avevi aggiunti, restano validi e hanno la precedenza; non servono più.)
    con l'`id` preso da `select id, name from vault.secrets;`.
 3. Esegui `supabase/ops/scheduled_jobs.sql` (promemoria, pulizie, scadenze, conservazione dati).
 4. Esegui `supabase/ops/push_dispatch_cron.sql` (invio notifiche ogni minuto): in fondo deve
-   comparire `haposto-push-dispatch` con `active = true`. Tutti e due i file sono rieseguibili.
-5. Prova. Prima apri **HAPOSTO Dev** ed entra con il tuo account: il telefono si registra per le
+   comparire `haposto-push-dispatch` con `active = true`.
+5. Esegui `supabase/ops/restaurant_files_cron.sql` (ogni notte toglie le foto "solo per oggi"
+   scadute e i file che nessun locale usa più): in fondo deve comparire
+   `haposto-restaurant-files-cleanup` con `active = true`. Serve la funzione `restaurant-file`
+   pubblicata (6.1) e la migration 0015. I tre file sono rieseguibili.
+6. Prova. Prima apri **HAPOSTO Dev** ed entra con il tuo account: il telefono si registra per le
    notifiche solo quando nell'app c'è un account collegato. Poi chiudi l'app **scorrendola via dalle
    app recenti** (non con *Forza interruzione* né con lo Stop di Android Studio: un'app "fermata"
    non riceve notifiche finché non la riapri). Infine, con il tuo indirizzo email:
@@ -411,6 +420,33 @@ se li avevi aggiunti, restano validi e hanno la precedenza; non servono più.)
    from public.device_push_tokens t join auth.users u on u.id = t.user_id
    where u.email = 'LA_TUA_EMAIL';
    ```
+
+### 6.4 Ping automatico contro la pausa (GitHub Actions, gratis)
+
+Un progetto Supabase Free senza attività per 7 giorni va in pausa. Il workflow
+`.github/workflows/supabase-keepalive.yml` fa ogni mattina una lettura su ogni progetto configurato
+(un piano pubblico, con la chiave *publishable*: nessun dato personale, nessuna scrittura). Il
+workflow parte solo dopo che il file è su `main`.
+
+1. GitHub → repository `haposto` → **Settings → Secrets and variables → Actions** → scheda
+   **Secrets** → **New repository secret**, una volta per riga:
+
+   | Name | Secret |
+   |---|---|
+   | `SUPABASE_DEV_URL` | `https://REF_DEV.supabase.co` |
+   | `SUPABASE_DEV_PUBLISHABLE_KEY` | la *publishable key* del DEV (Supabase → **Project Settings → API Keys**) |
+
+   Usa **Secrets**, non *Variables*: così l'indirizzo del progetto non compare nei registri pubblici.
+2. Prova subito: **Actions** → **Supabase keep-alive** → **Run workflow** → **Run workflow**. Dopo un
+   minuto compare il segno verde; aprendo l'esecuzione c'è la riga `DEV: ok`.
+3. Per la produzione (Parte 10) aggiungi anche `SUPABASE_PROD_URL` e `SUPABASE_PROD_PUBLISHABLE_KEY`.
+
+- Se la lettura non riesce (progetto già in pausa, chiave sbagliata) il workflow diventa rosso e
+  GitHub manda un'email: Supabase → il progetto → **Restore project**.
+- GitHub spegne i workflow pianificati dopo 60 giorni senza modifiche al repository (avvisa per
+  email): **Actions → Supabase keep-alive → Enable workflow**.
+- È una pratica diffusa, non una funzione ufficiale di Supabase: se un giorno non bastasse, il
+  progetto si riattiva comunque gratis e senza perdere dati.
 
 ---
 
@@ -627,11 +663,11 @@ DEV); restano gli stessi solo il client Google *Web*, il progetto Google Cloud/F
 3. **Project Settings → API Keys**: c'è la *publishable key* (`sb_publishable_…`, pubblica: andrà
    nell'app e nel sito). La *secret key* non va copiata. È normale che le chiavi *legacy* manchino.
 
-### 10.2 Database: migration 0001–0014
+### 10.2 Database: migration 0001–0015
 
 Supabase (**produzione**: controlla il nome del progetto in alto) → **SQL Editor** → **New query** →
 incolla il file intero → **Run**, **uno alla volta, in ordine**: `supabase/migrations/0001_extensions.sql`
-… `0014_explicit_grants.sql` (14 file, compresa la 0005). Se compare *Potential issue detected…
+… `0015_notes_links_file_offer.sql` (15 file, compresa la 0005). Se compare *Potential issue detected…
 destructive operation* premi **Run this query**. Se un file dà errore, fermati e mandami la riga.
 
 Verifica (nuova query):
@@ -645,11 +681,13 @@ select
      where pubname = 'supabase_realtime' and tablename = 'restaurant_live_status') as tempo_reale,
     (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname = 'public' and c.relkind = 'r'
-       and not has_table_privilege('service_role', c.oid, 'UPDATE')) as tabelle_senza_permessi_del_server;
+       and not has_table_privilege('service_role', c.oid, 'UPDATE')) as tabelle_senza_permessi_del_server,
+    (select count(*) from storage.buckets where id = 'restaurant-files') as contenitore_file;
 ```
 
 Atteso: `locali` 0 · `impostazioni` `beta, dev_tools_enabled, legal, min_supported_app_version,
-public_links, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0.
+public_links, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0 ·
+`contenitore_file` 1.
 
 In produzione **mai**: `supabase/seeds/*`, `supabase/dev/*`, `supabase/tests/*`. (Sul DEV la 0014
 non serve, ha già quei permessi; eseguirla è innocuo.)
@@ -727,6 +765,7 @@ Prova: app HAPOSTO → Account → tieni premuto 5 secondi sulla versione → "A
    npx supabase functions deploy stripe-checkout --no-verify-jwt --use-api
    npx supabase functions deploy billing-portal --no-verify-jwt --use-api
    npx supabase functions deploy stripe-webhook --no-verify-jwt --use-api
+   npx supabase functions deploy restaurant-file --no-verify-jwt --use-api
    ```
    Da qui la CLI lavora sulla **produzione**: per ripubblicare sul DEV rifai prima
    `npx supabase link --project-ref REF_DEV`. Il progetto collegato è quello con ● in
@@ -743,8 +782,9 @@ Prova: app HAPOSTO → Account → tieni premuto 5 secondi sulla versione → "A
    server da aggiungere.
 3. Come al punto 6.3, ma sul progetto di **produzione**: **Database → Extensions** → `pg_cron` e
    `pg_net`; nel vault `https://REF_PROD.supabase.co` e il **nuovo** `HAPOSTO_CRON_SECRET` (poi
-   **⋯ → Delete query**); `supabase/ops/scheduled_jobs.sql`; `supabase/ops/push_dispatch_cron.sql`.
-4. Prova come al punto 6.3.5 con l'app **HAPOSTO** (chiusa scorrendola via): nella risposta deve
+   **⋯ → Delete query**); `supabase/ops/scheduled_jobs.sql`; `supabase/ops/push_dispatch_cron.sql`;
+   `supabase/ops/restaurant_files_cron.sql`.
+4. Prova come al punto 6.3.6 con l'app **HAPOSTO** (chiusa scorrendola via): nella risposta deve
    comparire `"delivered":1`.
 
 ### 10.9 Il sito passa alla produzione
@@ -771,9 +811,10 @@ con l'app Dev non si aprono più sul sito. Le prove dell'app Dev continuano come
   (`restaurants_all_pro_until`). Per cambiare la data: pannello admin → **Impostazioni** → `beta`.
 - **Backup**: con il piano Free esporta periodicamente le tabelle principali (Table Editor →
   **Export → CSV**); con il piano Pro (a pagamento) i backup sono giornalieri.
-- **Pausa**: un progetto Free senza attività per 7 giorni viene messo in pausa (succederà alla
-  produzione finché non ci sono utenti). Dashboard → il progetto → **Restore project**: gratis, i dati
-  restano (entro 90 giorni dalla pausa).
+- **Pausa**: un progetto Free senza attività per 7 giorni viene messo in pausa (succederebbe alla
+  produzione finché non ci sono utenti). Lo evita il ping automatico del punto 6.4: aggiungi i due
+  segreti `SUPABASE_PROD_…`. Se succede lo stesso: Dashboard → il progetto → **Restore project**,
+  gratis, i dati restano (entro 90 giorni dalla pausa).
 
 ---
 
@@ -805,6 +846,24 @@ sito, poi pannello → Impostazioni → `legal` → nuova versione (es. `2027-03
 l'app chiede a tutti di riaccettare.
 
 **Credenziali admin dimenticate.** Riesegui `admin_set_credentials` (punto 4.2) dal SQL Editor.
+
+**Link e file dei locali.** Pannello → **Contenuti**: compaiono i locali che hanno cambiato link o
+file e che non hai ancora guardato (**Tutti** per vederli tutti). Tocca i link per aprirli; poi
+**Visto** se va bene, oppure **Togli link** / **Togli file** (l'operazione resta nel registro
+operazioni; il file tolto si cancella nella notte). Il titolare può rimetterli: li rivedrai tra
+quelli da controllare; se insiste, sospendi il locale.
+
+**Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
+`supabase/migrations/`:
+1. prima sul **DEV**: SQL Editor → incolla il file nuovo → **Run** (le migration sono rieseguibili:
+   se non ricordi quali hai già eseguito, eseguile tutte in ordine dalla prima mancante);
+2. se la PR cambia `supabase/functions/` o `supabase/ops/`, ripubblica le funzioni (6.1) ed
+   esegui i file `ops` indicati nella PR;
+3. prova con l'app **Dev** quello che la PR descrive;
+4. solo dopo, la stessa cosa sulla **produzione** (controlla il nome del progetto in alto).
+
+Le versioni dell'app già installate continuano a funzionare con il database aggiornato: i
+campi nuovi che non conoscono vengono ignorati.
 
 ---
 

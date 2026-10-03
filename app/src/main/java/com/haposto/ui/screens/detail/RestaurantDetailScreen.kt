@@ -149,6 +149,14 @@ fun RestaurantDetailScreen(
                                 fontWeight = FontWeight.Medium,
                             )
                         }
+                        effective.offer?.takeIf(String::isNotBlank)?.let { offer ->
+                            Text(
+                                text = "🏷 Offerta di stasera: $offer",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
 
                         HorizontalDivider()
                         Text(
@@ -177,6 +185,31 @@ fun RestaurantDetailScreen(
                             extras.isPlus -> "🔔 Avvisami quando c'è posto"
                             else -> "🔔 Avvisami quando c'è posto · Plus"
                         },
+                    )
+                }
+            }
+
+            val links = listOfNotNull(
+                extras?.menuUrl?.let { "📋 Menù" to it },
+                extras?.fileUrl?.let { (extras?.fileLabel ?: "📄 Menù") to it },
+                extras?.websiteUrl?.let { "🌐 Sito del locale" to it },
+            )
+            if (links.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Menù e sito", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    links.forEach { (label, url) ->
+                        OutlinedButton(
+                            onClick = {
+                                actionError = if (ExternalActions.openWebPage(context, url)) null
+                                else "Nessuna app disponibile per aprire il link."
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { Text(label) }
+                    }
+                    Text(
+                        "Contenuti messi dal locale.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -356,4 +389,9 @@ data class DetailExtras(
     val patternLines: List<String>,
     val message: String?,
     val onTrack: (RestaurantEvent) -> Unit,
+    /** Link e file messi dal locale (null = non indicati). */
+    val websiteUrl: String? = null,
+    val menuUrl: String? = null,
+    val fileUrl: String? = null,
+    val fileLabel: String? = null,
 )

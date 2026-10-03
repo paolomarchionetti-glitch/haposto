@@ -36,6 +36,7 @@ object AvailabilityResolver {
             availableTables = live.availableTables,
             estimatedWaitMinutes = live.estimatedWaitMinutes,
             note = live.note,
+            offer = live.offer.takeIf { live.status != AvailabilityStatus.FULL },
         )
     }
 
