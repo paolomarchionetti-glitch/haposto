@@ -212,6 +212,11 @@ class RestaurantManagerViewModel(
             return
         }
         message.value = null
+        // "togli i tavoli", "attesa non indicata", "nessuna nota", "togli l'offerta".
+        if (draft.tablesCleared) updateTables(null)
+        if (draft.waitCleared) updateWait(null)
+        if (draft.noteCleared) setNote("")
+        if (draft.offerCleared) setOffer("")
         draft.tables?.let { updateTables(it) }
         draft.waitMinutes?.let { updateWait(it) }
         draft.note?.let { setNote(it) }

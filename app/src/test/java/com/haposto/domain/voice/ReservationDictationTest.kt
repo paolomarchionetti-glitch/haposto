@@ -152,6 +152,52 @@ class ReservationDictationTest {
     }
 
     @Test
+    fun anyTime_evenUnusualOnes() {
+        assertEquals(LocalTime.of(13, 17), parse("Rossi alle 13.17 per 2").time)
+        assertEquals(LocalTime.of(13, 17), parse("Rossi alle 1317 per 2").time)
+        assertEquals(LocalTime.of(13, 17), parse("Rossi alle 13 17").time)
+        assertEquals(LocalTime.of(13, 17), parse("Rossi alle tredici e diciassette").time)
+        assertEquals(LocalTime.of(21, 10), parse("Verdi ore 2110").time)
+        val draft = parse("Rossi alle 1317 per 2")
+        assertEquals("Rossi", draft.name)
+        assertEquals(2, draft.partySize)
+    }
+
+    @Test
+    fun dayOfTheMonth_withOrWithoutTheMonth() {
+        val fifteenth = parse("Bianchi il 15 alle 20 per 3")
+        assertEquals(LocalDate.of(2026, 10, 15), fifteenth.date)
+        assertEquals(LocalTime.of(20, 0), fifteenth.time)
+        assertEquals(3, fifteenth.partySize)
+        assertEquals("Bianchi", fifteenth.name)
+        assertEquals(LocalDate.of(2026, 10, 15), parse("Galli 15 ottobre a pranzo, 4").date)
+        // Già passato quest'anno: l'anno prossimo.
+        assertEquals(LocalDate.of(2027, 9, 30), parse("Galli il 30 settembre").date)
+        assertEquals(4, parse("il 15 per 4 persone").partySize)
+    }
+
+    @Test
+    fun weekdayWithNumber_isADateOnlyIfItMatches() {
+        // Sabato 3 ottobre 2026 esiste: è la data.
+        val saturday = parse("Conti sabato 3 alle 20")
+        assertEquals(LocalDate.of(2026, 10, 3), saturday.date)
+        assertNull(saturday.partySize)
+        // Domenica è il 4: "domenica 3" sono 3 persone.
+        val sunday = parse("Conti domenica 3")
+        assertEquals(LocalDate.of(2026, 10, 4), sunday.date)
+        assertEquals(3, sunday.partySize)
+    }
+
+    @Test
+    fun coupleFamilyAndTitles() {
+        assertEquals(2, parse("una coppia alle 21, Ferri").partySize)
+        val family = parse("famiglia di 5 alle 20, Russo")
+        assertEquals(5, family.partySize)
+        assertEquals("Russo", family.name)
+        assertEquals("Gallo", parse("dottor Gallo per 2 alle 20").name)
+    }
+
+    @Test
     fun emptyText() {
         assertTrue(parse("   ").isEmpty)
     }

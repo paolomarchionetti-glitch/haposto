@@ -155,7 +155,16 @@ Tocca **Dettagli facoltativi** solo se vuoi:
 - **🎙 Detta i dettagli**: una frase sola, es. «tre tavoli, dieci minuti, solo tavoli fuori» →
   tavoli 3, attesa 10 min, nota "Solo tavoli fuori". Dopo la parola «offerta» detti l'offerta
   («due tavoli, offerta dolce offerto»), dopo «nota» la nota. Compila solo quello che dici;
-  controlla e correggi a mano se serve;
+  controlla e correggi a mano se serve. Esempi che capisce:
+
+  | Detti | Diventa |
+  |---|---|
+  | «nessuna attesa», «attesa nessuna», «attesa zero», «non c'è attesa» | Attesa **Nessuna** |
+  | «attesa non indicata», «togli l'attesa» | Attesa **Non indicata** |
+  | «una ventina di minuti», «10-15 minuti», «mezz'oretta» | Attesa 20 min, 20 min, 30+ min |
+  | «un paio di tavoli», «tre o quattro tavoli», «solo un tavolo» | Tavoli 2, 3, 1 |
+  | «togli i tavoli», «nessuna nota», «togli l'offerta» | Campo svuotato |
+
 - **Tavoli liberi indicativi** con − e +;
 - **Attesa indicativa** (Non indicata, Nessuna, 10 min, 20 min, 30+ min);
 - **Nota breve** (max 80 caratteri), es. "Solo tavoli esterni", "Cucina fino alle 23". Sotto
@@ -201,7 +210,9 @@ e i clienti non lo vedono.
 1. In alto scegli il giorno: **Oggi**, **Domani** o **📅 Altro giorno**.
 2. **🎙 Detta la prenotazione** con una frase sola, es. «Rossi, quattro, alle venti e trenta,
    tavolo dodici»: compila nome, persone, orario e tavolo. Capisce anche «domani», «sabato»,
-   «a pranzo», «alle otto e mezza», «tavolo da sei». Controlla e correggi se serve.
+   «il 15», «sabato 15 ottobre», «a pranzo», «alle otto e mezza», «tavolo da sei», «una coppia»,
+   «famiglia di quattro» e qualsiasi orario: «alle 13.17», «alle tredici e diciassette», «alle
+   1317». Toglie dal nome «signor», «dottor» e simili. Controlla e correggi se serve.
 3. Oppure a mano: **Nome**; **Orario** con un tocco sugli orari proposti (dagli orari del locale)
    o scrivendo solo le cifre (2030 → 20:30, i due punti si mettono da soli); **Persone** con − e +;
    **Tavolo** facoltativo.
