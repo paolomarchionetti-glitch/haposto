@@ -27,10 +27,12 @@ import com.haposto.data.auth.AuthState
 import com.haposto.data.network.NetworkMonitor
 import com.haposto.data.repository.RestaurantAccessRepository
 import com.haposto.data.repository.RestaurantRepository
+import com.haposto.data.restaurant.PlanNotices
 import com.haposto.data.restaurant.RestaurantManagementRepository
 import com.haposto.data.restaurant.SharedPrefsRecentNotesStore
 import com.haposto.platform.notifications.HaPostoNotifications
 import com.haposto.platform.notifications.Reminders
+import java.time.Instant
 import kotlinx.coroutines.launch
 
 /**
@@ -112,9 +114,14 @@ fun RestaurantManagerRoute(
     // Note pronte del locale (solo con account vero): le vede e le usa anche lo staff.
     val scope = rememberCoroutineScope()
     var quickNotes by remember(restaurantId) { mutableStateOf(emptyList<String>()) }
+    // Piano in scadenza o finito: avviso in cima alla dashboard (solo con account vero).
+    var planWarning by remember(restaurantId) { mutableStateOf<String?>(null) }
     LaunchedEffect(management, restaurantId) {
         if (management != null) {
             management.extras(restaurantId).valueOrNull?.let { quickNotes = it.quickNotes }
+            management.managerInfo(restaurantId).valueOrNull?.let { info ->
+                planWarning = PlanNotices.warning(info.plan, Instant.now())
+            }
         }
     }
     val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
@@ -144,6 +151,7 @@ fun RestaurantManagerRoute(
         },
         quickNotes = quickNotes,
         canSaveQuickNotes = management != null,
+        planWarning = planWarning,
         onSaveQuickNote = { note ->
             if (management != null) {
                 scope.launch {

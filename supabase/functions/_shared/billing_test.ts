@@ -2,7 +2,7 @@
 import { assert, assertEquals, assertFalse } from "jsr:@std/assert@1";
 import { base64UrlDecode, base64UrlEncode, safeEqual, sha256Hex } from "./http.ts";
 import { mapState } from "./play.ts";
-import { verifyStripeSignature } from "./stripe.ts";
+import { billingInterval, requestedInterval, verifyStripeSignature } from "./stripe.ts";
 
 async function stripeHeader(payload: string, secret: string, timestamp: number): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -54,4 +54,15 @@ Deno.test("confronto dei segreti e base64url", () => {
   assertFalse(safeEqual("segreto", "segreto-lungo"));
   const bytes = new Uint8Array([0, 250, 251, 252, 253, 254, 255]);
   assertEquals(base64UrlDecode(base64UrlEncode(bytes)), bytes);
+});
+
+Deno.test("periodi Stripe: mensile, semestrale (6 mesi) e annuale", () => {
+  assertEquals(billingInterval({ interval: "month", interval_count: 1 }), "MONTH");
+  assertEquals(billingInterval({ interval: "month", interval_count: 6 }), "SEMESTER");
+  assertEquals(billingInterval({ interval: "year", interval_count: 1 }), "YEAR");
+  assertEquals(billingInterval(undefined), "MONTH");
+  assertEquals(requestedInterval("SEMESTER"), "SEMESTER");
+  assertEquals(requestedInterval("YEAR"), "YEAR");
+  assertEquals(requestedInterval("WEEK"), "MONTH");
+  assertEquals(requestedInterval(undefined), "MONTH");
 });

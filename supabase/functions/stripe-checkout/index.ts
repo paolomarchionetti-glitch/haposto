@@ -1,11 +1,12 @@
 // stripe-checkout — il titolare (sul sito, con Google + verifica in due passaggi) attiva Pro.
 // Crea la pagina di pagamento Stripe legata al locale e restituisce l'indirizzo a cui andare.
 // Segreti: STRIPE_SECRET_KEY, HAPOSTO_SITE_URL, facoltativi STRIPE_PRICE_PRO_MONTH,
-// STRIPE_PRICE_PRO_YEAR (altrimenti dalla tabella plans) e STRIPE_TAX_RATE_ID (IVA 22%).
+// STRIPE_PRICE_PRO_SEMESTER, STRIPE_PRICE_PRO_YEAR (altrimenti dalla tabella plans) e
+// STRIPE_TAX_RATE_ID (IVA 22% inclusa nel prezzo).
 import { HttpError, json, serve } from "../_shared/http.ts";
 import { adminClient, requireCaller } from "../_shared/supabase.ts";
 import { requireOwner } from "../_shared/owner.ts";
-import { customerForRestaurant, siteUrl, stripe } from "../_shared/stripe.ts";
+import { customerForRestaurant, requestedInterval, siteUrl, stripe } from "../_shared/stripe.ts";
 
 const PLAN_CODE = "RESTAURANT_PRO";
 
@@ -13,7 +14,7 @@ serve(async (request) => {
   if (request.method !== "POST") throw new HttpError(405, "METHOD_NOT_ALLOWED");
   const caller = await requireCaller(request);
   const body = await request.json().catch(() => ({})) as { restaurantId?: string; interval?: string };
-  const interval = body.interval === "YEAR" ? "YEAR" : "MONTH";
+  const interval = requestedInterval(body.interval);
   const restaurant = await requireOwner(caller, body.restaurantId);
 
   if (restaurant.plan_source === "STRIPE" && restaurant.plan_code !== "RESTAURANT_BASIC") {
@@ -31,12 +32,14 @@ serve(async (request) => {
 
   const db = adminClient();
   const { data: plan } = await db.from("plans")
-    .select("stripe_price_month, stripe_price_year")
+    .select("stripe_price_month, stripe_price_semester, stripe_price_year")
     .eq("code", PLAN_CODE)
     .maybeSingle();
-  const price = interval === "YEAR"
-    ? Deno.env.get("STRIPE_PRICE_PRO_YEAR") ?? plan?.stripe_price_year
-    : Deno.env.get("STRIPE_PRICE_PRO_MONTH") ?? plan?.stripe_price_month;
+  const price = {
+    MONTH: Deno.env.get("STRIPE_PRICE_PRO_MONTH") ?? plan?.stripe_price_month,
+    SEMESTER: Deno.env.get("STRIPE_PRICE_PRO_SEMESTER") ?? plan?.stripe_price_semester,
+    YEAR: Deno.env.get("STRIPE_PRICE_PRO_YEAR") ?? plan?.stripe_price_year,
+  }[interval];
   if (!price) throw new HttpError(500, "NOT_CONFIGURED");
 
   let customer = await customerForRestaurant(db, restaurant.restaurant_id);

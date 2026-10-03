@@ -77,7 +77,7 @@ e la disponibilità dei ristoratori per il pilot. Meglio spostarle che partire c
 | D2 | **Dominio** | `haposto.app`, `haposto.it`, entrambi | compralo subito (serve a Google per il login, alla privacy policy, al sito e ai QR) | ottobre 2026 |
 | D3 | Tipo di account **Google Play** | personale o organizzazione | organizzazione se hai P.IVA/società (serve il numero D-U-N-S, gratuito); con account personale Google impone un test chiuso con almeno 12 tester per 14 giorni | prima della Fase I |
 | D4 | **Città e zone del pilot** | Pesaro centro + mare + Baia Flaminia | 2–3 zone vicine: conta la densità | inizio dicembre 2026 |
-| D5 | **Prezzi definitivi** | quelli indicativi: Pro €12,90 + IVA/mese o €99 + IVA/anno; Plus €1,49/mese o €9,99/anno IVA inclusa | decidili con i numeri del pilot | marzo 2027 |
+| D5 | **Prezzi definitivi** | provvisori dal 2 ottobre 2026, IVA inclusa: Pro €19,90/mese, €99,90/6 mesi, €199,90/anno; Plus €0,99/mese, €4,99/6 mesi, €9,99/anno; prova di 30 giorni per chi entra dopo la beta, poi "Non collegato" senza abbonamento | conferma o correggi con i numeri del pilot | marzo 2027 |
 | D6 | **Fine beta** | 30/06/2027 (attuale) o altra data | cambiabile in `app_config` senza aggiornare l'app | aprile 2027 |
 | D7 | Accesso ristoratori **senza account Google** | solo Google; Google + link via email | aggiungi il link via email solo se nel pilot qualcuno lo chiede | durante il pilot |
 | D8 | **iOS** | no; dopo il lancio Android; mai | valuta dopo 3 mesi di lancio | estate 2027 |
@@ -572,12 +572,12 @@ Fornitori da citare: Supabase (database e login), Google (login, notifiche, cras
 | | Ristoranti — Pro | Utenti — Plus |
 |---|---|---|
 | Dove si compra | sito (Stripe) | app (Google Play) |
-| Prezzo indicativo | €12,90 + IVA/mese, €99 + IVA/anno | €1,49/mese, €9,99/anno IVA inclusa |
+| Prezzo provvisorio (IVA inclusa) | €19,90/mese, €99,90/6 mesi, €199,90/anno | €0,99/mese, €4,99/6 mesi, €9,99/anno |
 | Chi incassa e trattiene | Stripe (~1,5% + 0,25 € + ~0,7%) | Google (15%) |
 | Fattura | elettronica SDI, emessa da HAPOSTO | ricevuta di Google (Google è il venditore verso l'utente per le regole IVA dello store) |
 | Conferma al nostro database | webhook Stripe → Edge Function ✅ | verifica ricevuta + RTDN → Edge Function ✅ |
 | Disdetta | portale Stripe dal sito | Google Play → Abbonamenti |
-| Se il pagamento fallisce | 3 giorni poi Basic ✅ | periodo di tolleranza di Google, poi Gratis ✅ |
+| Se il pagamento fallisce | 3 giorni poi "Non collegato" ✅ | periodo di tolleranza di Google, poi Gratis ✅ |
 | Prova | modalità test Stripe | tester con licenza in Play Console |
 
 ---

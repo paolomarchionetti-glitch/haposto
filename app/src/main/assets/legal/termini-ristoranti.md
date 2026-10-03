@@ -30,14 +30,19 @@ subito HAPOSTO in caso di uso non autorizzato.
 
 ## 4. Piani e prezzi
 
-4.1 **Basic** (gratuito): stato con un tocco, telefono pubblico, pagina con QR, statistiche essenziali.
-4.2 **Pro** (a pagamento): dettagli (tavoli, attesa, nota), collaboratori, promemoria, statistiche
-complete, prenotazioni condivise. Prezzi indicati su haposto.app/ristoratori, IVA esclusa.
-4.3 **Beta**: fino al [DATA FINE BETA] le funzioni Pro sono gratuite. Alla fine della beta
-**nessun addebito avviene senza la tua sottoscrizione esplicita**: se non ti abboni resti su Basic.
-4.4 Gli abbonamenti si pagano sul sito con Stripe, si **rinnovano automaticamente** (mese o anno) e
-si disdicono in qualsiasi momento con effetto alla fine del periodo pagato. In caso di mancato
-pagamento, dopo 3 giorni il locale torna su Basic.
+4.1 **Pro** (a pagamento): stato con un tocco, dettagli (tavoli, attesa, nota, offerta della
+serata), menù e sito, pagina con QR, collaboratori, promemoria, statistiche complete, prenotazioni
+condivise. Prezzi indicati su haposto.app/ristoratori, **IVA inclusa**.
+4.2 **Prova gratuita**: fino al [DATA FINE BETA] le funzioni Pro sono gratuite per tutti; chi
+attiva il locale dopo ha una prova gratuita della durata indicata su haposto.app/ristoratori
+(all'avvio 30 giorni) dal giorno in cui il locale è attivo. **Nessun addebito avviene senza la tua
+sottoscrizione esplicita.** HAPOSTO avvisa il titolare 7 giorni e 1 giorno prima della fine.
+4.3 **Senza piano**: finita la prova, se non ti abboni il locale resta nella lista come "non
+collegato" con i dati pubblici di directory, senza stato, offerta, menù e sito, e non puoi
+pubblicare lo stato finché non attivi Pro.
+4.4 Gli abbonamenti si pagano sul sito con Stripe, si **rinnovano automaticamente** (mese, 6 mesi o
+anno) e si disdicono in qualsiasi momento con effetto alla fine del periodo pagato. In caso di
+mancato pagamento, dopo 3 giorni il locale torna "non collegato".
 4.5 HAPOSTO emette **fattura elettronica** con i dati di fatturazione indicati dal Ristoratore.
 
 ## 5. Sospensione e recesso
@@ -74,5 +79,5 @@ Legge italiana. Per le controversie è competente in via esclusiva il Foro di [C
 
 Ai sensi degli artt. 1341 e 1342 del Codice civile il Ristoratore dichiara di approvare
 specificamente le seguenti clausole: 2.3 (responsabilità per l'account e i collaboratori),
-4.4 (rinnovo automatico e passaggio a Basic in caso di mancato pagamento), 5.1 (sospensione),
+4.4 (rinnovo automatico e locale "non collegato" in caso di mancato pagamento), 5.1 (sospensione),
 6.2 (limitazione di responsabilità), 8 (modifiche unilaterali con preavviso), 9 (foro esclusivo).

@@ -1,6 +1,6 @@
 -- HAPOSTO — Lavori pianificati di produzione (pg_cron).
 --
--- Prerequisiti: migration 0006–0013 eseguite; estensione pg_cron attiva
+-- Prerequisiti: migration 0006–0016 eseguite; estensione pg_cron attiva
 -- (Dashboard → Database → Extensions → "pg_cron" → Enable).
 -- Rieseguibile: cron.schedule con lo stesso nome aggiorna il job esistente.
 -- Orari cron in UTC (Supabase): 02:30 UTC = 03:30 o 04:30 in Italia.
@@ -52,6 +52,14 @@ select cron.schedule(
     'haposto-purge-operational-data',
     '15 3 * * 0',
     'select public.purge_operational_data()'
+);
+
+-- Avvisi al titolare 7 giorni e 1 giorno prima della fine della prova o del piano (migration
+-- 0016): finiscono nella coda delle notifiche push. Ogni giorno alle 08:00 UTC (9 o 10 in Italia).
+select cron.schedule(
+    'haposto-plan-expiry-notices',
+    '0 8 * * *',
+    'select public.enqueue_plan_expiry_notices()'
 );
 
 -- Controllo: elenco dei job attivi.

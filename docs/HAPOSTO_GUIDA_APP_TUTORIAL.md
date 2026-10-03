@@ -226,9 +226,12 @@ No. Vede se c'è posto e ti chiama o arriva. Le prenotazioni restano tue.
 No: dopo 30 minuti lo stato diventa "Da aggiornare". Nessun dato vecchio viene mostrato come attuale.
 
 **Quanto costa?**
-Oggi niente. Il piano Basic (stato, telefono, pagina con QR, statistiche essenziali) resterà gratis;
-Pro aggiunge dettagli, staff, promemoria, statistiche complete e prenotazioni condivise.
-Durante la beta Pro è gratis. Dettagli: `HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md`.
+Durante la beta niente: tutti i locali hanno Pro gratis. Chi entra dopo ha una prova gratuita (un
+mese). Poi Pro costa 19,90 € al mese, 99,90 € per 6 mesi o 199,90 € l'anno, IVA inclusa (prezzi
+provvisori), e si attiva sul sito, area ristoratori. Senza abbonamento il locale resta nella lista
+come **Non collegato**: niente stato, offerta, menù e sito. Una settimana e un giorno prima della
+fine arriva un avviso, e in **Gestisci il locale → Il tuo piano** c'è sempre la data. Dettagli:
+`HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md`.
 
 **Serve un account per cercare?**
 No, mai. L'account servirà solo a chi gestisce un locale e a chi vorrà Plus (avvisi, preferiti su più telefoni).

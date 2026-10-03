@@ -14,10 +14,12 @@ motori di ricavo) e con il database già pronto (migration `0007`–`0011`, vedi
 
 1. **Il loop centrale è gratis e senza account.** Aprire l'app, vedere chi ha posto, andare: sempre
    gratis, senza registrazione, per sempre.
-2. **Il ristoratore pubblica gratis.** Lo stato live con un tap è nel piano Basic gratuito: ogni locale
-   visibile porta utenti, e gli utenti portano altri locali.
-3. **Si paga per comodità e numeri, non per esistere.** Pro vende meno telefonate, più coperti e
-   statistiche; Plus vende avvisi e comodità. Nessun ranking a pagamento, nessun paywall sul dato.
+2. **Il ristoratore prova gratis, poi paga per i vantaggi** (decisione del titolare, 2 ottobre 2026).
+   Durante la beta tutti i locali hanno Pro gratis; chi entra dopo ha una prova gratuita (30 giorni,
+   modificabili dal pannello admin). Finita la prova, senza abbonamento il locale **resta nella
+   lista come "Non collegato"** (dati di directory, senza stato, offerta, menù e sito) e non pubblica.
+   Si paga per i vantaggi, non per le statistiche: quelle essenziali restano visibili.
+3. **Nessun ranking a pagamento, nessun paywall sul dato** per chi cerca. Plus vende avvisi e comodità.
 4. **L'account è facoltativo** per chi cerca: serve solo per funzioni avanzate (preferiti su più
    dispositivi, avvisi, Plus).
 5. **Il database decide i diritti**, non l'app: ogni funzione a pagamento è verificata lato server
@@ -45,13 +47,14 @@ Una stessa persona può essere utente Plus **e** titolare di un locale: i diritt
 
 ### 3.1 Ristoranti (B2B)
 
-| Funzione | Codice | Basic | Pro | Pro+ |
+| Funzione | Codice | Senza piano ("Non collegato") | Pro | Pro+ |
 |---|---|:-:|:-:|:-:|
-| Stato live con un tap (C'è posto / Pochi posti / Completo) | `LIVE_STATUS` | ✓ | ✓ | ✓ |
-| Telefono pubblico e tasto Chiama | `PHONE_PUBLIC` | ✓ | ✓ | ✓ |
-| Pagina pubblica + QR "Prima di chiamare" | `PUBLIC_PAGE_QR` | ✓ | ✓ | ✓ |
+| Il locale resta nella lista con i dati di directory | – | ✓ | ✓ | ✓ |
+| Stato live con un tap (C'è posto / Pochi posti / Completo) | `LIVE_STATUS` | – | ✓ | ✓ |
+| Telefono pubblico e tasto Chiama | `PHONE_PUBLIC` | – | ✓ | ✓ |
+| Pagina pubblica + QR "Prima di chiamare" con lo stato | `PUBLIC_PAGE_QR` | – | ✓ | ✓ |
 | Statistiche base (ultimi 7 giorni) | `ANALYTICS_BASIC` | ✓ | ✓ | ✓ |
-| Tavoli liberi, attesa, nota breve | `LIVE_DETAILS` | – | ✓ | ✓ |
+| Tavoli liberi, attesa, nota breve, offerta della serata, menù/sito/file | `LIVE_DETAILS` | – | ✓ | ✓ |
 | Statistiche complete (90 giorni: visite, indicazioni, chiamate) | `ANALYTICS` | – | ✓ | ✓ (365 gg) |
 | Account staff (fino a 5) | `STAFF_ACCOUNTS` | – | ✓ | ✓ (50) |
 | Promemoria "come siete messi?" | `REMINDERS` | – | ✓ | ✓ |
@@ -59,12 +62,20 @@ Una stessa persona può essere utente Plus **e** titolare di un locale: i diritt
 | Prenotazioni di sala sincronizzate tra dispositivi | `RESERVATIONS_CLOUD` | – | ✓ | ✓ |
 | Più sedi, API, integrazione cassa/gestionale | `MULTI_LOCATION`, `API_ACCESS`, `POS_INTEGRATION` | – | – | ✓ |
 
-| Prezzo indicativo | Basic | Pro | Pro+ |
-|---|---|---|---|
-| Mensile | €0 | **€12,90 + IVA** | su richiesta |
-| Annuale | €0 | **€99 + IVA** (≈ 2 mesi e mezzo gratis) | su richiesta |
+| Prezzo (provvisorio, IVA inclusa) | Pro | Pro+ |
+|---|---|---|
+| Mensile | **€19,90** | su richiesta |
+| Semestrale | **€99,90** | su richiesta |
+| Annuale | **€199,90** | su richiesta |
+
+I prezzi stanno nella tabella `plans` (migration 0016) e il sito li legge da lì.
 
 - **Beta**: fino alla data in `app_config.beta` (oggi 30/06/2027) **tutti i locali hanno Pro gratis**.
+- **Prova**: ogni locale ha `app_config.restaurant_trial.days` giorni (30 all'avvio, pannello admin →
+  Impostazioni) da quando diventa partner (`restaurants.partner_since`, la prima volta soltanto);
+  chi entra poco prima della fine della beta ha comunque i suoi giorni.
+- **Avvisi**: 7 giorni e 1 giorno prima della fine (prova, beta, mesi regalati, Stripe disdetto) il
+  titolare riceve una notifica (`enqueue_plan_expiry_notices`, ogni giorno alle 08:00 UTC).
 - **Pilot**: i primi partner possono ricevere Pro gratis per 6–12 mesi (`admin_grant_restaurant_plan`).
 - Il **registro prenotazioni sul telefono** resta gratuito per tutti: Pro aggiunge la sincronizzazione.
 
@@ -80,10 +91,13 @@ Una stessa persona può essere utente Plus **e** titolare di un locale: i diritt
 | Raggio di ricerca esteso | `EXTENDED_RADIUS` | 60 km | 60 km | 100 km |
 | Storico: a che ora di solito c'è posto | `AVAILABILITY_HISTORY` | – | – | ✓ |
 
-| Prezzo indicativo | Gratis | Plus |
+| Prezzo (provvisorio) | Gratis | Plus |
 |---|---|---|
-| Mensile | €0 | **€1,49 IVA inclusa** |
+| Mensile | €0 | **€0,99 IVA inclusa** |
+| Semestrale | €0 | **€4,99 IVA inclusa** |
 | Annuale | €0 | **€9,99 IVA inclusa** |
+
+I vantaggi di Plus sono ancora da definire meglio (decisione del titolare).
 
 Plus **non** toglie nulla ai gratuiti: è un'aggiunta per chi esce spesso.
 
@@ -156,11 +170,11 @@ commissioni più basse (Stripe ≈ 1,5% + €0,25 per carte UE, contro la quota 
 **Flusso (Step 14):**
 
 ```
-Dashboard app → card "Il tuo piano: Basic"  (solo informativa)
+Dashboard app → avviso "La prova finisce il …" / "Non collegato"  (solo informativo)
         │
         ▼
 haposto.app/pro  (pagina web, login con lo stesso account Google)
-        │  scelta mensile/annuale + dati di fatturazione (P.IVA, SDI o PEC)
+        │  scelta mensile/semestrale/annuale + dati di fatturazione (P.IVA, SDI o PEC)
         ▼
 Stripe Checkout  ──pagamento──►  Stripe
                                    │ webhook firmato
@@ -181,7 +195,7 @@ Eventi Stripe da gestire: `checkout.session.completed`, `customer.subscription.c
 Regole:
 
 - **Mancato rinnovo**: lo stato passa a `PAST_DUE`; Pro resta attivo **3 giorni** di tolleranza,
-  poi il locale torna Basic **senza perdere nulla** (lo stato live continua a funzionare).
+  poi il locale torna **"Non collegato"** senza perdere dati: con un nuovo abbonamento torna tutto.
 - **Disdetta**: resta Pro fino a fine periodo pagato (`cancel_at_period_end`).
 - **Fattura elettronica**: Stripe non invia allo SDI. Serve un servizio italiano (es. un software di
   fatturazione con API) chiamato dalla stessa Edge Function con i dati di `restaurant_billing_profiles`.
@@ -251,8 +265,9 @@ niente testo tecnico, aiuti dietro "ⓘ".
    · Privacy e termini · Elimina account.
 2. **Foglio Plus**: titolo "Avvisami quando c'è posto", 3 vantaggi, prezzo mensile/annuale, tasto
    unico "Prova 7 giorni gratis", link "Non ora".
-3. **Dashboard ristoratore → card "Il tuo piano"**: "Pro gratis fino al 30/06/2027 (beta)" oppure
-   "Basic · Scopri Pro su haposto.app/pro" (testo, non un link di pagamento).
+3. **Dashboard ristoratore → card "Il tuo piano"**: "Gratis durante la beta" / "Prova gratuita"
+   con la data di fine, avviso negli ultimi 7 giorni e quando il locale è "Non collegato", con il
+   contatto email (solo testo: nell'app niente inviti né link al pagamento).
 4. **Dashboard → Staff** (Pro): elenco, "+ Aggiungi per email", rimuovi.
 5. **Dashboard → Statistiche**: tre numeri grandi (Visite · Indicazioni · Chiamate) oggi e 7/90 giorni.
 6. **Pagina pubblica web** `haposto.app/<slug>`: nome, stato grande, "aggiornato N min fa",
