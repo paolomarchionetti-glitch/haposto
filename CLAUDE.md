@@ -7,7 +7,8 @@ Function Deno) + sito statico (`web/`, pubblicato su Cloudflare Pages). Area pil
 
 1. `docs/HAPOSTO_STATO_CONFIGURAZIONE.md` — **dove siamo arrivati** e come si riprende.
 2. `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` — tutte le operazioni di configurazione, in ordine.
-3. `docs/HAPOSTO_ROADMAP_COMPLETA.md` e `README.md` (sezione "Stato attuale").
+3. `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` (percorso da seguire), `docs/HAPOSTO_ROADMAP_COMPLETA.md`
+   (archivio delle scelte) e `README.md` (sezione "Stato attuale").
 4. `docs/modifiche/` — registro di tutte le modifiche fatte (più recenti in fondo, per data).
 
 ## Regole di lavoro (sempre)

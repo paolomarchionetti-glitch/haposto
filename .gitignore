@@ -26,3 +26,7 @@ secrets.properties
 
 # Log dei controlli SQL (job "Supabase SQL" della CI) eseguiti in locale
 /*.log
+
+# Documenti privati del titolare (accessi, chiavi, guida tecnica): mai nel repository pubblico
+*PRIVATO*
+*privato*
