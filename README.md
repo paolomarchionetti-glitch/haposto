@@ -18,9 +18,11 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 parte, come riprendere). Registro delle modifiche: `docs/modifiche/`. Regole per chi lavora al
 codice (anche Claude): `CLAUDE.md`.
 
-**Cosa manca (lo fai tu, con la guida):** eseguire le migration 0012–0013, attivare Google e la 2FA
-in Supabase, creare le chiavi (Google, Firebase, Play, Stripe), pubblicare Edge Function e sito,
-test finali → **`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`**.
+**Cosa manca:** l'app è completa e collaudata sul progetto DEV. Restano le cose "fuori dal codice":
+prova sul campo, decisioni (nome, zona), P.IVA e documenti legali, progetto di produzione, Google
+Play, pilot, lancio e pagamenti attivi. Il percorso in ordine, con costi e durate, è in
+**`docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`**; le operazioni di configurazione sono in
+`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
 
 Build Variants in Android Studio: `demoDebug` (nessun server), `devDebug` (Supabase DEV),
 `prodDebug`/`prodRelease` (produzione). Comandi: `./gradlew testDemoDebugUnitTest`,
@@ -241,7 +243,8 @@ Da dove partire (settembre 2026):
 - `docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
 - `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Pro (prova, poi "Non collegato" senza abbonamento) e Gratis/Plus, registrazione, acquisti
 - `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
-- `docs/HAPOSTO_ROADMAP_COMPLETA.md` — **tutte** le attività da oggi alla fine del progetto: login, privacy, pagamenti, Play Store, pilot, calendario
+- `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` — **il percorso da seguire ora** (5 ottobre 2026): 12 tappe dalla prova sul campo al lancio e alla gestione, con chi fa cosa, costi e durate
+- `docs/HAPOSTO_ROADMAP_COMPLETA.md` — archivio delle scelte e dei dettagli (fasi, decisioni, scheda dei trattamenti per la privacy)
 - `docs/HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa ha aggiunto lo Step 7.9
 
 Riferimenti Step 7 e architettura:

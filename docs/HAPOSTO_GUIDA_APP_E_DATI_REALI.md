@@ -179,6 +179,11 @@ returning id, slug;
 
 ### 4.2 Installa l'app sul suo telefono
 
+**Prima di tutto, abilita il suo account Google.** Finché il login è in modalità *Testing*, entrano
+solo gli account elencati: Google Cloud → **Google Auth Platform → Audience → Test users → Add
+users** → la sua email Google → **Save** (guida di configurazione, Parte 2.1, punto 5). Senza questo
+passo il login si ferma con un errore di accesso negato.
+
 - Collega il suo telefono al PC con il cavo, attiva *Opzioni sviluppatore → Debug USB*, e premi **Run ▶**
   in Android Studio; oppure
 - **Build → Build App Bundle(s) / APK(s) → Build APK(s)**, invia il file `.apk` e fallo installare
@@ -225,7 +230,7 @@ Quello che emerge qui vale più di qualsiasi funzione nuova.
 
 1. Supabase → **New project** `haposto-prod`, regione **Europa (Frankfurt)**, password del database
    salvata nel tuo gestore di password.
-2. SQL Editor: `0001`→`0014` in ordine, compresa la `0005` (procedura completa e verifica: guida di
+2. SQL Editor: `0001`→`0017` in ordine, compresa la `0005` (procedura completa e verifica: guida di
    configurazione, Parte 10.2). **Niente seed, niente `dev/`.**
 3. Import OpenStreetMap delle zone del pilot (§3).
 4. Login Google, 2FA, credenziali admin, Edge Function e sito: guida di configurazione, Parte 10.

@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **3 ottobre 2026** (Parte 10 in sospeso; PR #16, #17 e #18 collaudate sul DEV; migliorie della dettatura nella PR #19). Questo file dice **dove siamo
+Ultimo aggiornamento: **5 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -56,15 +56,18 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] Prova del **tempo reale fra due dispositivi** (stato pubblicato su uno, visibile sull'altro in
       1–2 secondi): serve un secondo telefono o l'emulatore.
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
-- [ ] Dopo la PR #19, sul **DEV**: SQL Editor → `supabase/migrations/0017_rome_dates_admin_plan.sql`
-      (in fondo `oggi_in_italia` = la data di oggi, `funzione_nuova` = 1); app **Dev** aggiornata
-      (Git → Pull, ▶ Run) e prova delle frasi nuove della dettatura (tutorial 4.4 e 4.6).
+- [ ] Prova sul campo con 1–3 ristoratori amici (Tappa 1 della roadmap da qui al lancio): prima
+      aggiungere la loro email Google ai *Test users* di Google Cloud.
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
 ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
 (`{"removed":0}`) e della notifica (`"delivered":1`); ping anti-pausa; prove nell'app (dettatura,
 prenotazioni, note pronte, offerta, menù/sito/file, pagina del QR, scheda **Contenuti**, "Il tuo
 piano": "Gratis durante la beta"). Tutto come previsto.
+
+Fatto il 3–5 ottobre 2026 sul DEV (PR #19): migration 0017 (`oggi_in_italia` corretto,
+`funzione_nuova` = 1), app Dev aggiornata, prove delle frasi nuove della dettatura. Tutto come
+previsto.
 
 ## 3 bis. Migliorie in programma (sul DEV, in quest'ordine)
 
@@ -97,8 +100,15 @@ PR #19.
    - migration 0017: "oggi" in ora italiana nelle pulizie e nel pannello; nella scheda del locale
      del pannello admin fonte e scadenza del piano e "Partner dal".
 
-Prossimi passi possibili (da decidere con il titolare): definire meglio i vantaggi di **Plus**;
-quando l'app è pronta, la **Parte 10** (produzione); poi le Parti 7–8 (Play e Stripe).
+Prossimi passi: il percorso completo, in ordine, con chi fa cosa, costi e durate, è in
+**`docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`** (5 ottobre 2026): prova sul campo sul DEV, decisioni
+di base (nome, zona, vantaggi di Plus), basi legali e fiscali, produzione (Parte 10), documenti
+legali, Google Play, pilot, lancio, pagamenti (Parti 7–8), fine beta e gestione.
+
+**Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
+(dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,
+pannello admin, regole, valori modificabili, query di controllo). Si tengono sul PC o nel gestore
+di password; il `.gitignore` esclude i file con `PRIVATO` nel nome.
 
 ## 4. Lezioni pratiche emerse nelle prove
 
@@ -134,7 +144,7 @@ Messaggio di ripresa:
 ```text
 Progetto HAPOSTO. Leggi CLAUDE.md, docs/HAPOSTO_STATO_CONFIGURAZIONE.md e la guida
 docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md, poi riprendi dal punto indicato nello stato
-(sezione 3 bis: migliorie sul DEV; poi Parte 10, produzione). Una parte alla volta: dimmi cosa cliccare o
+e la roadmap docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md (tappa in corso). Una parte alla volta: dimmi cosa cliccare o
 incollare e aspetta la mia conferma. Prima di darmi i passi verifica che la guida corrisponda al
 codice; se trovi errori nel codice o nella guida correggili su un branch dedicato con test, CI e
 registro in docs/modifiche, poi proponimi la PR. Rispondi in italiano; non chiedermi, non modificare

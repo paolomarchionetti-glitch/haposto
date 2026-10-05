@@ -1,5 +1,12 @@
 # HAPOSTO — Roadmap completa, da oggi alla fine del progetto
 
+> **Aggiornamento 5 ottobre 2026 — il percorso da seguire ora è in
+> [`HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`](HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md).** Le fasi C–H sono
+> fatte e collaudate sul DEV (PR #16–#19). Questo documento resta come archivio delle scelte e dei
+> dettagli. Due punti superati: dal 2 ottobre non esiste più un piano gratuito per i ristoranti
+> (prova, poi "Non collegato"); la produzione parte sul piano **Free** di Supabase e passa a Pro
+> (~25 $/mese) solo quando servirà.
+
 Versione del 27 settembre 2026, dopo le prove DEV pseudo-realistiche superate.
 Questo documento elenca **tutte** le attività rimaste, in ordine: account reali (ristoratore
 obbligatorio, utente facoltativo), termini e privacy, pagamenti, Play Store, pilot, lancio e
@@ -61,7 +68,7 @@ documenti restano validi per i dettagli:
 | **M3** Pilot concluso | KPI misurati, decisione di proseguire | fine febbraio 2027 |
 | **M4** Lancio pubblico | app su Google Play per tutti, Pesaro | marzo 2027 |
 | **M5** Pagamenti attivi | Pro acquistabile sul sito; Plus acquistabile nell'app | aprile–maggio 2027 |
-| **M6** Fine beta | dal 1° luglio 2027 i ristoranti pagano Pro (Basic resta gratis) | 30 giugno 2027 |
+| **M6** Fine beta | dal 1° luglio 2027 i ristoranti pagano Pro; chi non paga resta "Non collegato" | 30 giugno 2027 |
 | **M7** Progetto "finito" | vedi §9: prodotto stabile in gestione continuativa | estate 2027 |
 
 Le date dipendono soprattutto da due cose esterne: i tempi dei documenti legali/fiscali (Fase B e F)
@@ -94,7 +101,7 @@ Nessuna chiave segreta va mai in GitHub, nell'app o in chat.
 | Registrar del dominio (es. Cloudflare, Aruba, OVH) | dominio e caselle email (`info@`, `privacy@`) | Fase B | 15–40 €/anno |
 | Google Cloud (progetto "HAPOSTO") | login con Google (credenziali OAuth) | Fase C | gratis |
 | Supabase **DEV** (esiste già) | prove | ora | gratis |
-| Supabase **PROD** | dati reali | Fase I | piano Pro ~25 $/mese (backup giornalieri, niente pausa per inattività) |
+| Supabase **PROD** | dati reali | Fase I | gratis (piano Free, con il ping anti-pausa); piano Pro ~25 $/mese solo quando servirà (backup giornalieri, niente pausa) |
 | Firebase (solo Cloud Messaging e Crashlytics) | notifiche push, report dei crash | Fase G | gratis |
 | Hosting del sito (Cloudflare Pages, Netlify o simili) | sito, pagine legali, pagina pubblica dei locali | Fase H | gratis |
 | Google Play Console | pubblicazione | Fase I | 25 $ una tantum |
@@ -330,7 +337,7 @@ dal telefono senza SQL.
 
 ### Fase I — Produzione e test chiuso (Step 13a e 15)
 
-1. 🧑 Progetto **Supabase PROD** (regione Europa, Frankfurt), piano Pro.
+1. 🧑 Progetto **Supabase PROD** (regione Europa, Frankfurt), piano Free (Pro solo quando servirà).
 2. 🧑 Migration `0001`–`0004` e `0006`–`0012` (e successive). **Mai** seed né cartella `dev/`.
 3. 🧑 Import OpenStreetMap delle zone del pilot (`HAPOSTO_GUIDA_APP_E_DATI_REALI.md` §3) e controllo
    qualità.
@@ -416,9 +423,10 @@ Ristoratore (sito /ristoratori) → accede con Google (stesso account dell'app)
 5. **Fatture elettroniche**: all'inizio (fino a ~30 clienti) le emette il commercialista o tu con il
    gestionale, partendo dall'elenco mensile dei pagamenti (query KPI 8); oltre, collegamento
    automatico tra Stripe e il servizio di fatturazione.
-6. Nell'app: card **Il tuo piano** (`restaurant_entitlements`) ✅ con piano, scadenza e "per
-   modificarlo vai su haposto.app/ristoratori".
-7. Mancato pagamento: 3 giorni di tolleranza, poi Basic ✅; email automatiche di Stripe.
+6. Nell'app: card **Il tuo piano** (`restaurant_entitlements`) ✅ con piano e scadenza, senza tasti
+   né link di acquisto (regole di Google Play: per informazioni, info@haposto.app).
+7. Mancato pagamento: 3 giorni di tolleranza, poi "Non collegato" ✅ (dal 2 ottobre 2026 non c'è più
+   un piano gratuito per i ristoranti); email automatiche di Stripe.
 
 **Collaudo:** tutto in **modalità test** di Stripe con le carte di prova: pagamento, rinnovo,
 pagamento rifiutato, disdetta, rimborso. Poi un pagamento reale di 1 mese su un tuo locale di prova,
@@ -490,12 +498,14 @@ gli account di test di Play.
 ### Fase O — Fine della beta (maggio–giugno 2027)
 
 1. 🧑 Decidi D5 e D6 con i dati del pilot e del lancio.
-2. 🧑 **30 giorni prima** della fine: email e avviso nella dashboard: "Dal 1° luglio Pro costa X; Basic
-   resta gratis; non ti addebitiamo nulla se non scegli tu di abbonarti".
+2. 🧑 **30 giorni prima** della fine: email e avviso nella dashboard: "Dal 1° luglio Pro costa X;
+   senza abbonamento il locale resta visibile ma non collegato; non ti addebitiamo nulla se non
+   scegli tu di abbonarti".
 3. 🧑 Offerta per i partner del pilot (es. primo anno scontato), con `admin_grant_restaurant_plan` o
    coupon Stripe.
-4. Il 1° luglio chi non si è abbonato passa a **Basic** in automatico ✅: non perde lo stato live,
-   perde solo i dettagli Pro.
+4. Il 1° luglio chi non si è abbonato diventa **"Non collegato"** in automatico ✅: resta nella
+   mappa come locale della directory, ma non può più pubblicare lo stato (modello del 2 ottobre
+   2026, migration 0016).
 
 ---
 
