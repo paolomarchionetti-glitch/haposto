@@ -53,6 +53,10 @@ Nessun file rinominato o eliminato. I due documenti privati **non** sono nel rep
   - tabella delle cose da fare ogni giorno, settimana, mese, trimestre e anno;
   - quando conviene passare a un piano a pagamento.
 - **Riepilogo dei costi**, con la regola: prima di ogni voce a pagamento, Claude chiede.
+- **Avviso sull'email di contatto** (Tappa 3):
+  - l'app, i termini, `app_config` e il sito usano `info@haposto.app`, ma il dominio non è ancora
+    del titolare;
+  - prima del test chiuso: dominio con inoltro, oppure sostituzione con la Gmail di assistenza.
 
 ### Vecchia roadmap (`HAPOSTO_ROADMAP_COMPLETA.md`)
 
@@ -95,6 +99,9 @@ Nessuno.
   - file esistenti: `supabase/ops/kpi_queries.sql`, `app/src/main/assets/legal/`, roadmap
     completa §5.2, guida Parti 7–12;
   - chiavi di `app_config` citate (`beta`, `legal`, `restaurant_trial`);
-  - Crashlytics oggi non c'è nell'app: la roadmap lo dice.
+  - Crashlytics oggi non c'è nell'app: la roadmap lo dice;
+  - `info@haposto.app` cercato nel codice: 9 punti nell'app (`Outcome.kt`, `PlanNotices.kt`,
+    schermate Account, Area, 2FA, Impostazioni del locale), `termini.md`, `app_config` (0012),
+    valore predefinito di `web/build.mjs`.
 - `git check-ignore` conferma che un file `…PRIVATO….md` dentro `docs/` è ignorato.
 - Solo documenti e `.gitignore`: nessun codice cambiato. La CI gira comunque sulla PR.

@@ -100,6 +100,16 @@ serve un **indirizzo stabile**.
    - con Cloudflare il sito già pubblicato si collega al dominio in pochi minuti
      (Parte 9 della guida, "dominio");
    - gli indirizzi `info@` e `privacy@` si inoltrano gratis alla Gmail di assistenza.
+
+   ⚠️ **Email di contatto.** L'app scrive già `info@haposto.app`: account sospeso, verifica in due
+   passaggi persa, piani, registro attività, termini. Lo stesso indirizzo è in `app_config`
+   (`public_links.support_email`) e come valore predefinito del sito. Finché il dominio non è tuo,
+   quella casella **non esiste**, e chi comprasse il dominio riceverebbe le email degli utenti.
+   Per la prova sul campo sul DEV non conta. **Prima del test chiuso (Tappa 6)** c'è una di queste
+   due strade:
+   - compri il dominio e inoltri `info@` alla Gmail di assistenza;
+   - 🤖 sostituisco l'indirizzo con la Gmail di assistenza (una PR, poi pannello → Impostazioni →
+     `public_links` e la variabile `HAPOSTO_CONTACT_EMAIL` del sito).
 4. 🧑 **Sicurezza degli account**: verifica in due passaggi su Google, GitHub, Supabase,
    Cloudflare; un gestore di password (vedi il documento privato *Accessi e chiavi*).
 
