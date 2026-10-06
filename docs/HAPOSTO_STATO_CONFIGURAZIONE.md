@@ -166,3 +166,6 @@ e non pubblicare password, token, chiavi segrete, file .env o local.properties; 
   il sito (con un finto `supabase-js`).
 - **Prove sul progetto DEV vero** le fa sempre il titolare, seguendo la guida; Claude non ha accesso
   al progetto.
+- **Fotografia dello schema del DEV**: `supabase/database/` (dump del 5 ottobre 2026, solo struttura,
+  senza dati né permessi; da consultare, **non** da eseguire). Corrisponde alle migration
+  `0001`–`0017` più `supabase/dev/dev_tools.sql`. Come rifarlo: `supabase/database/README.md`.
