@@ -244,6 +244,7 @@ Da dove partire (settembre 2026):
 - `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Pro (prova, poi "Non collegato" senza abbonamento) e Gratis/Plus, registrazione, acquisti
 - `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
 - `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` — **il percorso da seguire ora** (5 ottobre 2026): 12 tappe dalla prova sul campo al lancio e alla gestione, con chi fa cosa, costi e durate
+- `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md` — proposta (da decidere dopo il pilot): visite registrate con il QR del cliente e tessera fedeltà digitale per i locali
 - `docs/HAPOSTO_ROADMAP_COMPLETA.md` — archivio delle scelte e dei dettagli (fasi, decisioni, scheda dei trattamenti per la privacy)
 - `docs/HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa ha aggiunto lo Step 7.9
 

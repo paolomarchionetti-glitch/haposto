@@ -197,6 +197,8 @@ mano.
 4. 🧑 **Ogni lunedì**:
    - query KPI (`supabase/ops/kpi_queries.sql`);
    - telefonata ai locali "silenziosi".
+5. 🧑 Facoltativo, costo zero: due domande in più ai ristoratori e ai clienti sulla **tessera
+   fedeltà digitale** (`HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`, fase V0).
 
 **Soglie per proseguire:**
 
@@ -212,6 +214,10 @@ mano.
 - **Soglie raggiunte** → lancio (Tappa 9) e conferma dei prezzi.
 - **Soglie mancate** → 🤖 lavoro su promemoria e semplicità, e altre 4 settimane di pilot. Non si
   passa ai pagamenti con dati deboli.
+- **Proposta «Visite e tessera fedeltà»** (`HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`):
+  - si decide qui, solo con soglie raggiunte e se almeno metà dei ristoratori la vuole;
+  - se sì, la V1 si costruisce in marzo–aprile 2027 (3–4 settimane, costo zero);
+  - a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO.
 
 ### Tappa 9 — Lancio pubblico
 
