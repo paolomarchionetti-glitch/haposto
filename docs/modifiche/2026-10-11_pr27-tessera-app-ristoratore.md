@@ -127,3 +127,7 @@ Nessuno: lo scanner di Google Play services è gratuito; nessun servizio nuovo.
   L'errore è stato riprodotto in locale con un file che simula il conflitto. Corretto dando a tutte
   le classi interne del repository della tessera il prefisso `Loyalty`; dopo la correzione la
   compilazione passa e i 30 test sono ancora verdi.
+- Seconda esecuzione: l'app compila nelle tre versioni e i test JVM passano. Si fermava solo il
+  test su emulatore della procedura guidata, per un import di troppo (`and` dei matcher di Compose
+  è una funzione del matcher, non va importata): tolto. Tolti anche due avvisi «Expression is
+  unused» nel repository della tessera.

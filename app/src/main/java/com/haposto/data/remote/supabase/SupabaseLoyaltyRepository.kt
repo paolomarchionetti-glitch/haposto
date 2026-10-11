@@ -38,6 +38,11 @@ class SupabaseLoyaltyRepository(private val client: SupabaseClient) : Restaurant
 
     private suspend fun rpc(name: String, params: JsonObject): String = client.postgrest.rpc(name, params).data
 
+    /** Chiamata senza risultato da leggere. */
+    private suspend fun call(name: String, params: JsonObject) {
+        client.postgrest.rpc(name, params)
+    }
+
     override suspend fun program(restaurantId: String): Outcome<LoyaltyProgram> = outcomeOf {
         decodeLoyaltyProgram(rpc("restaurant_loyalty_program", buildJsonObject { put("p_restaurant_id", restaurantId) }))
     }
@@ -73,17 +78,15 @@ class SupabaseLoyaltyRepository(private val client: SupabaseClient) : Restaurant
     }
 
     override suspend fun undo(scanId: String): Outcome<Unit> = outcomeOf {
-        rpc("undo_stamp", buildJsonObject { put("p_scan_id", scanId) })
-        Unit
+        call("undo_stamp", buildJsonObject { put("p_scan_id", scanId) })
     }
 
     override suspend fun useReward(restaurantId: String, rewardId: String, discountCents: Int?): Outcome<Unit> = outcomeOf {
-        rpc("use_reward", buildJsonObject {
+        call("use_reward", buildJsonObject {
             put("p_restaurant_id", restaurantId)
             put("p_reward_id", rewardId)
             put("p_discount_cents", discountCents)
         })
-        Unit
     }
 
     override suspend fun stats(restaurantId: String, days: Int): Outcome<LoyaltyStats> = outcomeOf {
