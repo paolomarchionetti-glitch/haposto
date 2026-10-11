@@ -5,8 +5,9 @@
 > **Aggiornamento 11 ottobre 2026.** Il titolare ha deciso di realizzare subito la tessera come
 > **funzione nascosta**, spenta dal pannello admin fino all'eventuale lancio. Le regole da seguire
 > sono in **`HAPOSTO_TESSERA_SPECIFICHE.md`**, che prevale su questo documento dove differiscono.
-> Per esempio: niente timbri a mano, condizioni bloccate per ogni tessera (il «patto»), premi solo da
-> una lista chiusa, sanzioni automatiche solo sulla tessera.
+> Per esempio: niente timbri a mano, condizioni bloccate per ogni tessera (il «patto»), timbro di
+> gruppo, premi personali in tre tipi con tutele per il locale, sanzioni automatiche solo sulla
+> tessera.
 > Questo documento resta per le motivazioni, i pro e i contro.
 
 Valutazione del documento «Sistema di disponibilità ristoranti, check-in verificato e loyalty»
