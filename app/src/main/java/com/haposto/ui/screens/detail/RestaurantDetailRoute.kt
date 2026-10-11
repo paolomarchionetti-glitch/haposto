@@ -21,11 +21,13 @@ import com.haposto.data.consumer.PublicDetails
 import com.haposto.data.consumer.RestaurantEvent
 import com.haposto.data.favorites.FavoritesStore
 import com.haposto.data.location.LocationSession
+import com.haposto.data.loyalty.CustomerLoyaltyRepository
 import com.haposto.data.repository.RestaurantDataSource
 import com.haposto.data.repository.RestaurantRepository
 import com.haposto.data.repository.RestaurantRepositoryMetadata
 import com.haposto.domain.usecase.RestaurantDistance
 import com.haposto.platform.notifications.HaPostoNotifications
+import com.haposto.ui.screens.loyalty.LoyaltyRestaurantSection
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.flow.catch
@@ -42,6 +44,10 @@ fun RestaurantDetailRoute(
     auth: AuthRepository? = null,
     onOpenPlus: () -> Unit = {},
     onOpenAccount: () -> Unit = {},
+    customerLoyalty: CustomerLoyaltyRepository? = null,
+    onShowLoyaltyQr: () -> Unit = {},
+    onLoyaltyGroup: () -> Unit = {},
+    onJoinTable: () -> Unit = {},
 ) {
     // Observe the repository so a manager update remains consistent everywhere in the app.
     // The flow is remembered: a new instance on every recomposition would restart the collection
@@ -76,6 +82,19 @@ fun RestaurantDetailRoute(
             onToggleFavorite = { favorites.toggle(restaurant.id) },
             onBack = onBack,
             extras = extras,
+            loyaltySection = {
+                if (customerLoyalty != null && auth != null) {
+                    LoyaltyRestaurantSection(
+                        restaurantId = restaurantId,
+                        loyalty = customerLoyalty,
+                        auth = auth,
+                        onShowQr = onShowLoyaltyQr,
+                        onGroup = onLoyaltyGroup,
+                        onJoin = onJoinTable,
+                        onOpenAccount = onOpenAccount,
+                    )
+                }
+            },
         )
     }
 }

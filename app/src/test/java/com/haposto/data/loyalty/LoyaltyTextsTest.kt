@@ -157,4 +157,125 @@ class LoyaltyTextsTest {
         assertNull(LoyaltyQr.tokenFrom(LoyaltyQr.PREFIX + "123"))
         assertNull(LoyaltyQr.tokenFrom(null))
     }
+
+    // Lato cliente.
+
+    private val rules = LoyaltyRules(
+        version = 1,
+        stampsRequired = 10,
+        condition = LoyaltyCondition(ConditionKind.SPEND, 1500),
+        doubleDay = null,
+        reward = RewardRules(RewardKind.DISCOUNT, percent = 20, capCents = 1000),
+    )
+
+    @Test
+    fun customerSeesProgressAndTheRewardForHim() {
+        assertEquals("10 timbri → 20% sulla tua consumazione, max 10 €", LoyaltyTexts.summary(rules))
+        assertEquals("4 su 10", LoyaltyTexts.progress(4, 10))
+        assertEquals("0 su 10", LoyaltyTexts.progress(-1, 10))
+        assertEquals("BQM C6P", LoyaltyTexts.codeSpaced("BQMC6P"))
+        assertEquals("K4F7", LoyaltyTexts.codeSpaced("K4F7"))
+    }
+
+    @Test
+    fun qrCountdownNeverGoesNegative() {
+        val now = Instant.parse("2026-10-11T12:00:00Z")
+        assertEquals(42L, LoyaltyTexts.secondsLeft(now.plusSeconds(42), now))
+        assertEquals(0L, LoyaltyTexts.secondsLeft(now.minusSeconds(5), now))
+        assertEquals(0L, LoyaltyTexts.secondsLeft(null, now))
+    }
+
+    /** §6.1 punto 3: «✓ +1 timbro · 4 su 10», «+2, giorno doppio», «🎁 Premio sbloccato». */
+    @Test
+    fun customerResultReadsLikeTheSpecification() {
+        assertEquals(
+            "✓ +1 timbro · 4 su 10",
+            LoyaltyTexts.customerResult(StampMember("K4F7", StampOutcome.STAMPED, stampsAdded = 1, stamps = 4, required = 10)),
+        )
+        assertEquals(
+            "✓ +2 timbri, giorno doppio · 10 su 10 · 1 sulla tessera nuova · 🎁 Premio sbloccato",
+            LoyaltyTexts.customerResult(
+                StampMember(
+                    "K4F7", StampOutcome.STAMPED, stampsAdded = 2, doubleDay = true, stamps = 10, required = 10,
+                    rewardUnlocked = true, carry = 1,
+                ),
+            ),
+        )
+        assertEquals(
+            "Hai già avuto un timbro qui nelle ultime 4 ore: questa volta niente timbro.",
+            LoyaltyTexts.customerResult(StampMember("K4F7", StampOutcome.TOO_SOON)),
+        )
+        assertEquals(
+            "Gestisci questo locale: la sua tessera non è per te.",
+            LoyaltyTexts.customerResult(StampMember(null, StampOutcome.SELF)),
+        )
+    }
+
+    @Test
+    fun groupResultForEachMember() {
+        assertEquals(
+            "✓ +1 timbro",
+            LoyaltyTexts.groupResult(GroupResult(StampOutcome.STAMPED, 1, doubleDay = false, undone = false, rewardUnlocked = false)),
+        )
+        assertEquals(
+            "✓ +2 timbri, giorno doppio · 🎁 Premio sbloccato",
+            LoyaltyTexts.groupResult(GroupResult(StampOutcome.STAMPED, 2, doubleDay = true, undone = false, rewardUnlocked = true)),
+        )
+        assertEquals(
+            "Lo staff ha annullato la scansione del tavolo: nessun timbro.",
+            LoyaltyTexts.groupResult(GroupResult(StampOutcome.STAMPED, 1, doubleDay = false, undone = true, rewardUnlocked = false)),
+        )
+    }
+
+    @Test
+    fun closingResetAndRewardsForTheCustomer() {
+        val date: (Instant) -> String = { "10/11/2026" }
+        assertNull(LoyaltyTexts.customerStatus("ACTIVE", null, date))
+        assertEquals(
+            "Il locale chiude la tessera: puoi completarla entro il 10/11/2026.",
+            LoyaltyTexts.customerStatus("CLOSING", Instant.EPOCH, date),
+        )
+        assertEquals(
+            "La tessera di questo locale è finita: restano i premi da usare.",
+            LoyaltyTexts.customerStatus("SUSPENDED", null, date),
+        )
+        assertEquals("Se non torni, i timbri si azzerano il 10/11/2026.", LoyaltyTexts.resetNotice(Instant.EPOCH, date))
+        assertNull(LoyaltyTexts.resetNotice(null, date))
+
+        val now = Instant.parse("2026-10-11T12:00:00Z")
+        val voucher = LoyaltyReward(
+            rewardId = "r1",
+            code = "K4F7",
+            rules = RewardRules(RewardKind.VOUCHER, amountCents = 500, minSpendCents = 1500, from = RewardFrom.NEXT_VISIT),
+            unlockedAt = now,
+            usableFrom = now.plusSeconds(4 * 3600),
+            expiresAt = now.plusSeconds(60L * 86_400),
+            usableNow = false,
+        )
+        assertEquals(
+            listOf(
+                "🎁 5 € di sconto alla visita dopo, con una spesa di almeno 15 €",
+                "Si usa dalla prossima visita.",
+                "Valido fino al 10/11/2026",
+            ),
+            LoyaltyTexts.customerReward(voucher, now, date),
+        )
+        val notToday = voucher.copy(usableFrom = now.minusSeconds(60), rules = voucher.rules.copy(weekdays = listOf(1, 2, 3)))
+        assertEquals("Oggi non si usa: solo lunedì, martedì, mercoledì.", LoyaltyTexts.customerReward(notToday, now, date)[1])
+        assertEquals(
+            "Si usa anche oggi: dillo alla cassa prima di pagare.",
+            LoyaltyTexts.customerReward(voucher.copy(usableNow = true), now, date)[1],
+        )
+    }
+
+    /** T48 e T59. */
+    @Test
+    fun reportButtonsAndPrivacyNotice() {
+        assertEquals("Non hanno voluto timbrare", LoyaltyTexts.reportKind(LoyaltyReportKind.NO_STAMP))
+        assertEquals("Non mi hanno riconosciuto il premio", LoyaltyTexts.reportKind(LoyaltyReportKind.REWARD_REFUSED))
+        val notice = LoyaltyTexts.PRIVACY_NOTICE.joinToString(" ")
+        assertTrue(notice.contains("codice anonimo"))
+        assertTrue(notice.contains("24 mesi"))
+        assertTrue(notice.contains("GPS"))
+    }
 }

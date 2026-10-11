@@ -32,12 +32,12 @@ internal val LOYALTY_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:m
 
 /** Le regole di una versione, come le vedono staff e clienti (T27). */
 @Composable
-internal fun RulesSummary(rules: LoyaltyRules) {
+internal fun RulesSummary(rules: LoyaltyRules, forCustomer: Boolean = false) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         LabeledValue("Timbri per il premio", "${rules.stampsRequired}")
         LabeledValue("Condizione per il timbro", LoyaltyTexts.condition(rules.condition))
         LabeledValue("Giorno doppio", LoyaltyTexts.doubleDay(rules.doubleDay))
-        LabeledValue("Premio", LoyaltyTexts.reward(rules.reward))
+        LabeledValue("Premio", LoyaltyTexts.reward(rules.reward, forCustomer))
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             LoyaltyTexts.rewardUse(rules.reward).forEach { line ->
                 Text("• $line", style = MaterialTheme.typography.bodyMedium)

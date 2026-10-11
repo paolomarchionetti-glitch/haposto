@@ -184,4 +184,99 @@ object LoyaltyTexts {
         if (seconds <= 0) return null
         return "${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}"
     }
+
+    // -----------------------------------------------------------------------------------------
+    // Lato cliente (§6, T24–T31, T48, T59).
+    // -----------------------------------------------------------------------------------------
+
+    /** «10 timbri → 20% sulla tua consumazione, max 10 €». */
+    fun summary(rules: LoyaltyRules): String = "${rules.stampsRequired} timbri → ${reward(rules.reward, forCustomer = true)}"
+
+    /** «4 su 10». */
+    fun progress(stamps: Int, required: Int): String = "${stamps.coerceAtLeast(0)} su $required"
+
+    /** Codice di riserva leggibile a voce: «BQMC6P» → «BQM C6P». */
+    fun codeSpaced(code: String): String =
+        if (code.length == 6) "${code.take(3)} ${code.drop(3)}" else code
+
+    /** Secondi che restano al QR (mai negativi). */
+    fun secondsLeft(expiresAt: Instant?, now: Instant): Long =
+        if (expiresAt == null) 0 else Duration.between(now, expiresAt).seconds.coerceAtLeast(0)
+
+    /** Esito del proprio QR, sul telefono del cliente (§6.1 punto 3): «✓ +1 timbro · 4 su 10». */
+    fun customerResult(member: StampMember, gapHours: Int = 4): String =
+        customerText(member.outcome, member.stampsAdded, member.doubleDay, member.rewardUnlocked, gapHours) {
+            if (member.stamps != null && member.required != null) append(" · ${progress(member.stamps, member.required)}")
+            if (member.carry > 0) append(" · ${member.carry} sulla tessera nuova")
+        }
+
+    /** Esito del tavolo per chi ne fa parte (T29): ognuno vede il suo timbro. */
+    fun groupResult(result: GroupResult, gapHours: Int = 4): String =
+        if (result.undone) "Lo staff ha annullato la scansione del tavolo: nessun timbro."
+        else customerText(result.outcome, result.stampsAdded, result.doubleDay, result.rewardUnlocked, gapHours) {}
+
+    private fun customerText(
+        outcome: StampOutcome,
+        stampsAdded: Int,
+        doubleDay: Boolean,
+        rewardUnlocked: Boolean,
+        gapHours: Int,
+        extra: StringBuilder.() -> Unit,
+    ): String = when (outcome) {
+        StampOutcome.STAMPED -> buildString {
+            append("✓ +$stampsAdded ${if (stampsAdded == 1) "timbro" else "timbri"}")
+            if (doubleDay) append(", giorno doppio")
+            extra()
+            if (rewardUnlocked) append(" · 🎁 Premio sbloccato")
+        }
+        StampOutcome.TOO_SOON -> "Hai già avuto un timbro qui nelle ultime $gapHours ore: questa volta niente timbro."
+        StampOutcome.SELF -> "Gestisci questo locale: la sua tessera non è per te."
+        StampOutcome.NO_ACCESS -> "La tessera non è disponibile per il tuo account."
+        StampOutcome.NO_NEW_CARDS -> "Il locale non apre più tessere nuove: niente timbro."
+        StampOutcome.PROGRAM_ENDED -> "La tessera del locale è finita: restano solo i premi da usare."
+        StampOutcome.UNKNOWN -> "Nessun timbro."
+    }
+
+    /** Stato della tessera del locale come lo legge il cliente; null se è attiva. */
+    fun customerStatus(programStatus: String?, closingUntil: Instant?, formatDate: (Instant) -> String): String? =
+        when (programStatus) {
+            "CLOSING" -> "Il locale chiude la tessera" +
+                (closingUntil?.let { ": puoi completarla entro il ${formatDate(it)}" } ?: "") + "."
+            "ENDED", "SUSPENDED", "REMOVED" -> "La tessera di questo locale è finita: restano i premi da usare."
+            else -> null
+        }
+
+    /** T24: quando si azzerano i timbri se non si torna. */
+    fun resetNotice(resetAt: Instant?, formatDate: (Instant) -> String): String? =
+        resetAt?.let { "Se non torni, i timbri si azzerano il ${formatDate(it)}." }
+
+    /** Un premio da usare, come lo legge il cliente (validità e da quando). */
+    fun customerReward(item: LoyaltyReward, now: Instant, formatDate: (Instant) -> String): List<String> = listOfNotNull(
+        "🎁 ${reward(item.rules, forCustomer = true)}",
+        when {
+            item.usableNow -> "Si usa anche oggi: dillo alla cassa prima di pagare."
+            item.usableFrom?.isAfter(now) == true -> "Si usa dalla prossima visita."
+            else -> "Oggi non si usa: " +
+                (item.rules.weekdays?.takeIf { it.isNotEmpty() }?.joinToString(", ") { weekday(it) }?.let { "solo $it." }
+                    ?: "giorni scelti dal locale.")
+        },
+        item.expiresAt?.let { "Valido fino al ${formatDate(it)}" },
+    )
+
+    /** T48: i due tasti, senza testo libero. */
+    fun reportKind(kind: LoyaltyReportKind): String = when (kind) {
+        LoyaltyReportKind.NO_STAMP -> "Non hanno voluto timbrare"
+        LoyaltyReportKind.REWARD_REFUSED -> "Non mi hanno riconosciuto il premio"
+    }
+
+    /** T59: la schermata breve al primo uso (cosa vede il locale, cosa conserva HAPOSTO, per quanto). */
+    val PRIVACY_NOTICE = listOf(
+        "Il locale vede solo un codice anonimo (per esempio K4F7), diverso per ogni locale: mai il tuo nome, " +
+            "l'email, la foto o il telefono, né le tue altre tessere.",
+        "I QR non contengono dati: solo un codice casuale che vale 60 secondi e una volta sola.",
+        "Niente GPS: la prova della visita è la scansione alla cassa.",
+        "HAPOSTO conserva QR e tavoli per 1 giorno; timbri e visite per 24 mesi; tessere e premi chiusi per 12 mesi, " +
+            "poi resta solo un conteggio anonimo; le segnalazioni per 12 mesi.",
+        "Puoi lasciare una tessera quando vuoi; eliminando l'account sparisce tutto.",
+    )
 }

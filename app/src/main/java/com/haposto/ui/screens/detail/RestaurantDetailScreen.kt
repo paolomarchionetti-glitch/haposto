@@ -58,6 +58,8 @@ fun RestaurantDetailScreen(
     onBack: () -> Unit,
     /** Versioni DEV/PROD: orari, condivisione, avvisi Plus, storico e contatori anonimi. */
     extras: DetailExtras? = null,
+    /** Tessera fedeltà (funzione nascosta): il riquadro non mostra niente se non è disponibile. */
+    loyaltySection: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val now by produceState(initialValue = Instant.now(), key1 = restaurant.id) {
@@ -233,6 +235,8 @@ fun RestaurantDetailScreen(
                     hours.describe().forEach { Text(it, style = MaterialTheme.typography.bodySmall) }
                 }
             }
+
+            loyaltySection?.invoke()
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(

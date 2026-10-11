@@ -32,7 +32,11 @@ import com.haposto.ui.screens.favorites.FavoritesRoute
 import com.haposto.ui.screens.home.HomeRoute
 import com.haposto.ui.screens.legal.LegalDocument
 import com.haposto.ui.screens.legal.LegalDocumentRoute
+import com.haposto.ui.screens.loyalty.LoyaltyCardsRoute
+import com.haposto.ui.screens.loyalty.LoyaltyGroupRoute
+import com.haposto.ui.screens.loyalty.LoyaltyJoinRoute
 import com.haposto.ui.screens.loyalty.LoyaltyManageRoute
+import com.haposto.ui.screens.loyalty.LoyaltyQrRoute
 import com.haposto.ui.screens.loyalty.LoyaltyStampRoute
 import com.haposto.ui.screens.mfa.MfaRoute
 import com.haposto.ui.screens.onboarding.OnboardingPrefs
@@ -74,6 +78,7 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
     val management = AppDependencies.managementRepository
     val admin = AppDependencies.adminRepository
     val loyalty = AppDependencies.loyaltyRepository
+    val customerLoyalty = AppDependencies.customerLoyaltyRepository
     val consumer = AppDependencies.consumerRepository
     val locationSession = AppDependencies.locationSession
     val deviceLocationProvider = remember(context) { AppDependencies.deviceLocationProvider(context) }
@@ -103,6 +108,17 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
     val openMfa: () -> Unit = { navController.navigate(AppDestination.MFA) { launchSingleTop = true } }
     val openPlus: () -> Unit = { navController.navigate(AppDestination.PLUS) { launchSingleTop = true } }
     val openAccount: () -> Unit = { navController.navigateToTab(AppDestination.ACCOUNT) }
+    val openLoyaltyQr: (String) -> Unit = { restaurantId ->
+        navController.navigate(AppDestination.loyaltyQr(restaurantId)) { launchSingleTop = true }
+    }
+    val openLoyaltyGroup: (String) -> Unit = { restaurantId ->
+        navController.navigate(AppDestination.loyaltyGroup(restaurantId)) {
+            launchSingleTop = true
+            // Dal QR personale («👥 Siamo in gruppo») si torna alla scheda, non al QR scaduto.
+            popUpTo(AppDestination.LOYALTY_QR) { inclusive = true }
+        }
+    }
+    val openJoinTable: () -> Unit = { navController.navigate(AppDestination.LOYALTY_JOIN) { launchSingleTop = true } }
 
     Scaffold(
         bottomBar = {
@@ -155,11 +171,14 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
                     onOpenMfa = openMfa,
                     onOpenPlus = openPlus,
                     onOpenAdmin = { navController.navigate(AppDestination.ADMIN) { launchSingleTop = true } },
+                    customerLoyalty = customerLoyalty,
+                    onOpenLoyaltyCards = { navController.navigate(AppDestination.LOYALTY_CARDS) { launchSingleTop = true } },
                 )
             }
             composable(AppDestination.RESTAURANT_DETAIL) { entry ->
+                val detailRestaurantId = entry.arguments?.getString("restaurantId").orEmpty()
                 RestaurantDetailRoute(
-                    restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
+                    restaurantId = detailRestaurantId,
                     repository = repository,
                     locationSession = locationSession,
                     favorites = favorites,
@@ -168,7 +187,58 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
                     auth = auth,
                     onOpenPlus = openPlus,
                     onOpenAccount = openAccount,
+                    customerLoyalty = customerLoyalty,
+                    onShowLoyaltyQr = { openLoyaltyQr(detailRestaurantId) },
+                    onLoyaltyGroup = { openLoyaltyGroup(detailRestaurantId) },
+                    onJoinTable = openJoinTable,
                 )
+            }
+            composable(AppDestination.LOYALTY_QR) { entry ->
+                if (customerLoyalty != null) {
+                    val qrRestaurantId = entry.arguments?.getString("restaurantId").orEmpty()
+                    LoyaltyQrRoute(
+                        restaurantId = qrRestaurantId,
+                        restaurantName = repository.findById(qrRestaurantId)?.name,
+                        loyalty = customerLoyalty,
+                        auth = auth,
+                        onBack = navController::navigateUp,
+                        onOpenAccount = openAccount,
+                        onGroup = { openLoyaltyGroup(qrRestaurantId) },
+                    )
+                }
+            }
+            composable(AppDestination.LOYALTY_GROUP) { entry ->
+                if (customerLoyalty != null) {
+                    val groupRestaurantId = entry.arguments?.getString("restaurantId").orEmpty()
+                    LoyaltyGroupRoute(
+                        restaurantId = groupRestaurantId,
+                        restaurantName = repository.findById(groupRestaurantId)?.name,
+                        loyalty = customerLoyalty,
+                        auth = auth,
+                        onBack = navController::navigateUp,
+                        onOpenAccount = openAccount,
+                    )
+                }
+            }
+            composable(AppDestination.LOYALTY_JOIN) {
+                if (customerLoyalty != null) {
+                    LoyaltyJoinRoute(
+                        loyalty = customerLoyalty,
+                        auth = auth,
+                        onBack = navController::navigateUp,
+                        onOpenAccount = openAccount,
+                    )
+                }
+            }
+            composable(AppDestination.LOYALTY_CARDS) {
+                if (customerLoyalty != null) {
+                    LoyaltyCardsRoute(
+                        loyalty = customerLoyalty,
+                        onBack = navController::navigateUp,
+                        onShowQr = openLoyaltyQr,
+                        onJoin = openJoinTable,
+                    )
+                }
             }
             composable(AppDestination.RESTAURANT_ACCESS) {
                 RestaurantAccessRoute(

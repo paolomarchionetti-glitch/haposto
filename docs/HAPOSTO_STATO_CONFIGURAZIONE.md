@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **11 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; tessera fedeltà: PR A con il database, spenta; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
+Ultimo aggiornamento: **11 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; tessera fedeltà: PR A–C fatte, spenta; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -63,6 +63,8 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
       controllare che `loyalty` in Impostazioni sia `"mode": "OFF"`; aggiornare l'app Dev.
 - [ ] Facoltativo, dopo la PR B (#27): prova del lato ristoratore sul DEV in modalità `"TEST"`
       (guida, Parte 11, «Tessera fedeltà»).
+- [ ] Facoltativo, dopo la PR C (#28): prova del lato cliente sul DEV in modalità `"TEST"`, QR
+      personale e tavolo di gruppo (guida, Parte 11, «Tessera fedeltà» → «Lato cliente»).
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
 ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
@@ -131,7 +133,18 @@ solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TE
     entro 2 minuti.
 
   Solo app: nessuna migration nuova.
-- **Prossima: PR C** (app del cliente: QR personale e del tavolo, Le mie tessere, segnalazioni).
+- **PR C (#28), 11 ottobre 2026:** app del cliente, visibile solo ai clienti tester in modalità
+  test:
+  - scheda del locale → riquadro **🎫 Tessera fedeltà** (timbri, premi, regole della propria
+    versione) con **Mostra il mio QR**, **👥 Siamo in gruppo**, **Unisciti a un tavolo**;
+  - QR personale e del tavolo con screenshot bloccati, luminosità al massimo, cornice animata,
+    codice di riserva e rinnovo ogni 60 secondi; l'esito («✓ +1 timbro · 4 su 10») compare appena
+    lo staff scansiona;
+  - **Account → Le mie tessere**: tessere, azzeramento, premi, segnalazioni, «Lascia la tessera»;
+  - schermata della privacy al primo uso; l'accesso con Google si chiede solo qui.
+
+  Solo app: nessuna migration nuova.
+- **Prossima: PR D** (pannello admin: scheda **Tessere**; guida di prova completa sul DEV).
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
 (dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,

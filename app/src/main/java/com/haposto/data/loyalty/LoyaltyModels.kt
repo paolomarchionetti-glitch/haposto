@@ -196,3 +196,98 @@ object LoyaltyQr {
         return text.substring(PREFIX.length).lowercase().takeIf { token.matches(it) }
     }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Lato cliente (T23–T31, T48, T59–T61).
+// ---------------------------------------------------------------------------------------------
+
+/** Cosa mostrare nell'app al cliente: NEW (tessere nuove), EXISTING (solo quelle iniziate), NONE. */
+data class LoyaltyAccess(val level: LoyaltyLevel, val hasCards: Boolean, val visible: Boolean) {
+    companion object {
+        val NONE = LoyaltyAccess(LoyaltyLevel.NONE, hasCards = false, visible = false)
+    }
+}
+
+/** La tessera attiva del cliente in un locale, con le regole della sua versione (T27). */
+data class MyCard(
+    val stamps: Int,
+    val startedAt: Instant?,
+    val lastStampAt: Instant?,
+    /** T24: quando si azzera se il cliente non torna (solo in «Le mie tessere»). */
+    val resetAt: Instant?,
+    val rules: LoyaltyRules?,
+)
+
+/** Riquadro della tessera nella scheda del locale. Con [available] false non si mostra niente. */
+data class RestaurantLoyaltyBox(
+    val available: Boolean,
+    val canStart: Boolean = false,
+    val status: String? = null,
+    val closingUntil: Instant? = null,
+    val rules: LoyaltyRules? = null,
+    val code: String? = null,
+    val card: MyCard? = null,
+    val rewards: List<LoyaltyReward> = emptyList(),
+) {
+    companion object {
+        val HIDDEN = RestaurantLoyaltyBox(available = false)
+    }
+}
+
+/** Un QR da 60 secondi (T35): il contenuto è solo un codice casuale. */
+data class VisitToken(val token: String, val code: String, val expiresAt: Instant?, val seconds: Int) {
+    val qrContent: String get() = LoyaltyQr.encode(token)
+}
+
+enum class TokenState { WAITING, USED, EXPIRED }
+
+/** Esito del proprio QR, per la schermata «✓ +1 timbro · 4 su 10». */
+data class TokenStatus(val state: TokenState, val result: StampMember?)
+
+/** Tavolo di gruppo appena creato o con il QR rinnovato (solo il capogruppo). */
+data class LoyaltyGroup(
+    val groupId: String,
+    val token: VisitToken,
+    val joinUntil: Instant?,
+    val expiresAt: Instant?,
+    val members: Int,
+)
+
+enum class GroupState { OPEN, USED, CLOSED }
+
+data class GroupResult(
+    val outcome: StampOutcome,
+    val stampsAdded: Int,
+    val doubleDay: Boolean,
+    val undone: Boolean,
+    val rewardUnlocked: Boolean,
+)
+
+/** Stato del tavolo per ogni membro (T28–T30). */
+data class GroupStatus(
+    val groupId: String,
+    val restaurantId: String,
+    val leader: Boolean,
+    val members: Int,
+    val joinUntil: Instant?,
+    val expiresAt: Instant?,
+    val state: GroupState,
+    val result: GroupResult?,
+)
+
+data class JoinedGroup(val groupId: String, val restaurantId: String, val restaurantName: String, val members: Int)
+
+/** Una voce di «Le mie tessere». */
+data class MyLoyaltyCard(
+    val restaurantId: String,
+    val restaurantName: String,
+    val city: String,
+    val code: String?,
+    val programStatus: String?,
+    val closingUntil: Instant?,
+    val card: MyCard?,
+    val rewards: List<LoyaltyReward>,
+)
+
+/** T48: i due tasti delle segnalazioni. */
+enum class LoyaltyReportKind { NO_STAMP, REWARD_REFUSED }
