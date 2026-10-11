@@ -879,8 +879,17 @@ Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
 - **Tester:** pannello → **Locali** → il locale → **Tessera fedeltà (nascosta)** → «Locale tester
   della tessera»; **Utenti** → l'utente → «Cliente tester della tessera». Gli admin sono sempre
   clienti tester.
-- Le schermate per ristoratore e cliente arrivano con le prossime PR: fino ad allora, anche in
-  modalità test, nell'app non compare niente.
+- **Lato ristoratore** (app Dev, dalla PR B): con la modalità `"TEST"` e il locale tester, il
+  titolare trova **Gestisci il locale → Tessera fedeltà**:
+  1. **Attiva la tessera** → sei passi: timbri, condizione, giorno doppio, premio, come si usa il
+     premio, riepilogo;
+  2. spunta **Accetto** sul patto → **Attiva la tessera** (serve la verifica in due passaggi);
+  3. nella dashboard compare **📷 Timbra la tessera fedeltà**: apre lo scanner di Google, che non
+     chiede il permesso della fotocamera (al primo uso Google può scaricare il modulo).
+
+  Il QR del cliente arriva con la PR C: fino ad allora lo scanner si apre, ma non c'è un QR da
+  timbrare. Statistiche, tessere attive e segnalazioni sono nella stessa scheda.
+- **Lato cliente**: con la PR C (fino ad allora il cliente non vede niente).
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:

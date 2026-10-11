@@ -1,7 +1,7 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-PR A (database) realizzata: migration `0018_loyalty_card.sql`, controlli `step22`.**
+PR A (database) e PR B (app del ristoratore) realizzate.**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -459,6 +459,8 @@ annotato).
     permesso della fotocamera);
   - esito singolo o di gruppo con i premi da consegnare;
   - inserimento del codice, statistiche.
+- **Contenuto dei QR** (personale e del tavolo): `haposto:tessera:` seguito dal codice casuale di
+  32 caratteri creato dal server; nessun dato personale (T56). Lo staff accetta solo questi QR.
 - **Pannello admin:** §13.
 
 ### 15.3 Verifiche

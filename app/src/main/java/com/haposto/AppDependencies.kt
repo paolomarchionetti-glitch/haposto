@@ -15,6 +15,7 @@ import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.data.location.AndroidDeviceLocationProvider
 import com.haposto.data.location.DeviceLocationProvider
 import com.haposto.data.location.LocationSession
+import com.haposto.data.loyalty.RestaurantLoyaltyRepository
 import com.haposto.data.network.AndroidNetworkMonitor
 import com.haposto.data.network.NetworkMonitor
 import com.haposto.data.remote.supabase.ConfigurationErrorRestaurantRepository
@@ -24,6 +25,7 @@ import com.haposto.data.remote.supabase.SupabaseAdminRepository
 import com.haposto.data.remote.supabase.SupabaseAuthRepository
 import com.haposto.data.remote.supabase.SupabaseClientProvider
 import com.haposto.data.remote.supabase.SupabaseConsumerRepository
+import com.haposto.data.remote.supabase.SupabaseLoyaltyRepository
 import com.haposto.data.remote.supabase.SupabaseManagementRepository
 import com.haposto.data.remote.supabase.SupabaseRestaurantRepository
 import com.haposto.data.repository.RestaurantAccessRepository
@@ -109,6 +111,11 @@ object AppDependencies {
 
     val managementRepository: RestaurantManagementRepository? by lazy {
         if (usesBackend) SupabaseManagementRepository(SupabaseClientProvider.client) else null
+    }
+
+    /** Tessera fedeltà lato locale (funzione nascosta: il server decide chi la vede). */
+    val loyaltyRepository: RestaurantLoyaltyRepository? by lazy {
+        if (usesBackend) SupabaseLoyaltyRepository(SupabaseClientProvider.client) else null
     }
 
     val adminRepository: AdminRepository? by lazy {

@@ -61,6 +61,8 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] DEV, dopo l'unione della PR A della tessera (#26): eseguire la migration `0018_loyalty_card.sql`
       e di nuovo `supabase/ops/scheduled_jobs.sql` (lavoro nuovo `haposto-loyalty-maintenance`);
       controllare che `loyalty` in Impostazioni sia `"mode": "OFF"`; aggiornare l'app Dev.
+- [ ] Facoltativo, dopo la PR B (#27): prova del lato ristoratore sul DEV in modalità `"TEST"`
+      (guida, Parte 11, «Tessera fedeltà»).
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
 ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
@@ -120,7 +122,16 @@ solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TE
   azzeramenti, scadenze e pulizia), 209 controlli automatici (`step22`), impostazione `loyalty`
   **spenta**, «Tester tessera» per locali e utenti nel pannello admin. Nell'app non si vede nulla.
   Corretta anche la scheda del locale del pannello dal SQL Editor.
-- **Prossima: PR B** (app del ristoratore: procedura guidata e patto, Timbra, premi, statistiche).
+- **PR B (#27), 11 ottobre 2026:** app del ristoratore, visibile solo ai tester in modalità test:
+  - Gestisci il locale → **Tessera fedeltà**: stato, regole, procedura guidata in sei passi con il
+    patto, nuova versione, chiusura con preavviso, segnalazioni, statistiche, tessere con il codice
+    anonimo;
+  - nella dashboard **📷 Timbra la tessera fedeltà**: scanner di Google senza permesso della
+    fotocamera, esito singolo o del tavolo, premi da consegnare, codice di riserva, annullamento
+    entro 2 minuti.
+
+  Solo app: nessuna migration nuova.
+- **Prossima: PR C** (app del cliente: QR personale e del tavolo, Le mie tessere, segnalazioni).
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
 (dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,

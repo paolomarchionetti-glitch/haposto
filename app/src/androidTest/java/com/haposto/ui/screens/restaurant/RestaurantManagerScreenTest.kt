@@ -4,12 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.haposto.data.fake.FakeRestaurantRepository
 import com.haposto.domain.model.AvailabilityStatus
 import com.haposto.domain.usecase.AvailabilityResolver
 import com.haposto.ui.theme.HaPostoTheme
 import java.time.Instant
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -80,5 +82,47 @@ class RestaurantManagerScreenTest {
         }
 
         composeRule.onNodeWithText("Sei offline").assertIsDisplayed()
+    }
+
+    @Test
+    fun loyaltyStampButton_hiddenUnlessTheServerSaysTheCardIsActive() {
+        setDashboard(onOpenLoyaltyStamp = null)
+
+        composeRule.onNodeWithText("Timbra la tessera fedeltà", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun loyaltyStampButton_opensTheScannerScreen() {
+        var opened = false
+        setDashboard(onOpenLoyaltyStamp = { opened = true })
+
+        composeRule.onNodeWithText("Timbra la tessera fedeltà", substring = true).performScrollTo().performClick()
+        composeRule.runOnIdle { assertTrue(opened) }
+    }
+
+    private fun setDashboard(onOpenLoyaltyStamp: (() -> Unit)?) {
+        val restaurant = FakeRestaurantRepository().findById("levante-demo")!!
+        val now = Instant.now()
+        composeRule.setContent {
+            HaPostoTheme {
+                RestaurantManagerScreen(
+                    uiState = RestaurantManagerUiState(
+                        restaurant = restaurant,
+                        effectiveAvailability = AvailabilityResolver.resolve(restaurant, now),
+                        now = now,
+                    ),
+                    onBack = {},
+                    onStatusSelected = {},
+                    onDecrementTables = {},
+                    onIncrementTables = {},
+                    onWaitSelected = {},
+                    onNoteChange = {},
+                    onRefreshCurrentStatus = {},
+                    onPhonePublicChange = {},
+                    onOpenSettings = {},
+                    onOpenLoyaltyStamp = onOpenLoyaltyStamp,
+                )
+            }
+        }
     }
 }
