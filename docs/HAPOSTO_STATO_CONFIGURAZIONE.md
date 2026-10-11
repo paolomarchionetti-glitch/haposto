@@ -106,9 +106,10 @@ di base (nome, zona, vantaggi di Plus), basi legali e fiscali, produzione (Parte
 legali, Google Play, pilot, lancio, pagamenti (Parti 7–8), fine beta e gestione.
 
 **Tessera fedeltà** (decisione dell'11 ottobre 2026): si realizza subito come **funzione nascosta**,
-spenta dal pannello admin, secondo `docs/HAPOSTO_TESSERA_SPECIFICHE.md` (versione 2, semplificata:
-regole T1–T51, premi da una lista chiusa, sanzioni automatiche solo sulla tessera; piano in 5 PR: A
-database, B ristoratore, C cliente, D pannello, E righe per privacy e termini). Si accende per tutti
+spenta dal pannello admin, secondo `docs/HAPOSTO_TESSERA_SPECIFICHE.md` (versione 3, valori
+confermati: regole T1–T61, timbro di gruppo con una scansione, premi in tre tipi con tutele per il
+locale, condizione del timbro personalizzabile, sanzioni automatiche solo sulla tessera; piano in 5
+PR: A database, B ristoratore, C cliente, D pannello, E righe per privacy e termini). Si accende per tutti
 solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`.
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
