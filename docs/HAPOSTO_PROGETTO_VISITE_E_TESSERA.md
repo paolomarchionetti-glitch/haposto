@@ -2,6 +2,12 @@
 
 **10 ottobre 2026 · stato: proposta da decidere dopo il pilot · nessun codice scritto.**
 
+> **Aggiornamento 11 ottobre 2026.** Il titolare ha deciso di realizzare subito la tessera come
+> **funzione nascosta**, spenta dal pannello admin fino all'eventuale lancio. Le regole da seguire
+> sono in **`HAPOSTO_TESSERA_SPECIFICHE.md`**, che prevale su questo documento dove differiscono.
+> Per esempio: niente timbri a mano, condizioni bloccate per ogni tessera (il «patto»), sanzioni.
+> Questo documento resta per le motivazioni, i pro e i contro.
+
 Valutazione del documento «Sistema di disponibilità ristoranti, check-in verificato e loyalty»
 (scritto con ChatGPT e fornito dal titolare). Dice come si applicherebbe a HAPOSTO, se ne vale la
 pena e come lo costruirei.

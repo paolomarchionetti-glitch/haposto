@@ -105,9 +105,10 @@ Prossimi passi: il percorso completo, in ordine, con chi fa cosa, costi e durate
 di base (nome, zona, vantaggi di Plus), basi legali e fiscali, produzione (Parte 10), documenti
 legali, Google Play, pilot, lancio, pagamenti (Parti 7–8), fine beta e gestione.
 
-**Proposta da decidere dopo il pilot** (10 ottobre 2026): visite registrate con il QR del cliente e
-tessera fedeltà digitale per i locali, in `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`. Nessun codice
-scritto; durante la prova sul campo e il pilot si raccolgono solo le opinioni (fase V0).
+**Tessera fedeltà** (decisione dell'11 ottobre 2026): si realizza subito come **funzione nascosta**,
+spenta dal pannello admin, secondo `docs/HAPOSTO_TESSERA_SPECIFICHE.md` (regole T1–T59, piano in 5
+PR: A database, B ristoratore, C cliente, D pannello, E testi legali). Si accende per tutti solo dopo
+l'avvocato e la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`.
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
 (dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,
