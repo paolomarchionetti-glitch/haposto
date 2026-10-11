@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **5 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
+Ultimo aggiornamento: **11 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; tessera fedeltà: PR A con il database, spenta; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -58,6 +58,9 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
 - [ ] Prova sul campo con 1–3 ristoratori amici (Tappa 1 della roadmap da qui al lancio): prima
       aggiungere la loro email Google ai *Test users* di Google Cloud.
+- [ ] DEV, dopo l'unione della PR A della tessera (#26): eseguire la migration `0018_loyalty_card.sql`
+      e di nuovo `supabase/ops/scheduled_jobs.sql` (lavoro nuovo `haposto-loyalty-maintenance`);
+      controllare che `loyalty` in Impostazioni sia `"mode": "OFF"`; aggiornare l'app Dev.
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
 ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
@@ -112,6 +115,13 @@ locale, condizione del timbro personalizzabile, sanzioni automatiche solo sulla 
 PR: A database, B ristoratore, C cliente, D pannello, E righe per privacy e termini). Si accende per tutti
 solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`.
 
+- **PR A (#26), 11 ottobre 2026:** migration `0018_loyalty_card.sql` (tabelle, regole e funzioni
+  della tessera, tutte con il controllo della modalità; lavoro pianificato per preavvisi,
+  azzeramenti, scadenze e pulizia), 209 controlli automatici (`step22`), impostazione `loyalty`
+  **spenta**, «Tester tessera» per locali e utenti nel pannello admin. Nell'app non si vede nulla.
+  Corretta anche la scheda del locale del pannello dal SQL Editor.
+- **Prossima: PR B** (app del ristoratore: procedura guidata e patto, Timbra, premi, statistiche).
+
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
 (dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,
 pannello admin, regole, valori modificabili, query di controllo). Si tengono sul PC o nel gestore
@@ -162,7 +172,7 @@ e non pubblicare password, token, chiavi segrete, file .env o local.properties; 
 
 - **CI** (`.github/workflows/android-ci.yml`): build delle tre varianti, test JVM, lint, test su
   emulatore API 34, job SQL (migration, seed, controlli step8_to_17 / step18 / dev_tools, ordine della
-  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), piani e prova (step20), date italiane (step21), **progetto di produzione nuovo** senza permessi automatici:
+  guida, KPI, import OSM, pulizia DEV, note/link/file/offerta (step19), piani e prova (step20), date italiane (step21), tessera fedeltà (step22), **progetto di produzione nuovo** senza permessi automatici:
   stessi permessi del DEV, operazioni del server, controlli e import OSM) e job Deno delle Edge
   Function. Il sito ha il workflow `website.yml` e la pubblicazione su Cloudflare Pages.
 - **Verifiche locali usate finora** (in un ambiente senza SDK Android, dove l'app si verifica solo in

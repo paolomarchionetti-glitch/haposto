@@ -77,6 +77,10 @@ data class AdminRestaurantDetail(
     val planSource: String? = null,
     val planValidUntil: Instant? = null,
     val partnerSince: Instant? = null,
+    /** Tessera fedeltà (migration 0018): null sui database precedenti, così la sezione non compare. */
+    val loyaltyTester: Boolean? = null,
+    /** NONE, ACTIVE, CLOSING, SUSPENDED, REMOVED, ENDED. */
+    val loyaltyStatus: String? = null,
 )
 
 data class AdminUserRow(
@@ -111,6 +115,8 @@ data class AdminUserDetail(
     val favorites: Int,
     val activeAlerts: Int,
     val recentActivity: List<AdminActivity>,
+    /** Cliente tester della tessera (migration 0018): null sui database precedenti. */
+    val loyaltyTester: Boolean? = null,
 )
 
 data class AdminSubscriptionRow(

@@ -387,7 +387,8 @@ se li avevi aggiunti, restano validi e hanno la precedenza; non servono più.)
    Poi elimina la query dall'elenco a sinistra (**⋯ → Delete query**): l'editor la salva da solo e
    contiene il segreto. Per cambiare un valore: `select vault.update_secret(id, 'nuovo valore')`
    con l'`id` preso da `select id, name from vault.secrets;`.
-3. Esegui `supabase/ops/scheduled_jobs.sql` (promemoria, pulizie, scadenze, conservazione dati).
+3. Esegui `supabase/ops/scheduled_jobs.sql` (promemoria, pulizie, scadenze, conservazione dati,
+   tessera fedeltà).
 4. Esegui `supabase/ops/push_dispatch_cron.sql` (invio notifiche ogni minuto): in fondo deve
    comparire `haposto-push-dispatch` con `active = true`.
 5. Esegui `supabase/ops/restaurant_files_cron.sql` (ogni notte toglie le foto "solo per oggi"
@@ -669,11 +670,11 @@ DEV); restano gli stessi solo il client Google *Web*, il progetto Google Cloud/F
 3. **Project Settings → API Keys**: c'è la *publishable key* (`sb_publishable_…`, pubblica: andrà
    nell'app e nel sito). La *secret key* non va copiata. È normale che le chiavi *legacy* manchino.
 
-### 10.2 Database: migration 0001–0017
+### 10.2 Database: migration 0001–0018
 
 Supabase (**produzione**: controlla il nome del progetto in alto) → **SQL Editor** → **New query** →
 incolla il file intero → **Run**, **uno alla volta, in ordine**: `supabase/migrations/0001_extensions.sql`
-… `0017_rome_dates_admin_plan.sql` (17 file, compresa la 0005). Se compare *Potential issue detected…
+… `0018_loyalty_card.sql` (18 file, compresa la 0005). Se compare *Potential issue detected…
 destructive operation* premi **Run this query**. Se un file dà errore, fermati e mandami la riga.
 
 Verifica (nuova query):
@@ -691,7 +692,7 @@ select
     (select count(*) from storage.buckets where id = 'restaurant-files') as contenitore_file;
 ```
 
-Atteso: `locali` 0 · `impostazioni` `beta, dev_tools_enabled, legal, min_supported_app_version,
+Atteso: `locali` 0 · `impostazioni` `beta, dev_tools_enabled, legal, loyalty, min_supported_app_version,
 public_links, restaurant_trial, security` · `piani` 5 · `tempo_reale` 1 · `tabelle_senza_permessi_del_server` 0 ·
 `contenitore_file` 1.
 
@@ -867,6 +868,19 @@ file e che non hai ancora guardato (**Tutti** per vederli tutti). Tocca i link p
 **Visto** se va bene, oppure **Togli link** / **Togli file** (l'operazione resta nel registro
 operazioni; il file tolto si cancella nella notte). Il titolare può rimetterli: li rivedrai tra
 quelli da controllare; se insiste, sospendi il locale.
+
+**Tessera fedeltà (funzione nascosta, migration 0018).** Parte **spenta** e nessuno la vede.
+Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
+- **Modalità:** pannello → **Impostazioni** → `loyalty` → nel testo cambia solo `"mode"`:
+  `"OFF"` (spenta), `"TEST"` (solo tester), `"ON"` (attiva per tutti), `"EXISTING_ONLY"` (solo le
+  tessere già iniziate) → **Salva**. Dopo il primo `"ON"` non si torna più a `"OFF"` o `"TEST"`
+  (il server lo rifiuta): si passa solo fra `"ON"` ed `"EXISTING_ONLY"`. Gli altri numeri sono
+  limiti e soglie: lasciali come sono, salvo decisione diversa.
+- **Tester:** pannello → **Locali** → il locale → **Tessera fedeltà (nascosta)** → «Locale tester
+  della tessera»; **Utenti** → l'utente → «Cliente tester della tessera». Gli admin sono sempre
+  clienti tester.
+- Le schermate per ristoratore e cliente arrivano con le prossime PR: fino ad allora, anche in
+  modalità test, nell'app non compare niente.
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:

@@ -12,6 +12,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -159,6 +161,21 @@ fun AdminRestaurantRoute(restaurantId: String, admin: AdminRepository, onBack: (
             ) { Text("Attiva Pro per $months mesi") }
         }
 
+        detail.loyaltyTester?.let { tester ->
+            SectionCard(title = "Tessera fedeltà (nascosta)", subtitle = "La modalità si cambia in Impostazioni → loyalty.") {
+                LabeledValue("Tessera del locale", loyaltyStatusLabel(detail.loyaltyStatus))
+                LoyaltyTesterSwitch("Locale tester della tessera", tester, enabled = !state.busy) { checked ->
+                    viewModel.act(if (checked) "✓ Locale tester della tessera." else "✓ Il locale non è più tester.") {
+                        admin.setRestaurantLoyaltyTester(detail.restaurantId, checked)
+                    }
+                }
+                Text(
+                    "In modalità TEST la tessera la vedono solo i locali e i clienti tester (gli admin sempre).",
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+
         SectionCard(title = "Membri") {
             detail.members.forEach { member ->
                 Row {
@@ -213,6 +230,14 @@ fun AdminRestaurantRoute(restaurantId: String, admin: AdminRepository, onBack: (
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun LoyaltyTesterSwitch(text: String, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }
 
@@ -311,6 +336,17 @@ fun AdminUserRoute(userId: String, admin: AdminRepository, onBack: () -> Unit, o
                 enabled = !state.busy,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Regala Plus per $months mesi") }
+        }
+
+        user.loyaltyTester?.let { tester ->
+            SectionCard(title = "Tessera fedeltà (nascosta)", subtitle = "La modalità si cambia in Impostazioni → loyalty.") {
+                LoyaltyTesterSwitch("Cliente tester della tessera", tester, enabled = !state.busy) { checked ->
+                    viewModel.act(if (checked) "✓ Cliente tester della tessera." else "✓ Non è più cliente tester.") {
+                        admin.setUserLoyaltyTester(user.userId, checked)
+                    }
+                }
+                if (user.isAdmin) Text("Gli admin sono sempre clienti tester.", style = MaterialTheme.typography.bodySmall)
+            }
         }
 
         SectionCard(title = "Locali") {

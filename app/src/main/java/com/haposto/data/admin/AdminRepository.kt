@@ -25,10 +25,14 @@ interface AdminRepository {
     suspend fun removeMember(restaurantId: String, userId: String, note: String?): Outcome<Unit>
     suspend fun grantRestaurantPlan(restaurantId: String, planCode: String, months: Int, note: String?): Outcome<Unit>
 
+    /** Tessera fedeltà nascosta: in modalità TEST la vedono solo locali e clienti tester. */
+    suspend fun setRestaurantLoyaltyTester(restaurantId: String, tester: Boolean): Outcome<Unit>
+
     suspend fun users(query: String?, filter: String, offset: Int = 0): Outcome<List<AdminUserRow>>
     suspend fun userDetail(userId: String): Outcome<AdminUserDetail>
     suspend fun setUserBlocked(userId: String, blocked: Boolean, reason: String?): Outcome<Unit>
     suspend fun grantPlus(userId: String, months: Int, note: String?): Outcome<Unit>
+    suspend fun setUserLoyaltyTester(userId: String, tester: Boolean): Outcome<Unit>
 
     suspend fun subscriptions(kind: String): Outcome<List<AdminSubscriptionRow>>
     suspend fun cancelSubscription(kind: String, subscriptionId: String, note: String?): Outcome<Unit>
