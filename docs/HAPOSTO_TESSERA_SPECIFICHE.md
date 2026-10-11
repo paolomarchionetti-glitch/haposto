@@ -1,39 +1,57 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
-**11 ottobre 2026 · stato: specifiche approvate per la realizzazione · funzione spenta di default.**
+**Versione 2 · 11 ottobre 2026 · funzione spenta di default · nessun codice ancora scritto.**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
-solo se e quando si deciderà di lanciarla. Questo documento sostituisce le parti operative della
-proposta `HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`, che resta per le motivazioni. **Dove i due
-documenti differiscono, vale questo.**
+solo se e quando si deciderà di lanciarla. Le motivazioni sono in
+`HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`; **dove i documenti differiscono, vale questo**.
 
 Ogni regola ha un codice (**T1**, **T2**…) da citare nelle PR, nei test e nelle discussioni.
 
-Legenda: 🧑 tocca al titolare · 🤖 lo fa Claude · ⚖️ serve un professionista.
+Legenda: 🧑 tocca al titolare · 🤖 lo fa Claude.
+
+---
+
+## Cosa cambia rispetto alla versione 1
+
+La prima versione era troppo vincolante per i ristoranti e chiedeva troppo lavoro all'admin. Il
+titolare ha chiesto una tessera più semplice, che funzioni da sola, «senza avvocati e leggi troppo
+vincolanti».
+
+| Versione 1 | Versione 2 |
+|---|---|
+| Chiudendo la tessera, quelle iniziate andavano avanti fino a 12 mesi | **Preavviso di 30 giorni**, poi la tessera finisce |
+| Tessera valida 12 mesi dal primo timbro, allungata dalle ferie | I timbri **si azzerano dopo 6 mesi senza visite**; niente gestione delle ferie |
+| Premio con testo libero, sconto percentuale, alcolici con avvertenza | **Solo da una lista chiusa** di prodotti del locale: niente soldi, sconti o alcolici |
+| Condizione del timbro con spesa minima in euro | Solo «pasto al tavolo» o «consumazione al tavolo» |
+| Contestazione del premio entro 48 ore, gestita dall'admin | **Nessuna contestazione.** Il cliente può solo segnalare, e le segnalazioni contano in automatico |
+| Sanzioni decise dall'admin, fino a togliere il locale da HAPOSTO | **Sanzioni automatiche e progressive, solo sulla tessera.** Il locale resta su HAPOSTO e il suo abbonamento non cambia |
+| Elenco di anomalie da controllare nel pannello | Tolto: bastano i limiti automatici |
+| Otto domande per l'avvocato | Con la lista chiusa è la classica tessera timbri del bar: si citano solo nei testi legali già previsti |
 
 ---
 
 ## 0. In breve
 
-- **Cos'è.** Una tessera timbri digitale per locale: «N timbri → un premio», scelto dal ristoratore
-  e mai in denaro. Il timbro si ottiene **solo** quando il locale scansiona il QR del cliente.
-- **Per chi.**
-  - Clienti: gratis, serve solo l'accesso con Google.
-  - Ristoratori: funzione di Pro. Durante la beta e la prova ce l'hanno tutti.
-- **Il patto.** Quando il ristoratore attiva una tessera accetta regole che **non può peggiorare**
-  per chi ha già iniziato. Ogni tessera iniziata resta valida alle condizioni di quel giorno fino
-  alla sua scadenza naturale. Chi viola il patto viene sospeso dall'app.
-- **Antifrode.** Nessun timbro gratis, in nessun modo:
-  - QR che cambia, vale 60 secondi, una volta sola;
-  - screenshot bloccati e QR "vivo" (animato), riconoscibile da una foto;
-  - niente timbri a mano;
-  - limiti e segnalazioni automatiche.
+- **Cos'è.** Una tessera timbri digitale per locale: «N timbri → un premio». Il premio si sceglie da
+  una lista di prodotti del locale. Il timbro si ottiene **solo** quando il locale scansiona il QR
+  del cliente.
+- **Per chi.** Gratis per i clienti con account Google. Per i ristoratori è una funzione di Pro
+  (durante la beta e la prova ce l'hanno tutti).
+- **Il patto, semplice.**
+  - Chi ha iniziato una tessera la completa alle condizioni di quel giorno.
+  - Se il locale cambia le regole, valgono solo per le tessere nuove.
+  - Se smette, i clienti hanno 30 giorni per completare.
+- **Antifrode.** Nessun timbro gratis: QR che cambia ogni 60 secondi e vale una volta sola,
+  screenshot bloccati, nessun timbro a mano, limiti automatici.
 - **Privacy.** Il ristoratore non vede mai nome, email o foto del cliente: solo un codice anonimo.
   Niente GPS.
-- **Nascosta.** Con l'interruttore spento non c'è nessun menù, nessun tasto, nessuna scritta, e il
-  server rifiuta ogni operazione. Il codice è comunque nel repository pubblico: «nascosta» vuol dire
-  invisibile e inutilizzabile nell'app, non segreta.
+- **Gestione automatica.** Nessuna contestazione da seguire. Se più clienti diversi segnalano
+  problemi, la tessera del locale si sospende da sola. L'admin non deve fare niente.
+- **Nascosta.** Con l'interruttore spento non c'è nessun menù né tasto, e il server rifiuta ogni
+  operazione. Il codice è nel repository pubblico: «nascosta» vuol dire invisibile e inutilizzabile
+  nell'app, non segreta.
 
 ---
 
@@ -41,12 +59,12 @@ Legenda: 🧑 tocca al titolare · 🤖 lo fa Claude · ⚖️ serve un professi
 
 | | Regola |
 |---|---|
-| **T1** | Il **timbro** si ottiene solo con una visita reale, quando il locale scansiona il QR del cliente. Non esistono altri modi: niente timbri a mano, regalati o recuperati |
-| **T2** | Le **condizioni** (timbri richiesti, premio, scadenze, giorni doppi) sono fissate quando la tessera del cliente inizia e **non cambiano più** per quella tessera |
+| **T1** | Il **timbro** si ottiene solo con una visita reale, quando il locale scansiona il QR del cliente. Non esistono timbri a mano, regalati o recuperati |
+| **T2** | Le **condizioni** (timbri richiesti, premio, giorni doppi) sono fissate quando la tessera del cliente inizia e **non cambiano** per quella tessera |
 | **T3** | Il ristoratore può cambiare le condizioni solo **per le tessere nuove**, che partono da zero |
-| **T4** | Il **premio** maturato è un impegno del locale: va consegnato entro la sua validità, alla visita che sceglie il cliente |
-| **T5** | Il premio **non è mai denaro**: niente contanti, credito, buoni, gift card, «€ X di sconto» |
-| **T6** | Chi viola il patto (locale o cliente) viene **sospeso** dall'app. Il locale sparisce da mappa ed elenco, l'account del cliente viene bloccato (§9) |
+| **T4** | Il **premio maturato** va consegnato entro la sua validità, alla visita che sceglie il cliente |
+| **T5** | Il premio si sceglie **solo dalla lista** del §8: prodotti del locale, **mai soldi, sconti o alcolici** |
+| **T6** | Un locale che non rispetta la tessera **perde la tessera**, in automatico e a gradi (§9). Il locale resta su HAPOSTO e il suo abbonamento non cambia |
 
 ---
 
@@ -57,23 +75,22 @@ Legenda: 🧑 tocca al titolare · 🤖 lo fa Claude · ⚖️ serve un professi
 | **T7** | Pannello admin → **Impostazioni** → `loyalty` → **modalità**. Valore iniziale: **spenta** |
 | **T8** | Le modalità sono quattro (tabella sotto) |
 | **T9** | **Il server decide**: ogni funzione della tessera controlla la modalità e rifiuta con `FEATURE_DISABLED` se non è permessa. L'app nasconde i menù, ma la protezione vera è sul server |
-| **T10** | **Dopo il lancio non si può più spegnere del tutto.** Da «attiva» si passa solo a «solo esistenti», così il patto con chi ha già timbri resta rispettato |
+| **T10** | **Dopo il lancio non si spegne di colpo.** Da «attiva» si passa a «solo esistenti», così chi ha timbri può completare |
 
 | Modalità | Chi la vede | Cosa si può fare |
 |---|---|---|
-| **Spenta** (iniziale) | Nessuno (l'admin vede solo l'interruttore e la scheda Tessere vuota) | Niente |
-| **Test** | Solo i **locali tester** e i **clienti tester**, scelti dall'admin (gli admin sono sempre clienti tester) | Tutto, solo fra tester |
-| **Attiva** | Tutti i clienti con account; i locali con la funzione `LOYALTY` (Pro) | Tutto |
-| **Solo esistenti** | Chi ha già una tessera iniziata | Si completano le tessere e si consegnano i premi; niente tessere nuove né programmi nuovi |
+| **Spenta** (iniziale) | Nessuno (l'admin vede solo l'interruttore) | Niente |
+| **Test** | Solo i **locali tester** e i **clienti tester** scelti dall'admin (gli admin sono sempre clienti tester) | Tutto, solo fra tester |
+| **Attiva** | Tutti i clienti con account; i locali con Pro | Tutto |
+| **Solo esistenti** | Chi ha già una tessera iniziata | Si completano le tessere e si consegnano i premi; niente tessere nuove |
 
 - **Tester:**
   - **Locali** → il locale → «**Tester tessera**»;
   - **Utenti** → l'utente → «**Tester tessera**».
 
   Sul DEV: il tuo account come cliente, il «ristoratore di prova» con il suo locale come tester.
-- **Cosa resta nascosto con la tessera non disponibile:** riquadro nella scheda del locale, «Le mie
-  tessere», tasto «Timbra» nella dashboard, voce «Tessera fedeltà» in Gestisci il locale,
-  statistiche della tessera, righe nella pagina pubblica del sito e nell'adesivo QR.
+- **Con la tessera non disponibile non si vede niente:** riquadro nella scheda del locale, «Le mie
+  tessere», tasto «Timbra», voce «Tessera fedeltà» in Gestisci il locale, statistiche.
 
 ---
 
@@ -81,42 +98,43 @@ Legenda: 🧑 tocca al titolare · 🤖 lo fa Claude · ⚖️ serve un professi
 
 ### 3.1 Cosa sceglie il ristoratore (entro limiti fissati dall'admin)
 
-| | Impostazione | Limiti (modificabili solo dall'admin) | Proposta iniziale |
-|---|---|---|---|
-| **T11** | Timbri per il premio | da **5** a **20** | 10 |
-| **T12** | Premio | tipo + descrizione (§8) | — |
-| **T13** | Validità del premio dopo lo sblocco | da **30** a **180** giorni | 60 |
-| **T14** | Durata della tessera dal primo timbro | **6** o **12** mesi | 12 |
-| **T15** | Giorni con timbro doppio | da 0 a **2** giorni della settimana | nessuno |
-| **T16** | Condizione per il timbro | a scelta: «un pasto al tavolo», «una consumazione al tavolo», oppure «spesa minima di X €» (X da 5 a 50) | un pasto al tavolo |
+| | Impostazione | Scelta |
+|---|---|---|
+| **T11** | Timbri per il premio | da **5** a **20** |
+| **T12** | Premio | **uno** dalla lista del §8 |
+| **T13** | Condizione per il timbro | «un pasto al tavolo» oppure «una consumazione al tavolo» |
+| **T14** | Giorni con timbro doppio (facoltativo) | da 0 a **2** giorni della settimana |
 
-La spesa minima è una **condizione** per ricevere il timbro, non un premio: non contrasta con
-**T5**.
+Sono valori fissati dall'admin, uguali per tutti:
+- la **validità del premio** (es. 60 giorni);
+- l'**azzeramento per inattività** (es. 6 mesi senza visite);
+- il **preavviso di chiusura** (30 giorni).
+
+Così ogni tessera funziona allo stesso modo e il cliente non deve leggere regole diverse in ogni
+locale.
 
 ### 3.2 Il patto: attivazione e versioni
 
 | | Regola |
 |---|---|
-| **T17** | **Riepilogo del patto** prima di attivare, con le scelte e gli impegni: «Mi impegno a timbrare ogni cliente che rispetta la condizione e mostra il QR; a consegnare ogni premio maturato entro la sua validità; a non chiudere la tessera prima che scadano quelle già iniziate, salvo cessazione dell'attività». Si attiva solo con la spunta **Accetto il patto**, da titolare con verifica in due passaggi |
-| **T18** | L'accettazione si registra in `consent_log` (tipo `LOYALTY_PACT`) con data, versione del programma, account e versione dei termini. Le clausole onerose richiedono l'approvazione specifica (artt. 1341–1342 c.c., come per le condizioni dei ristoranti) |
-| **T19** | Ogni attivazione crea una **versione** numerata. Una versione attivata **non si può modificare** (il database lo impedisce) |
-| **T20** | **Modificare = pubblicare una nuova versione.** Le tessere nuove usano quella; le tessere già iniziate restano sulla loro (**T2**, **T3**) |
+| **T15** | **Riepilogo** prima di attivare, in tre righe: «Timbro ogni cliente che rispetta la condizione e mostra il QR. Consegno i premi maturati entro la loro validità. Se smetto, i clienti hanno 30 giorni per completare». Si attiva con **Accetto**, da titolare con verifica in due passaggi |
+| **T16** | L'accettazione si registra in `consent_log` (tipo `LOYALTY_PACT`) con data, versione del programma e account |
+| **T17** | Ogni attivazione crea una **versione** numerata, che **non si può modificare** (il database lo impedisce) |
+| **T18** | **Modificare = pubblicare una nuova versione.** Le tessere nuove usano quella; le tessere già iniziate restano sulla loro (**T2**, **T3**) |
 
 ---
 
-## 4. Cosa può e non può fare il ristoratore
+## 4. Cosa può fare il ristoratore
 
 | Situazione | Cosa succede | Regola |
 |---|---|---|
-| Vuole **cambiare** timbri o premio | Pubblica una nuova versione (nuovo patto). Vale **solo per chi inizia da oggi**, con timbri a zero. Chi ha 9 timbri su 10 prende il premio della versione in cui ha iniziato | **T20** |
-| Vuole **smettere** | **Chiude la tessera con preavviso**: da subito nessuna tessera nuova; quelle iniziate continuano fino alla loro scadenza (massimo 12 mesi), premi compresi. Poi la tessera si chiude da sola. I clienti ricevono un avviso con la data | **T21** |
-| Vuole togliere il premio a chi è a 9 su 10 | **Non può.** È proprio ciò che il patto impedisce | **T2** |
-| **Ferie o chiusura temporanea** | Dichiara le date: le scadenze delle tessere e dei premi attivi si **allungano** degli stessi giorni (mai si accorciano). Max 60 giorni l'anno | **T22** |
-| **Non paga più Pro** (diventa «Non collegato») | Come una chiusura con preavviso: niente tessere nuove, le iniziate si completano. Lo scanner resta disponibile solo per quelle | **T23** |
-| **Chiude l'attività** (cessazione, fallimento) | Lo comunica a HAPOSTO (o lo verifica l'admin). L'admin **termina** la tessera con motivo «cessazione»; i clienti vengono avvisati. Nessuna sanzione al locale; i premi non consegnati decadono | **T24** |
-| Il titolare **cancella l'account** | Come la cessazione. Se c'è un altro titolare, il patto passa a lui | **T25** |
-| **Sospeso per violazione** | §9: sparisce da mappa ed elenco; la tessera viene terminata; per 12 mesi non può riattivarla | **T26** |
-| Il locale **cambia titolare** (nuova gestione) | Decide l'admin caso per caso. Di norma il nuovo titolare subentra nel patto o lo termina come una cessazione, con avviso ai clienti | **T27** |
+| **Cambiare** timbri, premio o giorni doppi | Pubblica una nuova versione. Vale **solo per chi inizia da oggi**, con timbri a zero. Chi ha già timbri completa con le condizioni di prima | **T18** |
+| **Smettere** | **Chiude con 30 giorni di preavviso**. Da subito nessuna tessera nuova. Per 30 giorni chi ha una tessera può continuare a timbrare; i premi già sbloccati restano validi fino alla loro scadenza. Poi è finita. Chi è a 1 su 10 perde i timbri; chi è a 9 su 10 ha 30 giorni per l'ultima visita | **T19** |
+| **Non paga più Pro** (diventa «Non collegato») | Succede da solo quello che succede quando smette: parte il preavviso di 30 giorni | **T20** |
+| **Esce da HAPOSTO** (cessazione, account cancellato, locale sospeso per altri motivi) | La tessera finisce subito: non c'è più nessuno che possa timbrare. I clienti ricevono un avviso | **T21** |
+
+Il massimo a cui un locale si impegna smettendo, quindi, è il preavviso di 30 giorni più la
+validità dei premi già sbloccati.
 
 ---
 
@@ -124,30 +142,30 @@ La spesa minima è una **condizione** per ricevere il timbro, non un premio: non
 
 | | Regola |
 |---|---|
-| **T28** | La tessera **nasce al primo timbro**, legata alla versione attiva quel giorno. Massimo **una tessera attiva per locale** per cliente |
-| **T29** | **Scadenza della tessera:** primo timbro + durata della versione (6 o 12 mesi), allungata dalle ferie (**T22**). Scaduta senza premio: i timbri decadono. Avvisi gratuiti 30 e 7 giorni prima, se mancano 1–3 timbri |
-| **T30** | Arrivato a N timbri si **sblocca il premio** (validità della versione) e la tessera è completata. Un timbro in più (giorno doppio) passa alla tessera successiva, se il locale ne accetta di nuove |
-| **T31** | **Premio:** «🎁 da ritirare entro il …». Si consegna alla visita che sceglie il cliente (§8). Avviso gratuito 7 giorni prima della scadenza |
-| **T32** | Il cliente può **lasciare** una tessera (Le mie tessere → Esci): i suoi timbri si cancellano. Con la cancellazione dell'account sparisce tutto |
-| **T33** | Il cliente vede sempre le **regole della sua tessera**: timbri, premio, scadenze, giorni doppi, condizione, data del patto. Sono quelle della sua versione, anche se il locale ne ha pubblicata una nuova |
+| **T22** | La tessera **nasce al primo timbro**, legata alla versione attiva quel giorno. Al massimo **una tessera attiva per locale** per cliente |
+| **T23** | **Azzeramento per inattività:** se il cliente non torna per **6 mesi** (valore dell'admin), i timbri si azzerano. È l'unica «scadenza», facile da spiegare: «I timbri valgono finché torni almeno una volta ogni 6 mesi». Avviso gratuito 15 giorni prima, solo se mancano 1–3 timbri |
+| **T24** | Arrivato a N timbri si **sblocca il premio**, valido **60 giorni** (valore dell'admin). La tessera è completata e alla visita dopo ne parte una nuova. Un timbro in più (giorno doppio) passa alla tessera nuova, se il locale ne accetta ancora |
+| **T25** | Il cliente può **lasciare** una tessera (i timbri si cancellano). Con la cancellazione dell'account sparisce tutto |
+| **T26** | Il cliente vede sempre le **regole della sua tessera** (timbri, premio, giorni doppi, condizione): sono quelle della sua versione |
 
 ---
 
 ## 6. Timbrare: il flusso veloce
 
-**Il cliente** (alla cassa, quando paga):
+**Il cliente**, alla cassa quando paga:
 1. scheda del locale (o «Le mie tessere») → **Mostra il mio QR**. Senza account: «Accedi con Google
-   per raccogliere i timbri» (una volta sola);
-2. il QR compare **subito**: il codice si crea mentre la schermata si apre, in meno di mezzo
-   secondo. Luminosità al massimo, cornice animata, codice di riserva di 6 caratteri, conto alla
-   rovescia di 60 secondi con **rinnovo automatico**;
-3. appena il locale scansiona, entro 1 secondo la schermata mostra **«✓ +1 timbro · 4 su 10»**
+   per raccogliere i timbri», una volta sola;
+2. il QR compare **subito** (meno di mezzo secondo), con:
+   - luminosità al massimo e cornice animata;
+   - un codice di riserva di 6 caratteri;
+   - un conto alla rovescia di 60 secondi, con rinnovo automatico;
+3. appena il locale scansiona, la schermata mostra entro 1 secondo **«✓ +1 timbro · 4 su 10»**
    (o «+2, giorno doppio», o «🎁 Premio sbloccato»).
 
 **Il locale** (titolare o collaboratore con verifica in due passaggi):
-1. dashboard → **📷 Timbra**: lo scanner di Google si apre all'istante, senza permesso della
-   fotocamera per l'app;
-2. inquadra → in meno di 1 secondo il riquadro dell'esito:
+1. dashboard → **📷 Timbra**: si apre all'istante lo scanner di Google, che non chiede il permesso
+   della fotocamera all'app;
+2. dopo la scansione, in meno di 1 secondo compare l'esito:
 
    ```
    ✓ Cliente K4F7 · +1 timbro · 4 su 10
@@ -156,68 +174,80 @@ La spesa minima è una **condizione** per ricevere il timbro, non un premio: non
    [ Annulla (entro 2 minuti) ]     [ Timbra il prossimo ]
    ```
 
-3. **Inserisci codice** se il QR non si legge;
-4. **Annulla** solo entro 2 minuti e solo per un errore (persona sbagliata, doppia scansione).
-   Resta nel registro; troppi annullamenti generano una segnalazione all'admin.
+3. **Inserisci codice** se il QR non si legge.
 
 | | Regola |
 |---|---|
-| **T34** | Ogni scansione aggiorna **subito** il database: tessera, timbri, premio, statistiche. Il telefono del cliente lo vede entro 1 secondo |
-| **T35** | La dashboard resta com'è: il tasto **Timbra** è secondario e compare solo se il locale ha una tessera attiva o in chiusura |
+| **T27** | Ogni scansione aggiorna **subito** il database: tessera, timbri, premio, statistiche |
+| **T28** | **Annulla** serve solo per un errore dello staff: cliente sbagliato, stessa persona scansionata due volte. Toglie quel timbro ed è possibile **solo nei 2 minuti** dopo la scansione. Dopo, il timbro resta. Ogni annullamento è registrato |
+| **T29** | La dashboard resta com'è: il tasto **Timbra** è secondario e compare solo se il locale ha la tessera attiva o in preavviso |
 
 ---
 
 ## 7. QR e antifrode: nessun timbro gratis
 
+Tutte le difese sono **automatiche**: nessuno deve controllare niente.
+
 | Tentativo | Difesa | Regola |
 |---|---|---|
-| Fotografare o fare lo screenshot del QR e riusarlo | Il QR vale **60 secondi** e **una volta sola**; la schermata **blocca gli screenshot** (`FLAG_SECURE`); la cornice animata e l'orologio fanno riconoscere allo staff una foto statica | **T36** |
-| Mandare il QR a un amico che è al ristorante (timbro senza esserci) | Come sopra; in più il timbro va sempre al **titolare dell'account** del QR, che al massimo ottiene un timbro per locale ogni 4 ore. Le segnalazioni automatiche intercettano gli schemi ripetuti | **T36**, **T38** |
-| Inventare un QR o un codice | Il codice è casuale (128 bit nel QR, 6 caratteri di riserva su ~900 milioni di combinazioni) e lo crea solo il server. I codici di riserva sbagliati sono limitati: al decimo errore in 10 minuti lo scanner si blocca per 10 minuti | **T37** |
-| Più timbri nella stessa visita | **1 timbro per tessera ogni 4 ore** per locale (valore dell'admin), 2 nei giorni doppi | **T38** |
-| Il titolare o lo staff timbrano se stessi | Chi gestisce un locale non può avere la tessera di quel locale | **T39** |
-| Timbri a mano, regali, «recuperi» | **Non esistono** (**T1**). Errori del cliente (QR non mostrato): il timbro di quella visita si perde, come con la tessera di carta dimenticata a casa | **T1** |
-| Il locale crea clienti finti | Account Google veri, limite di scansioni (max 60 ogni 10 minuti e 300 al giorno per locale), segnalazioni automatiche (stessi clienti timbrati spesso dallo stesso collaboratore, account nuovi con timbri in un solo locale, premi consegnati subito dopo lo sblocco) | **T40** |
-| Il locale annulla il decimo timbro per non dare il premio | L'annullamento vale solo 2 minuti ed è registrato; il cliente vede subito il timbro e l'annullamento e può segnalare | **T41** |
-| Il locale segna «premio consegnato» senza darlo | Il cliente vede subito «premio consegnato» e ha **48 ore** per segnalare «non l'ho ricevuto» | **T42** |
-| Cliente con più account | Ogni account ha le sue tessere, ma ogni timbro richiede comunque una visita scansionata. Gli account duplicati evidenti si sospendono (§9) | **T43** |
+| Foto o screenshot del QR da riusare | Il QR vale **60 secondi** e **una volta sola**; la schermata **blocca gli screenshot**; la cornice animata fa riconoscere allo staff una foto statica | **T30** |
+| QR mandato a un amico che è al ristorante | Come sopra; in più il timbro va sempre al titolare dell'account del QR, che ne prende al massimo uno ogni 4 ore per locale | **T30**, **T32** |
+| Inventare un QR o un codice | Codice casuale creato solo dal server: 128 bit nel QR, ~900 milioni di combinazioni per il codice di riserva. Dopo 10 codici sbagliati in 10 minuti, l'inserimento si blocca per 10 minuti | **T31** |
+| Più timbri nella stessa visita | **1 timbro ogni 4 ore** per locale (2 nei giorni doppi) | **T32** |
+| Il titolare o lo staff timbrano la propria tessera | Chi gestisce un locale usa HAPOSTO anche come cliente, con lo stesso account. Potrebbe timbrarsi da solo e prendersi i premi. **Il sistema glielo impedisce**: chi gestisce un locale non può avere la tessera di quel locale | **T33** |
+| Timbri a mano | **Non esistono** (**T1**). Se il cliente dimentica il QR, il timbro di quella visita si perde, come con la tessera di carta lasciata a casa | **T1** |
+| Il locale timbra in massa clienti inesistenti | **Tetto automatico**: max 60 scansioni ogni 10 minuti e 300 al giorno per locale. Oltre, lo scanner risponde «limite raggiunto». Nessun controllo manuale | **T34** |
 
-Il GPS non serve: il locale che scansiona è già la prova della presenza. Si potrà aggiungere solo se
-emergesse un abuso reale, con il consenso del cliente.
+Il GPS non serve: il locale che scansiona è già la prova della presenza.
 
 ---
 
-## 8. Il premio
+## 8. Il premio: solo da una lista
 
 | | Regola |
 |---|---|
-| **T44** | **Tipi ammessi.** **Omaggio**: un prodotto o servizio del locale (es. «dolce offerto», «antipasto per il tavolo», «caffè e digestivo»). **Sconto percentuale** sul conto di quella visita, dal 5% al 50% |
-| **T45** | **Vietati:** denaro, credito, buoni, gift card, prodotti di terzi, importi in euro. Il server rifiuta descrizioni con «€», «euro» o importi |
-| **T46** | **Bevande alcoliche:** consentite solo come parte di un omaggio, con la dicitura «solo maggiorenni» (⚖️ da confermare; vedi §14) |
-| **T47** | **Consegna.** Alla scansione lo staff vede il premio disponibile e tocca **Consegna ora** quando il cliente lo vuole usare. Il cliente può dire «la prossima volta» |
-| **T48** | **Contestazione:** «Non l'ho ricevuto» entro 48 ore (**T42**). Si gestisce dal pannello (§9) |
+| **T35** | Il ristoratore sceglie **un** premio da questa lista, senza testo libero |
+| **T36** | **Niente soldi, sconti, buoni, credito o alcolici.** La lista non li contiene e il server accetta solo le voci della lista |
+| **T37** | **Consegna:** alla scansione lo staff vede il premio disponibile e tocca **Consegna ora** quando il cliente lo vuole usare. Il cliente può dire «la prossima volta». Nessuna conferma e nessuna contestazione: com'è con la tessera di carta |
+
+**Lista dei premi** (modificabile solo con una nuova versione dell'app):
+
+| Premio | Testo che vede il cliente |
+|---|---|
+| Caffè | «Caffè offerto» |
+| Dolce | «Dolce offerto» |
+| Antipasto | «Antipasto offerto» |
+| Contorno | «Contorno offerto» |
+| Primo piatto | «Primo piatto offerto» |
+| Pizza | «Pizza offerta» |
+| Bibita analcolica | «Bibita analcolica offerta» |
+| Coperto | «Coperto offerto» |
+
+Sono tutti prodotti o servizi del locale stesso, consegnati in quel locale. È la forma della
+classica tessera timbri del bar («ogni 10 caffè, uno offerto»), che non richiede regolamenti o
+pratiche particolari (§14).
 
 ---
 
-## 9. Segnalazioni e sanzioni
+## 9. Segnalazioni e sanzioni automatiche
 
-**Come si segnala:**
-- **il cliente**, da Le mie tessere → **Segnala un problema**:
-  - «non hanno voluto timbrare»;
-  - «premio non consegnato»;
-  - «premio diverso da quello promesso»;
-  - altro, con una nota breve;
-- **il locale**, dal riquadro dell'esito o dalle statistiche → **Segnala**: «uso sospetto del QR»,
-  «cliente scorretto».
-
-La segnalazione arriva all'admin con i dati della tessera: codice anonimo, date, versione del patto.
-L'admin vede anche gli account, quindi può verificare.
+Non ci sono contestazioni né decisioni da prendere. C'è solo un modo semplice per dire «questo locale
+non ha rispettato la tessera»; se lo dicono **più clienti diversi**, la tessera del locale si ferma
+da sola.
 
 | | Regola |
 |---|---|
-| **T49** | **Sanzioni per il locale** (decide l'admin, dopo una telefonata al locale): **1)** richiamo scritto (registro); **2)** **tessera sospesa**: niente tessere nuove, le esistenti restano valide; **3)** **locale sospeso da HAPOSTO**: sparisce da mappa, elenco e sito, la tessera viene terminata, per 12 mesi non può riattivarla. Le segnalazioni di più clienti diversi pesano di più |
-| **T50** | **Sanzioni per il cliente:** **1)** richiamo; **2)** **azzeramento** della tessera in quel locale; **3)** **account sospeso**: niente timbri, niente premi, niente funzioni con account. Segnalare il falso per avere premi vale come violazione |
-| **T51** | Ogni sanzione resta nel **registro** del pannello con motivo e autore. Locale e cliente possono chiedere un riesame scrivendo all'assistenza |
+| **T38** | **Chi può segnalare:** solo un cliente che ha avuto **almeno un timbro in quel locale negli ultimi 60 giorni**. Le scelte sono due tasti, senza testo: «Non hanno voluto timbrare» e «Non mi hanno dato il premio». **Una segnalazione per cliente per locale ogni 90 giorni.** Il cliente non ottiene niente segnalando, quindi non ha motivo di accanirsi |
+| **T39** | **Livello 1, avviso:** **3** segnalazioni di clienti diversi in 60 giorni → avviso automatico al titolare, nella dashboard e con una notifica: «Alcuni clienti segnalano problemi con la tessera». Nessuna conseguenza |
+| **T40** | **Livello 2, tessera sospesa:** **5** segnalazioni di clienti diversi in 60 giorni → la tessera del locale si **sospende da sola per 90 giorni**. Le tessere dei clienti finiscono, con un avviso. Dopo 90 giorni il locale può riattivarla accettando di nuovo il patto |
+| **T41** | **Livello 3, tessera tolta:** una seconda sospensione entro 12 mesi → la tessera viene **tolta**. Solo l'admin può ridargliela, se vuole |
+| **T42** | **Il locale non viene mai tolto da HAPOSTO** per la tessera: resta in mappa ed elenco, con il suo stato e il suo abbonamento. Perde solo la tessera |
+| **T43** | Il locale vede nelle statistiche quante segnalazioni ha (es. «2 negli ultimi 60 giorni; la tessera si sospende a 5»), senza sapere chi le ha fatte |
+| **T44** | **Clienti:** nessuna sanzione automatica. I limiti tecnici del §7 rendono inutile imbrogliare. Per i casi gravi l'admin può sempre bloccare un account dal pannello, come oggi |
+
+Le soglie (3, 5, 60 e 90 giorni, 12 mesi) sono impostazioni dell'admin. L'admin può anche togliere
+una sospensione a mano, se la ritiene ingiusta, ma **non deve** fare niente perché il sistema
+funzioni.
 
 ---
 
@@ -225,37 +255,31 @@ L'admin vede anche gli account, quindi può verificare.
 
 | | Regola |
 |---|---|
-| **T52** | **Il locale vede solo un codice anonimo** (es. `K4F7`): casuale, diverso per ogni locale, stabile nel tempo, così il locale distingue i clienti abituali senza sapere chi sono. Mai nome, email, foto, telefono, altre tessere |
-| **T53** | **Il QR non contiene dati**: solo un codice casuale. Il server conserva solo l'impronta del codice |
-| **T54** | **Niente GPS, niente impronta del dispositivo.** La posizione del cliente non viene mai chiesta per la tessera |
-| **T55** | **Conservazione:** codici QR 1 giorno; timbri e visite 24 mesi; tessere e premi chiusi 12 mesi dopo la chiusura, poi resta solo il conteggio anonimo; segnalazioni 24 mesi |
-| **T56** | **Al primo uso** il cliente legge una schermata breve: cosa vede il locale, cosa conserva HAPOSTO, per quanto. Poi accetta (versione dei termini). Base giuridica: contratto, cioè il servizio chiesto dal cliente |
-| **T57** | Da aggiornare: informativa privacy, termini per utenti e per ristoranti, scheda «Sicurezza dei dati» di Google Play |
+| **T45** | **Il locale vede solo un codice anonimo** (es. `K4F7`): casuale, diverso per ogni locale, stabile nel tempo. Così il locale distingue i clienti abituali senza sapere chi sono. Mai nome, email, foto, telefono, altre tessere |
+| **T46** | **Il QR non contiene dati**: solo un codice casuale. Il server conserva solo l'impronta |
+| **T47** | **Niente GPS, niente impronta del dispositivo** |
+| **T48** | **Conservazione:** codici QR 1 giorno; timbri e visite 24 mesi; tessere e premi chiusi 12 mesi, poi resta solo il conteggio anonimo; segnalazioni 12 mesi |
+| **T49** | **Al primo uso** il cliente vede una schermata breve: cosa vede il locale, cosa conserva HAPOSTO, per quanto. Poi accetta |
 
 ---
 
 ## 11. Statistiche
 
-**Per il ristoratore** (Gestisci il locale → Statistiche → Tessera; consultabili anche dallo staff;
+**Per il ristoratore** (Gestisci il locale → Statistiche → Tessera; le vedono anche i collaboratori;
 mai dati personali):
 - ultimi 7 / 30 / 90 giorni:
   - visite timbrate, coperti, clienti nuovi e di ritorno;
-  - tessere iniziate, timbri dati (normali e doppi);
+  - tessere iniziate, timbri (normali e doppi);
   - premi sbloccati, consegnati, scaduti;
 - **clienti vicini al premio** (quanti a N−1, N−2), senza sapere chi sono;
-- **per giorno della settimana e fascia oraria**: quando vengono i clienti con la tessera;
-- elenco delle tessere con **codice anonimo**: timbri, inizio, ultima visita, scadenza.
+- **giorni e orari** in cui arrivano i clienti con la tessera;
+- elenco delle tessere con **codice anonimo**: timbri, inizio, ultima visita;
+- segnalazioni ricevute e soglie (**T43**).
 
-Con la tessera spenta non si vede nulla.
-
-**Per l'admin** (pannello → nuova scheda **Tessere**):
-- totali: programmi attivi, tessere attive, timbri e premi del giorno, della settimana e del mese;
-- per locale: versione attiva e storico delle versioni con i patti accettati;
-- segnalazioni aperte e da gestire;
-- **segnali automatici** (**T40**, **T41**);
+**Per l'admin** (pannello → nuova scheda **Tessere**, solo da consultare):
+- totali: locali con tessera, tessere attive, timbri e premi di oggi, della settimana e del mese;
+- per locale: versioni e patti accettati, segnalazioni, sospensioni automatiche;
 - impostazioni e tester.
-
-Tutto si legge anche con le query di controllo della guida tecnica privata.
 
 ---
 
@@ -263,24 +287,20 @@ Tutto si legge anche con le query di controllo della guida tecnica privata.
 
 | | Regola |
 |---|---|
-| **T58** | **La tessera è gratis** per chi accede con Google: nessun abbonamento richiesto, nemmeno per gli avvisi sulle proprie tessere |
-| **T59** | **L'accesso si chiede solo quando serve** (alla prima «Mostra il mio QR»). Chi non vuole accedere usa HAPOSTO come oggi |
+| **T50** | **La tessera è gratis** per chi accede con Google, avvisi sulle proprie tessere compresi |
+| **T51** | **L'accesso si chiede solo quando serve** (alla prima «Mostra il mio QR»). Chi non vuole accedere usa HAPOSTO come oggi |
 
-**Plus (0,99 €/mese).** Oggi comprende avvisi «si è liberato», preferiti sincronizzati, raggio di
-100 km e «di solito». Idee per renderlo più interessante, senza togliere nulla al Gratis:
+**Plus (0,99 €/mese)** oggi comprende avvisi «si è liberato», preferiti sincronizzati, raggio di
+100 km e «di solito». Proposte per arricchirlo senza togliere nulla al Gratis (si decide alla
+Tappa 2):
 
 | Idea | La mia scelta |
 |---|---|
-| **Filtri avanzati** (cucina, aperto ora, con offerta, con tessera) — già previsti nel piano, non realizzati | ✅ sì |
+| **Filtri avanzati** (cucina, aperto ora, con offerta, con tessera) | ✅ sì |
 | **Avviso a orario** («avvisami se stasera dalle 20 c'è posto da X») | ✅ sì |
-| **Widget sulla schermata Home** del telefono («c'è posto vicino a te») | ✅ sì |
-| **Liste personali** («pizzerie del sabato») | 🟡 forse |
-| **Storico personale** (dove sono stato, quante volte) | 🟡 forse |
-| Avvisi «un locale della tua zona ha posto» | ❌ invadente |
-| Timbri doppi per gli abbonati Plus | ❌ no: la tessera resta uguale per tutti e non dipende da un pagamento |
-
-I vantaggi di Plus si decidono alla Tappa 2 della roadmap (decisioni di base); questa tabella è una
-proposta.
+| **Widget sulla schermata Home** del telefono | ✅ sì |
+| Liste personali, storico personale | 🟡 forse |
+| Timbri in più per chi ha Plus | ❌ no: la tessera è uguale per tutti |
 
 ---
 
@@ -288,48 +308,30 @@ proposta.
 
 - **Impostazioni** → `loyalty`:
   - modalità (**T7**–**T10**);
-  - limiti di **T11**, **T13**–**T16**;
-  - finestra di 4 ore (**T38**);
-  - limiti di scansione (**T40**);
-  - errori del codice di riserva (**T37**);
-  - massimo di giorni di ferie (**T22**).
-- **Locali** → il locale: «Tester tessera»; versione attiva e storico; statistiche; **Sospendi la
-  tessera**, **Termina (cessazione)**.
-- **Utenti** → l'utente: «Tester tessera»; le sue tessere (nell'admin si vedono, servono per le
-  contestazioni); **Azzera la tessera di un locale**.
-- **Tessere** (scheda nuova): §11, segnalazioni con **Prendi in carico → Decidi** (richiamo,
-  sospensione, archivia).
-- **Registro:** ogni azione della tessera e ogni sanzione.
+  - limiti di **T11** e **T14**;
+  - validità del premio, azzeramento per inattività, preavviso;
+  - finestra delle 4 ore e tetti di scansione;
+  - soglie delle segnalazioni (**T39**–**T41**).
+- **Locali** → il locale: «Tester tessera»; versioni; statistiche; eventuale sospensione da
+  togliere o tessera da ridare (facoltativo).
+- **Utenti** → l'utente: «Tester tessera».
+- **Tessere** (scheda nuova): i numeri del §11, solo da leggere.
+- **Registro:** attivazioni, versioni, chiusure, sospensioni automatiche, annullamenti.
 
 ---
 
-## 14. Aspetti legali da sottoporre all'avvocato ⚖️
+## 14. Aspetti legali
 
-Da portare insieme ai documenti legali (roadmap, Tappa 5), **prima** di accendere la tessera per il
-pubblico. La modalità «test» fra tester si può usare anche prima.
+Con la **lista chiusa di premi** (prodotti del locale, niente soldi, sconti o alcolici) la tessera è
+la stessa cosa della tessera timbri di carta che molti bar e ristoranti usano già. Non serve un
+lavoro legale dedicato: basta aggiungere poche righe ai testi già previsti.
+- **Privacy:** cosa vede il locale (codice anonimo), cosa conserva HAPOSTO e per quanto (§10).
+- **Termini per gli utenti:** come funzionano timbri, azzeramento, premio, chiusura con preavviso.
+- **Termini per i ristoratori:** il patto in tre righe (**T15**); il premio è un'iniziativa del
+  locale; sospensione automatica della tessera (§9).
 
-1. **Manifestazioni a premio (DPR 430/2001):**
-   - la tessera con premi decisi e pagati dal singolo locale, come omaggio di suoi prodotti o sconto
-     percentuale sul suo conto, rientra nelle esclusioni (art. 6)?
-   - serve un regolamento o una comunicazione al Ministero?
-   - chi è il promotore: il locale o HAPOSTO?
-2. **Ruolo di HAPOSTO:** fornitore dello strumento, non promotore né garante dei premi. Come
-   scriverlo nei termini.
-3. **Il patto e le sanzioni nei termini per i ristoranti:**
-   - immodificabilità per le tessere iniziate, chiusura con preavviso, sospensione;
-   - quali clausole richiedono l'approvazione specifica (artt. 1341–1342 c.c.);
-   - cosa succede in caso di cessazione o fallimento.
-4. **Codice del Consumo:** chiarezza delle condizioni per il cliente; decadenza dei timbri alla
-   scadenza; nessuna clausola vessatoria.
-5. **Privacy:**
-   - il codice anonimo dato al locale è un dato pseudonimo: il locale diventa titolare o
-     responsabile di un trattamento?
-   - serve una valutazione d'impatto (DPIA)?
-   - tempi di conservazione del §10.
-6. **Alcolici come premio:** ammessi solo con «solo maggiorenni» o meglio vietarli?
-7. **Sconto percentuale:** limite massimo e indicazione del prezzo; aspetti fiscali per il locale
-   (con il commercialista).
-8. **Spesa minima come condizione del timbro:** va bene indicarla in euro?
+Queste righe si fanno rileggere **insieme agli altri documenti legali** alla Tappa 5 della roadmap,
+senza costi in più. La modalità **test** fra tester si può usare anche prima.
 
 ---
 
@@ -339,36 +341,34 @@ pubblico. La modalità «test» fra tester si può usare anche prima.
 
 | Tabella | Contenuto |
 |---|---|
-| `loyalty_programs` | uno per locale: stato (`NONE`, `ACTIVE`, `CLOSING`, `SUSPENDED`, `TERMINATED`), versione attiva, tester sì/no, sospeso fino a, motivo |
-| `loyalty_program_versions` | versioni **immutabili** (un trigger blocca le modifiche): numero, timbri, tipo e testo del premio, percentuale, validità del premio, durata della tessera, giorni doppi, condizione, accettata da / quando, versione dei termini |
-| `loyalty_members` | locale + cliente → **codice anonimo** casuale (**T52**) |
-| `loyalty_cards` | tessera: versione, timbri, inizio, scadenza, stato |
-| `loyalty_stamps` | ogni timbro: tessera, chi ha scansionato, quando, timbri (1 o 2), persone, annullato da / quando |
-| `loyalty_rewards` | premio: testo copiato dalla versione, sbloccato, scade, consegnato da / quando, contestato |
-| `visit_tokens` | impronta del QR e del codice di riserva, cliente, scade (60 s), usato da / quando, esito |
-| `loyalty_reports` | segnalazioni: chi, tipo, tessera, nota, stato, decisione |
-| `loyalty_holidays` | ferie dichiarate (date) |
+| `loyalty_programs` | uno per locale: stato (`NONE`, `ACTIVE`, `CLOSING`, `SUSPENDED`, `REMOVED`, `ENDED`), versione attiva, tester sì/no, fine del preavviso, sospeso fino a |
+| `loyalty_program_versions` | versioni **immutabili** (un trigger blocca le modifiche): numero, timbri, premio (codice della lista), condizione, giorni doppi, accettata da / quando |
+| `loyalty_members` | locale + cliente → **codice anonimo** casuale (**T45**) |
+| `loyalty_cards` | tessera: versione, timbri, inizio, ultima visita, stato |
+| `loyalty_stamps` | ogni timbro: tessera, chi ha scansionato, quando, timbri (1 o 2), persone, annullato sì/no |
+| `loyalty_rewards` | premio: codice della lista, sbloccato, scade, consegnato da / quando |
+| `visit_tokens` | impronta del QR e del codice di riserva, cliente, scadenza (60 s), usato da / quando, esito |
+| `loyalty_reports` | segnalazioni: cliente, locale, tipo, data |
 
 Più:
-- `app_config` → `loyalty`: modalità e limiti (`admin_set_config` la valida);
+- `app_config` → `loyalty`: modalità, limiti e soglie (`admin_set_config` la valida);
 - `profiles.loyalty_tester`;
 - funzione del piano `LOYALTY` aggiunta a Pro.
 
 **Funzioni principali** (tutte sul server, con verifica della modalità **T9**):
 - **cliente:** `loyalty_access`, `create_visit_token`, `visit_token_status`, `my_loyalty_cards`,
   `leave_loyalty_card`, `report_loyalty_problem`;
-- **locale:**
-  - `register_stamp` (scansione o codice), `undo_stamp`, `redeem_reward`;
-  - `publish_loyalty_version` (patto), `close_loyalty_program`, `declare_loyalty_holidays`;
-  - `restaurant_loyalty_stats`, `restaurant_loyalty_cards`;
-- **admin:** impostazioni, tester, sospensione e terminazione, azzeramento, segnalazioni,
-  statistiche.
+- **locale:** `register_stamp` (scansione o codice), `undo_stamp`, `redeem_reward`,
+  `publish_loyalty_version` (patto), `close_loyalty_program`, `restaurant_loyalty_stats`,
+  `restaurant_loyalty_cards`;
+- **admin:** impostazioni, tester, togliere una sospensione o ridare la tessera, statistiche.
 
 **Lavori pianificati:**
-- scadenze di tessere e premi;
-- avvisi (**T29**, **T31**);
-- chiusura automatica a fine preavviso;
-- pulizia dei codici QR e conservazione (**T55**).
+- azzeramento per inattività e avvisi (**T23**);
+- scadenza dei premi;
+- fine del preavviso (**T19**, **T20**);
+- soglie delle segnalazioni (**T39**–**T41**);
+- pulizia (**T48**).
 
 Nella stessa migration si sistema anche `admin_restaurant_detail`, che dalla 0017 non funziona dal
 SQL Editor (problema già annotato).
@@ -377,36 +377,32 @@ SQL Editor (problema già annotato).
 
 - **Cliente:**
   - riquadro nella scheda del locale;
-  - schermata del QR (ZXing, già nel progetto) con `FLAG_SECURE`, cornice animata, rinnovo ogni
-    60 s ed esito letto ogni secondo;
-  - Le mie tessere, Segnala, schermata della privacy al primo uso;
+  - schermata del QR (ZXing, già nel progetto) con screenshot bloccati (`FLAG_SECURE`), cornice
+    animata, rinnovo ogni 60 secondi ed esito letto ogni secondo;
+  - Le mie tessere, i due tasti di segnalazione, schermata della privacy al primo uso;
   - tutto nascosto senza accesso alla funzione.
 - **Ristoratore:**
-  - Gestisci il locale → Tessera fedeltà: procedura in 3 passi (scelte → regole → patto);
-  - versioni, chiusura, ferie;
+  - Gestisci il locale → Tessera fedeltà: scelte (timbri, premio dalla lista, condizione, giorni
+    doppi) e patto;
+  - nuova versione, chiusura con preavviso;
   - tasto **Timbra** con lo scanner di Google (`play-services-code-scanner`, gratuito, senza
-    permesso della fotocamera) e il riquadro dell'esito;
-  - inserimento del codice; statistiche.
+    permesso della fotocamera), riquadro dell'esito, inserimento del codice;
+  - statistiche.
 - **Pannello admin:** §13.
 
 ### 15.3 Verifiche
 
-- **SQL** (`step22_loyalty_checks.sql` in CI): ogni regola **T** controllabile dal database ha il
-  suo controllo, in particolare:
+- **SQL** (`step22_loyalty_checks.sql` in CI): un controllo per ogni regola verificabile dal
+  database, in particolare:
   - modalità e tester;
   - immutabilità delle versioni;
-  - limiti;
-  - token monouso e scaduti;
-  - finestra delle 4 ore;
-  - autotimbro;
-  - annullamento oltre i 2 minuti;
-  - premio vietato in euro;
-  - chiusura con preavviso;
-  - ferie;
-  - sanzioni;
-  - privacy (il locale non legge mai email e nomi).
-- **Kotlin:** test della logica (stati, testi, conti alla rovescia) e della visibilità a funzione
-  spenta.
+  - lista dei premi;
+  - token monouso e scaduti, finestra delle 4 ore, autotimbro, annullamento oltre i 2 minuti;
+  - tetti di scansione;
+  - preavviso e azzeramento;
+  - soglie delle segnalazioni;
+  - privacy: il locale non legge mai email e nomi.
+- **Kotlin:** test della logica e della visibilità a funzione spenta.
 - **Costi:** nessuno (Supabase Free, scanner gratuito).
 
 ---
@@ -416,44 +412,42 @@ SQL Editor (problema già annotato).
 | PR | Contenuto | Visibile? |
 |---|---|---|
 | **A** | Database 0018, controlli SQL, impostazione `loyalty` (spenta) e tester nel pannello admin | No |
-| **B** | App del ristoratore: procedura del patto, Timbra, esito, statistiche | Solo ai tester in modalità test |
+| **B** | App del ristoratore: scelte e patto, Timbra, esito, statistiche | Solo ai tester in modalità test |
 | **C** | App del cliente: QR, Le mie tessere, segnalazioni, avvisi | Solo ai tester |
-| **D** | Pannello admin: scheda Tessere, segnalazioni, sanzioni; guida di prova sul DEV | Admin |
-| **E** | Bozze dei testi legali da far rivedere (privacy, termini, patto) | — |
+| **D** | Pannello admin: scheda Tessere; guida di prova sul DEV | Admin |
+| **E** | Righe da aggiungere a privacy e termini (§14) | — |
 
 Dopo ogni PR, come sempre:
 - 🧑 migration sul DEV;
-- prova con i due account: tu come cliente, il «ristoratore di prova» come locale, modalità
+- prova con i due account (tu come cliente, il «ristoratore di prova» come locale), in modalità
   **test**;
 - registro e stato aggiornati.
 
-La modalità **attiva** si accende solo dopo l'avvocato (§14) e la decisione di lancio (Tappa 8).
-
 ---
 
-## 17. Altre idee (facoltative, dopo la V1)
+## 17. Altre idee (facoltative, dopo la prima versione)
 
 - **«C'era posto quando sei arrivato?»** dopo il timbro: misura l'affidabilità degli stati.
-- **Serata a timbro doppio** collegata all'offerta della serata. Annunciata almeno 24 ore prima e
-  non revocabile una volta annunciata; vale per tutte le tessere attive (solo a favore del cliente).
+- **Serata a timbro doppio** collegata all'offerta della serata (solo a favore del cliente).
 - **Riga sulla tessera** nella pagina pubblica `/r/…` e sull'adesivo in vetrina, a funzione accesa.
 - **Avviso al locale** «hai 3 clienti a un timbro dal premio», senza dire chi sono.
-- **Valore stimato** con lo scontrino medio dichiarato dal locale.
 
 ---
 
 ## 18. Valori iniziali da confermare (🧑)
 
-| Valore | Proposta |
-|---|---|
-| Timbri per il premio (limiti) | 5–20, proposta 10 |
-| Validità del premio (limiti) | 30–180 giorni, proposta 60 |
-| Durata della tessera | 6 o 12 mesi, proposta 12 |
-| Finestra fra due timbri nello stesso locale | 4 ore |
-| Giorni doppi | max 2 a settimana |
-| QR | 60 secondi, rinnovo automatico |
-| Annullamento | entro 2 minuti |
-| Contestazione del premio | entro 48 ore |
-| Ferie che allungano le scadenze | max 60 giorni l'anno |
-| Sospensione del locale per violazione | 12 mesi senza tessera |
-| Nome nell'app | «Tessera» |
+| # | Valore | Proposta |
+|---|---|---|
+| 1 | Timbri per il premio (limiti per il ristoratore) | da 5 a 20 |
+| 2 | Validità del premio dopo lo sblocco | 60 giorni |
+| 3 | Azzeramento dei timbri per inattività | 6 mesi senza visite |
+| 4 | Preavviso quando il locale smette o non paga più | 30 giorni |
+| 5 | Tempo minimo fra due timbri nello stesso locale | 4 ore |
+| 6 | Durata del QR | 60 secondi, rinnovo automatico |
+| 7 | Annullamento di un timbro sbagliato | entro 2 minuti |
+| 8 | Giorni con timbro doppio | max 2 a settimana (o toglierli del tutto) |
+| 9 | Tetti di scansione per locale | 60 ogni 10 minuti, 300 al giorno |
+| 10 | Soglie delle segnalazioni | avviso a 3, sospensione a 5 (clienti diversi, in 60 giorni); sospensione di 90 giorni; tessera tolta alla seconda sospensione in 12 mesi |
+| 11 | Lista dei premi | caffè, dolce, antipasto, contorno, primo, pizza, bibita analcolica, coperto (aggiungere o togliere?) |
+| 12 | Condizione del timbro | «un pasto al tavolo» o «una consumazione al tavolo» |
+| 13 | Nome nell'app | «Tessera» |
