@@ -121,4 +121,9 @@ Nessuno: lo scanner di Google Play services è gratuito; nessun servizio nuovo.
 - Test su emulatore aggiunti: il tasto «Timbra» c'è solo quando il server lo consente; la tessera
   si attiva solo dopo «Accetto».
 - Le schermate Compose e lo scanner (Google Maven non raggiungibile da questo ambiente) li
-  compilano la CI: build delle tre varianti, lint, test JVM, test su emulatore.
+  compila la CI: build delle tre varianti, lint, test JVM, test su emulatore.
+- Prima esecuzione della CI fallita: una classe privata `MemberDto` aveva lo stesso nome di una già
+  presente nello stesso pacchetto (`SupabaseManagementRepository.kt`), e su Kotlin/JVM non si può.
+  L'errore è stato riprodotto in locale con un file che simula il conflitto. Corretto dando a tutte
+  le classi interne del repository della tessera il prefisso `Loyalty`; dopo la correzione la
+  compilazione passa e i 30 test sono ancora verdi.

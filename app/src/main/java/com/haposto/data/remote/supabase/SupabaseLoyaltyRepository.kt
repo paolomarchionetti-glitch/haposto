@@ -43,7 +43,7 @@ class SupabaseLoyaltyRepository(private val client: SupabaseClient) : Restaurant
     }
 
     override suspend fun publish(restaurantId: String, draft: LoyaltyDraft): Outcome<Int> = outcomeOf {
-        loyaltyJson.decodeFromString<PublishDto>(
+        loyaltyJson.decodeFromString<LoyaltyPublishDto>(
             rpc("publish_loyalty_version", buildJsonObject {
                 put("p_restaurant_id", restaurantId)
                 put("p_rules", draft.toJson())
@@ -105,25 +105,25 @@ private val loyaltyJson = Json { ignoreUnknownKeys = true }
 
 /** Le funzioni internal servono ai test (JSON vero della migration 0018). */
 internal fun decodeLoyaltyProgram(text: String): LoyaltyProgram =
-    loyaltyJson.decodeFromString<ProgramDto>(text).toDomain()
+    loyaltyJson.decodeFromString<LoyaltyProgramDto>(text).toDomain()
 
 internal fun decodeStampResult(text: String): StampResult =
-    loyaltyJson.decodeFromString<StampResultDto>(text).toDomain()
+    loyaltyJson.decodeFromString<LoyaltyStampResultDto>(text).toDomain()
 
 internal fun decodeLoyaltyStats(text: String): LoyaltyStats =
-    loyaltyJson.decodeFromString<StatsDto>(text).toDomain()
+    loyaltyJson.decodeFromString<LoyaltyStatsDto>(text).toDomain()
 
 internal fun decodeLoyaltyCards(text: String): List<LoyaltyCardRow> =
-    loyaltyJson.decodeFromString<List<CardDto>>(text).map { it.toDomain() }
+    loyaltyJson.decodeFromString<List<LoyaltyCardDto>>(text).map { it.toDomain() }
 
 private inline fun <reified T : Enum<T>> enumOr(value: String?, fallback: T): T =
     enumValues<T>().firstOrNull { it.name == value } ?: fallback
 
 @Serializable
-private data class PublishDto(val version: Int = 0)
+private data class LoyaltyPublishDto(val version: Int = 0)
 
 @Serializable
-private data class ConditionDto(
+private data class LoyaltyConditionDto(
     val kind: String = "ONE_OF",
     @SerialName("min_spend_cents") val minSpendCents: Int? = null,
     val types: List<String>? = null,
@@ -132,10 +132,10 @@ private data class ConditionDto(
 }
 
 @Serializable
-private data class DoubleDayDto(val weekday: Int = 0, val slot: String = "ALL_DAY")
+private data class LoyaltyDoubleDayDto(val weekday: Int = 0, val slot: String = "ALL_DAY")
 
 @Serializable
-private data class RewardDto(
+private data class LoyaltyRewardDto(
     val kind: String = "GIFT",
     val gift: String? = null,
     val percent: Int? = null,
@@ -164,12 +164,12 @@ private data class RewardDto(
 }
 
 @Serializable
-private data class RulesDto(
+private data class LoyaltyRulesDto(
     val version: Int = 0,
     @SerialName("stamps_required") val stampsRequired: Int = 0,
-    val condition: ConditionDto = ConditionDto(),
-    @SerialName("double_day") val doubleDay: DoubleDayDto? = null,
-    val reward: RewardDto = RewardDto(),
+    val condition: LoyaltyConditionDto = LoyaltyConditionDto(),
+    @SerialName("double_day") val doubleDay: LoyaltyDoubleDayDto? = null,
+    val reward: LoyaltyRewardDto = LoyaltyRewardDto(),
     @SerialName("inactivity_months") val inactivityMonths: Int = 6,
     @SerialName("accepted_at") val acceptedAt: String? = null,
 ) {
@@ -185,7 +185,7 @@ private data class RulesDto(
 }
 
 @Serializable
-private data class LimitsDto(
+private data class LoyaltyLimitsDto(
     @SerialName("stamps_min") val stampsMin: Int = 5,
     @SerialName("stamps_max") val stampsMax: Int = 20,
     @SerialName("spend_min_cents") val spendMinCents: Int = 500,
@@ -211,7 +211,7 @@ private data class LimitsDto(
 }
 
 @Serializable
-private data class ReportsDto(
+private data class LoyaltyReportsDto(
     val count: Int = 0,
     val warn: Int = 3,
     val suspend: Int = 5,
@@ -219,24 +219,24 @@ private data class ReportsDto(
 )
 
 @Serializable
-private data class VersionDto(val version: Int = 0, @SerialName("accepted_at") val acceptedAt: String? = null)
+private data class LoyaltyVersionDto(val version: Int = 0, @SerialName("accepted_at") val acceptedAt: String? = null)
 
 @Serializable
-private data class ProgramDto(
+private data class LoyaltyProgramDto(
     val visible: Boolean = false,
     val level: String? = null,
     @SerialName("can_publish") val canPublish: Boolean = false,
     @SerialName("publish_blocker") val publishBlocker: String? = null,
     val status: String = "NONE",
-    val current: RulesDto? = null,
-    val versions: List<VersionDto> = emptyList(),
+    val current: LoyaltyRulesDto? = null,
+    val versions: List<LoyaltyVersionDto> = emptyList(),
     @SerialName("closing_until") val closingUntil: String? = null,
     @SerialName("closing_reason") val closingReason: String? = null,
     @SerialName("suspended_until") val suspendedUntil: String? = null,
     @SerialName("active_cards") val activeCards: Int = 0,
     @SerialName("rewards_available") val rewardsAvailable: Int = 0,
-    val reports: ReportsDto? = null,
-    val limits: LimitsDto = LimitsDto(),
+    val reports: LoyaltyReportsDto? = null,
+    val limits: LoyaltyLimitsDto = LoyaltyLimitsDto(),
 ) {
     fun toDomain() = if (!visible) {
         LoyaltyProgram.HIDDEN
@@ -261,7 +261,7 @@ private data class ProgramDto(
 }
 
 @Serializable
-private data class MemberDto(
+private data class LoyaltyMemberDto(
     val code: String? = null,
     val outcome: String? = null,
     @SerialName("stamps_added") val stampsAdded: Int = 0,
@@ -270,7 +270,7 @@ private data class MemberDto(
     val required: Int? = null,
     @SerialName("reward_unlocked") val rewardUnlocked: Boolean = false,
     val carry: Int = 0,
-    val condition: ConditionDto? = null,
+    val condition: LoyaltyConditionDto? = null,
 ) {
     fun toDomain() = StampMember(
         code = code,
@@ -286,7 +286,7 @@ private data class MemberDto(
 }
 
 @Serializable
-private data class StampRewardDto(
+private data class LoyaltyStampRewardDto(
     @SerialName("reward_id") val rewardId: String,
     val code: String? = null,
     val kind: String = "GIFT",
@@ -331,7 +331,7 @@ private data class StampRewardDto(
 }
 
 @Serializable
-private data class StampResultDto(
+private data class LoyaltyStampResultDto(
     val ok: Boolean = false,
     val error: String? = null,
     @SerialName("attempts_left") val attemptsLeft: Int? = null,
@@ -342,8 +342,8 @@ private data class StampResultDto(
     val stamped: Int = 0,
     val stamps: Int = 0,
     @SerialName("undo_until") val undoUntil: String? = null,
-    val members: List<MemberDto> = emptyList(),
-    val rewards: List<StampRewardDto> = emptyList(),
+    val members: List<LoyaltyMemberDto> = emptyList(),
+    val rewards: List<LoyaltyStampRewardDto> = emptyList(),
 ) {
     fun toDomain() = StampResult(
         ok = ok,
@@ -362,13 +362,13 @@ private data class StampResultDto(
 }
 
 @Serializable
-private data class HourDto(val weekday: Int = 0, val hour: Int = 0, val scans: Int = 0)
+private data class LoyaltyHourDto(val weekday: Int = 0, val hour: Int = 0, val scans: Int = 0)
 
 @Serializable
-private data class NearDto(val one: Int = 0, val two: Int = 0)
+private data class LoyaltyNearDto(val one: Int = 0, val two: Int = 0)
 
 @Serializable
-private data class StatsDto(
+private data class LoyaltyStatsDto(
     val days: Int = 30,
     val scans: Int = 0,
     @SerialName("group_scans") val groupScans: Int = 0,
@@ -383,8 +383,8 @@ private data class StatsDto(
     @SerialName("rewards_expired") val rewardsExpired: Int = 0,
     @SerialName("discount_cents") val discountCents: Int = 0,
     @SerialName("active_cards") val activeCards: Int = 0,
-    @SerialName("near_reward") val nearReward: NearDto = NearDto(),
-    @SerialName("by_hour") val byHour: List<HourDto> = emptyList(),
+    @SerialName("near_reward") val nearReward: LoyaltyNearDto = LoyaltyNearDto(),
+    @SerialName("by_hour") val byHour: List<LoyaltyHourDto> = emptyList(),
 ) {
     fun toDomain() = LoyaltyStats(
         days = days, scans = scans, groupScans = groupScans, people = people, stamps = stamps,
@@ -397,7 +397,7 @@ private data class StatsDto(
 }
 
 @Serializable
-private data class CardDto(
+private data class LoyaltyCardDto(
     val code: String = "",
     val stamps: Int = 0,
     val required: Int = 0,
