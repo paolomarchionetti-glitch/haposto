@@ -214,10 +214,12 @@ mano.
 - **Soglie raggiunte** → lancio (Tappa 9) e conferma dei prezzi.
 - **Soglie mancate** → 🤖 lavoro su promemoria e semplicità, e altre 4 settimane di pilot. Non si
   passa ai pagamenti con dati deboli.
-- **Proposta «Visite e tessera fedeltà»** (`HAPOSTO_PROGETTO_VISITE_E_TESSERA.md`):
-  - si decide qui, solo con soglie raggiunte e se almeno metà dei ristoratori la vuole;
-  - se sì, la V1 si costruisce in marzo–aprile 2027 (3–4 settimane, costo zero);
-  - a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO.
+- **Tessera fedeltà** (`HAPOSTO_TESSERA_SPECIFICHE.md`):
+  - dall'11 ottobre 2026 si realizza subito come **funzione nascosta**, spenta dal pannello admin e
+    provabile sul DEV in modalità test;
+  - qui si decide se **accenderla** per tutti: soglie raggiunte, almeno metà dei ristoratori la
+    vuole, parere dell'avvocato (specifiche §14);
+  - se sì, a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO.
 
 ### Tappa 9 — Lancio pubblico
 
