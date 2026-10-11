@@ -32,6 +32,8 @@ import com.haposto.ui.screens.favorites.FavoritesRoute
 import com.haposto.ui.screens.home.HomeRoute
 import com.haposto.ui.screens.legal.LegalDocument
 import com.haposto.ui.screens.legal.LegalDocumentRoute
+import com.haposto.ui.screens.loyalty.LoyaltyManageRoute
+import com.haposto.ui.screens.loyalty.LoyaltyStampRoute
 import com.haposto.ui.screens.mfa.MfaRoute
 import com.haposto.ui.screens.onboarding.OnboardingPrefs
 import com.haposto.ui.screens.onboarding.OnboardingScreen
@@ -71,6 +73,7 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
     // null nella versione DEMO: l'area ristoratore resta quella simulata.
     val management = AppDependencies.managementRepository
     val admin = AppDependencies.adminRepository
+    val loyalty = AppDependencies.loyaltyRepository
     val consumer = AppDependencies.consumerRepository
     val locationSession = AppDependencies.locationSession
     val deviceLocationProvider = remember(context) { AppDependencies.deviceLocationProvider(context) }
@@ -232,13 +235,47 @@ private fun MainNavigation(deepLink: DeepLink?, onDeepLinkHandled: () -> Unit) {
                         }
                     },
                     onOpenMfa = openMfa,
+                    loyalty = loyalty,
+                    onOpenLoyaltyStamp = {
+                        navController.navigate(AppDestination.restaurantLoyaltyStamp(managerRestaurantId)) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(AppDestination.RESTAURANT_SETTINGS) { entry ->
                 if (management != null) {
+                    val settingsRestaurantId = entry.arguments?.getString("restaurantId").orEmpty()
                     RestaurantSettingsRoute(
-                        restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
+                        restaurantId = settingsRestaurantId,
                         management = management,
+                        onBack = navController::navigateUp,
+                        onOpenMfa = openMfa,
+                        loyalty = loyalty,
+                        onOpenLoyalty = {
+                            navController.navigate(AppDestination.restaurantLoyalty(settingsRestaurantId)) {
+                                launchSingleTop = true
+                            }
+                        },
+                    )
+                }
+            }
+            composable(AppDestination.RESTAURANT_LOYALTY) { entry ->
+                if (management != null && loyalty != null) {
+                    LoyaltyManageRoute(
+                        restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
+                        loyalty = loyalty,
+                        management = management,
+                        onBack = navController::navigateUp,
+                        onOpenMfa = openMfa,
+                    )
+                }
+            }
+            composable(AppDestination.RESTAURANT_LOYALTY_STAMP) { entry ->
+                if (loyalty != null) {
+                    LoyaltyStampRoute(
+                        restaurantId = entry.arguments?.getString("restaurantId").orEmpty(),
+                        loyalty = loyalty,
                         onBack = navController::navigateUp,
                         onOpenMfa = openMfa,
                     )

@@ -202,6 +202,9 @@ dependencies {
     // Abbonamento HAPOSTO Plus (Google Play Billing).
     implementation(libs.play.billing)
 
+    // Tessera fedeltà: scanner QR di Google Play services (gratuito, senza permesso della fotocamera).
+    implementation(libs.play.services.code.scanner)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

@@ -91,6 +91,8 @@ fun RestaurantManagerScreen(
     onSaveQuickNote: (String) -> Unit = {},
     /** Piano finito o in scadenza entro 7 giorni (null = niente da dire). */
     planWarning: String? = null,
+    /** Tessera fedeltà attiva o in preavviso: tasto secondario «Timbra» (T34); null = nascosto. */
+    onOpenLoyaltyStamp: (() -> Unit)? = null,
 ) {
     val realMode = onOpenSettings != null
     Scaffold(
@@ -221,6 +223,17 @@ fun RestaurantManagerScreen(
                         .heightIn(min = 56.dp),
                 ) {
                     Text("⚙  Gestisci il locale · dati, orari, QR, staff, statistiche", fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            onOpenLoyaltyStamp?.let { openStamp ->
+                OutlinedButton(
+                    onClick = openStamp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp),
+                ) {
+                    Text("📷  Timbra la tessera fedeltà", fontWeight = FontWeight.SemiBold)
                 }
             }
 

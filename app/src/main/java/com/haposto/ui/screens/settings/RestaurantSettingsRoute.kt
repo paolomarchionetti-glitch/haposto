@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -51,6 +52,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.haposto.config.AppConfig
 import com.haposto.data.Outcome
+import com.haposto.data.loyalty.LoyaltyProgram
+import com.haposto.data.loyalty.LoyaltyTexts
+import com.haposto.data.loyalty.RestaurantLoyaltyRepository
 import com.haposto.data.restaurant.ActivityEntry
 import com.haposto.data.restaurant.DailyStat
 import com.haposto.data.restaurant.ManagerInfo
@@ -205,6 +209,9 @@ fun RestaurantSettingsRoute(
     management: RestaurantManagementRepository,
     onBack: () -> Unit,
     onOpenMfa: () -> Unit,
+    /** Tessera fedeltà (funzione nascosta): la voce compare solo se il server la rende visibile. */
+    loyalty: RestaurantLoyaltyRepository? = null,
+    onOpenLoyalty: () -> Unit = {},
 ) {
     val viewModel: RestaurantSettingsViewModel = viewModel(
         key = "settings-$restaurantId",
@@ -226,6 +233,7 @@ fun RestaurantSettingsRoute(
                 }
                 PlanSection(info)
                 QrSection(info)
+                LoyaltyEntry(restaurantId, loyalty, onOpenLoyalty)
                 val owner = info.myRole == MemberRole.OWNER
                 if (owner) ProfileSection(info, state.busy, viewModel)
                 if (info.mfaOk) QuickNotesSection(state.extras, state.busy, viewModel)
@@ -239,6 +247,23 @@ fun RestaurantSettingsRoute(
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun LoyaltyEntry(restaurantId: String, loyalty: RestaurantLoyaltyRepository?, onOpen: () -> Unit) {
+    if (loyalty == null) return
+    val program by produceState<LoyaltyProgram?>(initialValue = null, loyalty, restaurantId) {
+        value = loyalty.program(restaurantId).valueOrNull
+    }
+    val current = program?.takeIf { it.visible } ?: return
+    val date = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.systemDefault())
+    SectionCard(title = "Tessera fedeltà", subtitle = LoyaltyTexts.status(current) { date.format(it) }) {
+        Text(
+            "Timbri e premi per i clienti che tornano: regole, patto, statistiche.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        OutlinedButton(onClick = onOpen, modifier = Modifier.fillMaxWidth()) { Text("Apri la tessera fedeltà") }
     }
 }
 

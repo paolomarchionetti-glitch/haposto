@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.haposto.data.auth.AuthRepository
 import com.haposto.data.auth.AuthState
+import com.haposto.data.loyalty.RestaurantLoyaltyRepository
 import com.haposto.data.network.NetworkMonitor
 import com.haposto.data.repository.RestaurantAccessRepository
 import com.haposto.data.repository.RestaurantRepository
@@ -54,6 +55,9 @@ fun RestaurantManagerRoute(
     auth: AuthRepository? = null,
     onOpenSettings: () -> Unit = {},
     onOpenMfa: () -> Unit = {},
+    /** Tessera fedeltà (DEV/PROD): il tasto «Timbra» compare solo se il server la dà attiva (T34). */
+    loyalty: RestaurantLoyaltyRepository? = null,
+    onOpenLoyaltyStamp: () -> Unit = {},
 ) {
     val isOnline = networkMonitor.isOnline
         .collectAsStateWithLifecycle(initialValue = true)
@@ -124,6 +128,10 @@ fun RestaurantManagerRoute(
             }
         }
     }
+    var loyaltyCanScan by remember(restaurantId) { mutableStateOf(false) }
+    LaunchedEffect(loyalty, restaurantId) {
+        loyaltyCanScan = loyalty?.program(restaurantId)?.valueOrNull?.canScan == true
+    }
     val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     var offerTermsAccepted by remember { mutableStateOf(prefs.getBoolean(KEY_OFFER_TERMS, false)) }
 
@@ -140,6 +148,7 @@ fun RestaurantManagerRoute(
         onPhonePublicChange = viewModel::setPhonePublic,
         onOpenReservations = onOpenReservations,
         onOpenSettings = if (management != null) onOpenSettings else null,
+        onOpenLoyaltyStamp = if (loyaltyCanScan) onOpenLoyaltyStamp else null,
         mfaMissing = mfaMissing,
         onOpenMfa = onOpenMfa,
         onDictateDetails = viewModel::applyDictation,

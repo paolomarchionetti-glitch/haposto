@@ -15,6 +15,10 @@ object AppDestination {
     const val RESTAURANT_SETTINGS = "restaurant-settings/{restaurantId}"
     const val REGISTER_RESTAURANT = "register-restaurant"
     const val RESERVATIONS = "reservations/{restaurantId}"
+
+    /** Tessera fedeltà del locale (funzione nascosta): gestione e «Timbra». */
+    const val RESTAURANT_LOYALTY = "restaurant-loyalty/{restaurantId}"
+    const val RESTAURANT_LOYALTY_STAMP = "restaurant-loyalty-stamp/{restaurantId}"
     const val MFA = "mfa"
     const val LEGAL = "legal/{document}"
     const val PLUS = "plus"
@@ -31,6 +35,8 @@ object AppDestination {
     fun restaurantManager(restaurantId: String): String = "restaurant-manager/$restaurantId"
     fun restaurantSettings(restaurantId: String): String = "restaurant-settings/$restaurantId"
     fun reservations(restaurantId: String): String = "reservations/$restaurantId"
+    fun restaurantLoyalty(restaurantId: String): String = "restaurant-loyalty/$restaurantId"
+    fun restaurantLoyaltyStamp(restaurantId: String): String = "restaurant-loyalty-stamp/$restaurantId"
     fun legal(document: String): String = "legal/$document"
     fun adminRestaurant(restaurantId: String): String = "admin-restaurant/$restaurantId"
     fun adminUser(userId: String): String = "admin-user/$userId"
