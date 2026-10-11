@@ -123,9 +123,7 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
     }
 
     override suspend fun restaurantDetail(restaurantId: String): Outcome<AdminRestaurantDetail> = outcomeOf {
-        json.decodeFromString<AdminRestaurantDetailDto>(
-            rpc("admin_restaurant_detail", buildJsonObject { put("p_restaurant_id", restaurantId) }),
-        ).toDomain()
+        decodeAdminRestaurantDetail(rpc("admin_restaurant_detail", buildJsonObject { put("p_restaurant_id", restaurantId) }))
     }
 
     override suspend fun setRestaurantStatus(restaurantId: String, status: String, note: String?): Outcome<Unit> = outcomeOf {
@@ -183,6 +181,14 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
             Unit
         }
 
+    override suspend fun setRestaurantLoyaltyTester(restaurantId: String, tester: Boolean): Outcome<Unit> = outcomeOf {
+        rpc("admin_set_restaurant_loyalty_tester", buildJsonObject {
+            put("p_restaurant_id", restaurantId)
+            put("p_tester", tester)
+        })
+        Unit
+    }
+
     override suspend fun users(query: String?, filter: String, offset: Int): Outcome<List<AdminUserRow>> = outcomeOf {
         json.decodeFromString<List<AdminUserRowDto>>(
             rpc("admin_list_users", buildJsonObject {
@@ -195,9 +201,7 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
     }
 
     override suspend fun userDetail(userId: String): Outcome<AdminUserDetail> = outcomeOf {
-        json.decodeFromString<AdminUserDetailDto>(
-            rpc("admin_user_detail", buildJsonObject { put("p_user_id", userId) }),
-        ).toDomain()
+        decodeAdminUserDetail(rpc("admin_user_detail", buildJsonObject { put("p_user_id", userId) }))
     }
 
     override suspend fun setUserBlocked(userId: String, blocked: Boolean, reason: String?): Outcome<Unit> = outcomeOf {
@@ -214,6 +218,14 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
             put("p_user_id", userId)
             put("p_months", months)
             put("p_note", note)
+        })
+        Unit
+    }
+
+    override suspend fun setUserLoyaltyTester(userId: String, tester: Boolean): Outcome<Unit> = outcomeOf {
+        rpc("admin_set_user_loyalty_tester", buildJsonObject {
+            put("p_user_id", userId)
+            put("p_tester", tester)
         })
         Unit
     }
@@ -430,6 +442,23 @@ private data class DetailPublishDto(
     @SerialName("by_email") val byEmail: String? = null,
 )
 
+private val detailJson = Json { ignoreUnknownKeys = true }
+
+/** Scheda del locale da admin_restaurant_detail (internal per i test). */
+internal fun decodeAdminRestaurantDetail(text: String): AdminRestaurantDetail =
+    detailJson.decodeFromString<AdminRestaurantDetailDto>(text).toDomain()
+
+/** Scheda dell'utente da admin_user_detail (internal per i test). */
+internal fun decodeAdminUserDetail(text: String): AdminUserDetail =
+    detailJson.decodeFromString<AdminUserDetailDto>(text).toDomain()
+
+/** Tessera fedeltà nella scheda del locale (migration 0018). */
+@Serializable
+private data class DetailLoyaltyDto(
+    val tester: Boolean = false,
+    val status: String = "NONE",
+)
+
 @Serializable
 private data class AdminRestaurantDetailDto(
     val restaurant: DetailRestaurantDto,
@@ -442,6 +471,7 @@ private data class AdminRestaurantDetailDto(
     val subscriptions: List<DetailSubscriptionDto> = emptyList(),
     @SerialName("recent_publishes") val recentPublishes: List<DetailPublishDto> = emptyList(),
     @SerialName("stats_30_days") val stats: JsonObject? = null,
+    val loyalty: DetailLoyaltyDto? = null,
 ) {
     fun toDomain() = AdminRestaurantDetail(
         restaurantId = restaurant.id,
@@ -468,6 +498,8 @@ private data class AdminRestaurantDetailDto(
         planSource = planSource,
         planValidUntil = planValidUntil?.let(::parseTimestamp),
         partnerSince = partnerSince?.let(::parseTimestamp),
+        loyaltyTester = loyalty?.tester,
+        loyaltyStatus = loyalty?.status,
     )
 }
 
@@ -505,6 +537,7 @@ private data class DetailProfileDto(
     @SerialName("blocked_reason") val blockedReason: String? = null,
     @SerialName("marketing_opt_in") val marketingOptIn: Boolean = false,
     @SerialName("accepted_terms_version") val acceptedTermsVersion: String? = null,
+    @SerialName("loyalty_tester") val loyaltyTester: Boolean? = null,
 )
 
 @Serializable
@@ -553,6 +586,7 @@ private data class AdminUserDetailDto(
         recentActivity = recentActivity.map {
             AdminActivity(it.createdAt?.let(::parseTimestamp), it.action, it.actorKind, it.details?.toString().orEmpty())
         },
+        loyaltyTester = profile?.loyaltyTester,
     )
 }
 

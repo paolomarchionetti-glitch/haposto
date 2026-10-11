@@ -81,6 +81,8 @@ object ErrorMessages {
         "INVALID_MONTHS" to "Durata non valida (da 1 a 36 mesi).",
         "CONFIG_KEY_NOT_EDITABLE" to "Questa impostazione non si modifica dall'app.",
         "INVALID_CONFIG_VALUE" to "Valore dell'impostazione non valido.",
+        "LOYALTY_ALREADY_LAUNCHED" to "La tessera è già stata lanciata: non si spegne e non torna in prova, si passa solo fra ON ed EXISTING_ONLY.",
+        "USER_NOT_FOUND" to "Utente non trovato.",
         "INVALID_EVENT" to "Evento non valido.",
         "Not authorized" to "Non hai i permessi per questo locale.",
         "not an active partner" to "Il locale non è ancora attivo su HAPOSTO.",

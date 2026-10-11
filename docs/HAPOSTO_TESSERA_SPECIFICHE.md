@@ -1,7 +1,7 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-nessun codice ancora scritto.**
+PR A (database) realizzata: migration `0018_loyalty_card.sql`, controlli `step22`.**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -389,11 +389,14 @@ La modalità **test** si può usare anche prima.
 | `loyalty_program_versions` | versioni **immutabili** (un trigger blocca le modifiche): numero, timbri, condizione (tipo, spesa minima, tipologie), giorno doppio (giorno e fascia), premio (tipo, omaggio, percentuale, tetto, importo, spesa minima, da quando, giorni di utilizzo, max per tavolo, cumulabile), accettata da / quando |
 | `loyalty_members` | locale + cliente → **codice anonimo** casuale (**T55**) |
 | `loyalty_cards` | tessera: versione, timbri, inizio, ultima visita, stato |
-| `loyalty_groups` | tavolo di gruppo: capogruppo, membri, creato, scade (10 minuti), usato |
-| `loyalty_stamps` | ogni timbro: tessera, gruppo (se c'è), chi ha scansionato, quando, timbri (1 o 2), annullato sì/no |
-| `loyalty_rewards` | premio: regole copiate dalla versione, sbloccato, utilizzabile da, scade, usato da / quando, sconto dichiarato |
-| `visit_tokens` | impronta del QR (personale o del tavolo) e del codice di riserva, cliente o gruppo, scadenza (60 s), usato da / quando, esito |
+| `loyalty_groups` | tavolo di gruppo: capogruppo, creato, ci si unisce entro 10 minuti, si scansiona entro 60, usato |
+| `loyalty_group_members` | chi è nel tavolo (un gruppo aperto alla volta per persona) |
+| `visit_tokens` | impronta del QR (personale o del tavolo) e del codice di riserva, cliente o gruppo, scadenza (60 s), usato da / quando, esito per la schermata del cliente |
+| `loyalty_scans` | ogni scansione dello staff (una sola anche per un tavolo): chi, quando, persone, timbrati, annullata sì/no |
+| `loyalty_stamps` | esito per persona di ogni scansione: timbri (0, 1 o 2), motivo se 0 (già timbrato, chi gestisce il locale, niente tessere nuove…), quanto serve all'annullamento |
+| `loyalty_rewards` | premio: le regole sono quelle della versione (immutabile) a cui rimanda; sbloccato, utilizzabile da, scade, usato da / quando, scansione, sconto dichiarato |
 | `loyalty_reports` | segnalazioni: cliente, locale, tipo, data |
+| `loyalty_code_failures` | codici di riserva sbagliati, per il blocco di 10 minuti (si cancellano dopo un giorno) |
 
 Più:
 - `app_config` → `loyalty`: modalità, limiti e soglie (`admin_set_config` la valida);
@@ -402,21 +405,41 @@ Più:
 
 **Funzioni principali** (tutte sul server, con verifica della modalità **T9**):
 - **cliente:**
-  - `loyalty_access`, `create_visit_token`, `visit_token_status`;
-  - `create_loyalty_group`, `join_loyalty_group`;
+  - `loyalty_access` (cosa mostrare), `loyalty_restaurant_card` (riquadro nella scheda del locale,
+    anche senza account);
+  - `create_visit_token`, `visit_token_status`;
+  - `create_loyalty_group`, `loyalty_group_token` (QR del tavolo rinnovato), `join_loyalty_group`,
+    `leave_loyalty_group`, `loyalty_group_status`;
   - `my_loyalty_cards`, `leave_loyalty_card`, `report_loyalty_problem`;
 - **locale:**
-  - `register_stamp` (QR personale, QR del tavolo o codice), `undo_stamp`, `use_reward`;
+  - `restaurant_loyalty_program` (scheda «Tessera fedeltà» con limiti, versioni, segnalazioni);
+  - `register_stamp` (QR personale, QR del tavolo o codice), `undo_stamp`, `use_reward` (solo per
+    chi è stato scansionato negli ultimi 30 minuti: il locale non può segnare premi «usati» a
+    distanza);
   - `publish_loyalty_version` (patto), `close_loyalty_program`;
   - `restaurant_loyalty_stats`, `restaurant_loyalty_cards`;
-- **admin:** impostazioni, tester, togliere una sospensione o ridare la tessera, statistiche.
+- **admin:** `admin_set_config('loyalty', …)`, `admin_set_restaurant_loyalty_tester`,
+  `admin_set_user_loyalty_tester`, `admin_loyalty_restore` (togliere una sospensione o ridare la
+  tessera), `admin_loyalty_overview`; la scheda del locale (`admin_restaurant_detail`) mostra la
+  tessera.
 
-**Lavori pianificati:**
-- azzeramento e avvisi;
+Codici d'errore principali: `FEATURE_DISABLED`, `LOYALTY_NOT_ACTIVE`, `LOYALTY_NO_NEW_CARDS`,
+`LOYALTY_OWN_RESTAURANT`, `LOYALTY_PACT_REQUIRED`, `LOYALTY_INVALID_STAMPS` / `_CONDITION` /
+`_DOUBLE_DAY` / `_REWARD`, `LOYALTY_SUSPENDED`, `LOYALTY_REMOVED`, `LOYALTY_EXISTING_ONLY`,
+`LOYALTY_ALREADY_LAUNCHED`, `SCAN_LIMIT`, `TOO_MANY_CODES`, `GROUP_FULL`, `GROUP_CLOSED`,
+`UNDO_EXPIRED`, `REWARD_NOT_YET`, `REWARD_NOT_TODAY`, `REWARD_TABLE_LIMIT`, `REWARD_NEEDS_SCAN`,
+`REPORT_NOT_ALLOWED`, `REPORT_TOO_SOON`. I codici di riserva sbagliati rispondono senza errore
+(`INVALID_CODE`, `CODE_LOCKED`), così il conteggio dei tentativi resta salvato.
+
+**Lavoro pianificato** `loyalty_maintenance()` (ogni giorno, `supabase/ops/scheduled_jobs.sql`):
+- uscita da HAPOSTO (fine subito), Pro non pagato (preavviso; se Pro torna, riparte), fine del
+  preavviso, fine della sospensione;
+- avviso 15 giorni prima dell'azzeramento e azzeramento;
 - scadenza dei premi;
-- fine del preavviso;
-- soglie delle segnalazioni;
-- pulizia.
+- pulizia (§10, T58).
+
+Le soglie delle segnalazioni si controllano a ogni segnalazione, non nel lavoro pianificato. A
+interruttore spento il lavoro fa solo scadenze e pulizia.
 
 Nella stessa migration si sistema anche `admin_restaurant_detail` dal SQL Editor (problema già
 annotato).

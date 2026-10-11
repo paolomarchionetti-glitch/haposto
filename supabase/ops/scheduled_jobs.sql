@@ -1,6 +1,6 @@
 -- HAPOSTO — Lavori pianificati di produzione (pg_cron).
 --
--- Prerequisiti: migration 0006–0016 eseguite; estensione pg_cron attiva
+-- Prerequisiti: migration 0006–0018 eseguite; estensione pg_cron attiva
 -- (Dashboard → Database → Extensions → "pg_cron" → Enable).
 -- Rieseguibile: cron.schedule con lo stesso nome aggiorna il job esistente.
 -- Orari cron in UTC (Supabase): 02:30 UTC = 03:30 o 04:30 in Italia.
@@ -60,6 +60,15 @@ select cron.schedule(
     'haposto-plan-expiry-notices',
     '0 8 * * *',
     'select public.enqueue_plan_expiry_notices()'
+);
+
+-- Tessera fedeltà (migration 0018): preavvisi, azzeramenti con avviso, premi scaduti e pulizia dei
+-- dati (QR e tavoli dopo 1 giorno). A interruttore spento fa solo scadenze e pulizia. Ogni giorno
+-- alle 07:40 UTC (8:40 o 9:40 in Italia).
+select cron.schedule(
+    'haposto-loyalty-maintenance',
+    '40 7 * * *',
+    'select public.loyalty_maintenance()'
 );
 
 -- Controllo: elenco dei job attivi.
