@@ -218,7 +218,7 @@ mano.
   - dall'11 ottobre 2026 si realizza subito come **funzione nascosta**, spenta dal pannello admin e
     provabile sul DEV in modalità test;
   - qui si decide se **accenderla** per tutti: soglie raggiunte, almeno metà dei ristoratori la
-    vuole, parere dell'avvocato (specifiche §14);
+    vuole, righe su privacy e termini già rilette con gli altri documenti legali (specifiche §14);
   - se sì, a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO.
 
 ### Tappa 9 — Lancio pubblico
