@@ -131,6 +131,7 @@ object ErrorMessages {
         "REWARD_TABLE_LIMIT" to "Raggiunto il limite di premi per tavolo: gli altri restano validi per un'altra visita.",
         "INVALID_DISCOUNT" to "Sconto non valido: non può superare il tetto dello sconto o il valore del buono.",
         "TOO_MANY_CODES" to "Troppi QR in pochi minuti: attendi un momento.",
+        "LOYALTY_NOT_SUSPENDED" to "La tessera del locale non è sospesa né tolta: non c'è niente da ridare.",
         // Tessera fedeltà, lato cliente.
         "INVALID_TOKEN" to "QR non valido: inquadra il QR del tavolo sul telefono di chi l'ha creato.",
         "TOKEN_EXPIRED" to "QR scaduto: inquadra quello aggiornato, cambia ogni 60 secondi.",

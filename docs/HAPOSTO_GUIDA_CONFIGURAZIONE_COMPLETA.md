@@ -907,6 +907,20 @@ Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
 
   Un secondo timbro allo stesso locale arriva solo dopo 4 ore («Hai già avuto un timbro qui…»):
   per riprovare subito usa un altro account cliente tester.
+- **Pannello → Tessere** (dalla PR D): modalità, locali con la tessera per stato, tessere dei
+  clienti, ultimi 30 giorni (scansioni, persone, timbri, premi, sconti riconosciuti), premi, tipi
+  di premio scelti, versioni, patti e segnalazioni; poi le **sanzioni automatiche** (con **Ridai la
+  tessera**, facoltativo) e l'elenco dei **tester**. Solo numeri: mai chi ha timbrato. Le
+  operazioni sono nel **Registro** (cerca `LOYALTY`). Nella scheda del locale (**Locali** → il
+  locale) ci sono anche regole attuali, versioni, tessere attive, segnalazioni e, se la tessera è
+  sospesa o tolta, **Ridai la tessera (facoltativo)**.
+
+**Tessera fedeltà: collaudo completo sul DEV** → `docs/HAPOSTO_TESSERA_COLLAUDO.md`: Supabase
+(migration 0018 e `scheduled_jobs.sql`; nessuna Edge Function da ripubblicare), app Dev, prova
+di ogni parte (ristoratore, QR, annullamento, premio, gruppo, codice, statistiche, nuove regole,
+segnalazione e sospensione, pannello e «Ridai la tessera», chiusura, modalità solo esistenti) e,
+alla fine, i valori di partenza con `"mode": "OFF"`. Lì c'è anche come portarla in produzione
+senza accenderla.
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:

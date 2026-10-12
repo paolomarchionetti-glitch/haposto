@@ -28,6 +28,12 @@ interface AdminRepository {
     /** Tessera fedeltà nascosta: in modalità TEST la vedono solo locali e clienti tester. */
     suspend fun setRestaurantLoyaltyTester(restaurantId: String, tester: Boolean): Outcome<Unit>
 
+    /** Scheda «Tessere»: numeri della tessera, tester e sanzioni (solo lettura). */
+    suspend fun loyaltyOverview(): Outcome<AdminLoyaltyOverview>
+
+    /** Toglie una sospensione o ridà la tessera tolta: il locale la riattiva accettando di nuovo il patto. */
+    suspend fun restoreLoyalty(restaurantId: String, note: String?): Outcome<Unit>
+
     suspend fun users(query: String?, filter: String, offset: Int = 0): Outcome<List<AdminUserRow>>
     suspend fun userDetail(userId: String): Outcome<AdminUserDetail>
     suspend fun setUserBlocked(userId: String, blocked: Boolean, reason: String?): Outcome<Unit>

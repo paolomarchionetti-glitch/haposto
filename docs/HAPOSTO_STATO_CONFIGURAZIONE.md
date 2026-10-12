@@ -1,6 +1,6 @@
 # HAPOSTO — Stato della configurazione (punto di ripresa)
 
-Ultimo aggiornamento: **11 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; tessera fedeltà: PR A–C fatte, spenta; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
+Ultimo aggiornamento: **12 ottobre 2026** (Parte 10 in sospeso; PR #16–#19 collaudate sul DEV; tessera fedeltà: completata (PR A–E), spenta, da collaudare; percorso fino al lancio in `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`). Questo file dice **dove siamo
 arrivati** seguendo `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` e **come si riprende** in una
 nuova sessione.
 Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
@@ -58,13 +58,11 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
 - [ ] Prova sul campo con 1–3 ristoratori amici (Tappa 1 della roadmap da qui al lancio): prima
       aggiungere la loro email Google ai *Test users* di Google Cloud.
-- [ ] DEV, dopo l'unione della PR A della tessera (#26): eseguire la migration `0018_loyalty_card.sql`
-      e di nuovo `supabase/ops/scheduled_jobs.sql` (lavoro nuovo `haposto-loyalty-maintenance`);
-      controllare che `loyalty` in Impostazioni sia `"mode": "OFF"`; aggiornare l'app Dev.
-- [ ] Facoltativo, dopo la PR B (#27): prova del lato ristoratore sul DEV in modalità `"TEST"`
-      (guida, Parte 11, «Tessera fedeltà»).
-- [ ] Facoltativo, dopo la PR C (#28): prova del lato cliente sul DEV in modalità `"TEST"`, QR
-      personale e tavolo di gruppo (guida, Parte 11, «Tessera fedeltà» → «Lato cliente»).
+- [ ] **Collaudo finale della tessera sul DEV** (quando vuoi, circa 1 ora e mezza):
+      `docs/HAPOSTO_TESSERA_COLLAUDO.md`, dalla Parte A (migration `0018_loyalty_card.sql` e di
+      nuovo `scheduled_jobs.sql`; nessuna Edge Function) alla Parte N (valori di partenza e
+      `"mode": "OFF"`). Finché sul DEV manca la 0018, l'app nuova funziona come prima (la tessera
+      semplicemente non compare).
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
 ripubblicate; `restaurant_files_cron.sql` e `scheduled_jobs.sql`; prova della pulizia dei file
@@ -144,7 +142,17 @@ solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TE
   - schermata della privacy al primo uso; l'accesso con Google si chiede solo qui.
 
   Solo app: nessuna migration nuova.
-- **Prossima: PR D** (pannello admin: scheda **Tessere**; guida di prova completa sul DEV).
+- **PR D (#29), 12 ottobre 2026:** pannello admin → scheda **Tessere** (modalità, numeri della
+  tessera, sanzioni automatiche con «Ridai la tessera», tester) e, nella scheda del locale, regole
+  attuali e conteggi; **guida di prova completa sul DEV** verificata passo per passo sul database
+  locale. Corretto anche il riquadro del cliente: se una segnalazione sospende la tessera, la
+  conferma resta visibile. Solo app e documenti: nessuna migration nuova.
+- **PR E (nella #29), 12 ottobre 2026:** righe pronte per privacy, termini d'uso e condizioni per i
+  ristoranti, con le domande per il professionista (`docs/HAPOSTO_TESSERA_TESTI_LEGALI.md`): **non**
+  sono ancora nei documenti legali (l'app li mostra e il sito li pubblica), si inseriscono solo al
+  lancio. **Guida di collaudo completa** (`docs/HAPOSTO_TESSERA_COLLAUDO.md`), verificata sul
+  database locale; la guida generale (Parte 11) rimanda a quella.
+- **La tessera è completa.** Prossimo passo: il collaudo finale sul DEV, quando vuoi.
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
 (dove si trova ogni valore, cosa conservare, rotazione) e *Guida tecnica* (sezioni dell'app,

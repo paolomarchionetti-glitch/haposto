@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.haposto.data.Outcome
 import com.haposto.data.admin.AdminClaim
 import com.haposto.data.admin.AdminExtrasRow
+import com.haposto.data.admin.AdminLoyaltyOverview
 import com.haposto.data.admin.AdminOverview
 import com.haposto.data.admin.AdminPaymentRow
 import com.haposto.data.admin.AdminRepository
@@ -28,6 +29,7 @@ enum class AdminTab(val label: String) {
     USERS("Utenti"),
     SUBSCRIPTIONS("Abbonamenti"),
     PAYMENTS("Pagamenti"),
+    LOYALTY("Tessere"),
     LOG("Registro"),
     SETTINGS("Impostazioni"),
 }
@@ -46,6 +48,8 @@ data class AdminUiState(
     val payments: List<AdminPaymentRow> = emptyList(),
     val audit: List<AuditRow> = emptyList(),
     val config: List<ConfigEntry> = emptyList(),
+    /** Scheda «Tessere» (tessera fedeltà nascosta, migration 0018). */
+    val loyalty: AdminLoyaltyOverview? = null,
     /** Codice da dettare al telefono del locale (mostrato una volta). */
     val issuedCode: Pair<AdminClaim, String>? = null,
     val busy: Boolean = false,
@@ -113,6 +117,7 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
                 AdminTab.USERS -> admin.users(query, filter ?: "ALL").onValue { v -> mutable.update { it.copy(users = v) } }
                 AdminTab.SUBSCRIPTIONS -> admin.subscriptions(filter ?: "ALL").onValue { v -> mutable.update { it.copy(subscriptions = v) } }
                 AdminTab.PAYMENTS -> admin.payments().onValue { v -> mutable.update { it.copy(payments = v) } }
+                AdminTab.LOYALTY -> admin.loyaltyOverview().onValue { v -> mutable.update { it.copy(loyalty = v) } }
                 AdminTab.LOG -> admin.auditLog(null, query).onValue { v -> mutable.update { it.copy(audit = v) } }
                 AdminTab.SETTINGS -> admin.config().onValue { v -> mutable.update { it.copy(config = v) } }
             }
@@ -158,6 +163,14 @@ class AdminViewModel(private val admin: AdminRepository) : ViewModel() {
 
     fun setConfig(key: String, json: String) = act(success = "✓ Impostazione salvata.") {
         (admin.setConfig(key, json) as? Outcome.Failure).also { if (it == null) loadTab(AdminTab.SETTINGS) }
+    }
+
+    /** Toglie la sospensione o ridà la tessera tolta (facoltativo: il sistema non lo richiede). */
+    fun restoreLoyalty(restaurantId: String, note: String) = act(
+        success = "✓ Fatto: il locale può riattivare la tessera accettando di nuovo il patto.",
+    ) {
+        (admin.restoreLoyalty(restaurantId, note.trim().ifEmpty { null }) as? Outcome.Failure)
+            .also { if (it == null) loadTab(AdminTab.LOYALTY) }
     }
 
     fun cancelSubscription(row: AdminSubscriptionRow) = act(success = "✓ Abbonamento chiuso.") {

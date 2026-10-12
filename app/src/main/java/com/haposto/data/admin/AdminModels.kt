@@ -1,5 +1,6 @@
 package com.haposto.data.admin
 
+import com.haposto.data.loyalty.LoyaltyRules
 import java.time.Instant
 
 data class AdminStatus(
@@ -81,6 +82,55 @@ data class AdminRestaurantDetail(
     val loyaltyTester: Boolean? = null,
     /** NONE, ACTIVE, CLOSING, SUSPENDED, REMOVED, ENDED. */
     val loyaltyStatus: String? = null,
+    /** Dettagli della tessera del locale (§13): regole attuali, versioni, tessere, segnalazioni. */
+    val loyalty: AdminRestaurantLoyalty? = null,
+)
+
+/** Tessera del locale nella scheda del pannello (admin_restaurant_detail, migration 0018). */
+data class AdminRestaurantLoyalty(
+    val rules: LoyaltyRules?,
+    val versions: Int,
+    val activeCards: Int,
+    val reports60Days: Int,
+    val closingUntil: Instant?,
+    val suspendedUntil: Instant?,
+) {
+    companion object {
+        /** Solo una tessera sospesa o tolta si può ridare dal pannello (admin_loyalty_restore). */
+        fun canRestore(status: String?): Boolean = status == "SUSPENDED" || status == "REMOVED"
+    }
+}
+
+/** Un locale nella scheda «Tessere»: tester o con una sanzione automatica. */
+data class AdminLoyaltyRestaurant(
+    val restaurantId: String,
+    val name: String,
+    val city: String?,
+    val status: String?,
+    val suspendedUntil: Instant? = null,
+)
+
+data class AdminLoyaltyUser(val userId: String, val email: String)
+
+/**
+ * Scheda «Tessere» del pannello (admin_loyalty_overview, §11 e §13): solo numeri, mai chi ha
+ * timbrato. I conteggi sono per stato (tessere, premi, programmi dei locali).
+ */
+data class AdminLoyaltyOverview(
+    /** OFF, TEST, ON, EXISTING_ONLY. */
+    val mode: String,
+    val launched: Boolean,
+    val programs: Map<String, Int>,
+    val cards: Map<String, Int>,
+    val rewards: Map<String, Int>,
+    val last30Days: Map<String, Int>,
+    val rewardKinds: Map<String, Int>,
+    val versions: Int,
+    val pacts: Int,
+    val reports60Days: Int,
+    val testerRestaurants: List<AdminLoyaltyRestaurant>,
+    val testerUsers: List<AdminLoyaltyUser>,
+    val sanctioned: List<AdminLoyaltyRestaurant>,
 )
 
 data class AdminUserRow(

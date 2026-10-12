@@ -58,6 +58,7 @@ class LoyaltyBoxViewModel(
 
     /** Errori di rete: il riquadro resta com'era (o nascosto), niente messaggi a chi non lo vede. */
     fun reload() {
+        mutable.update { it.copy(message = null) }
         viewModelScope.launch {
             loyalty.restaurantBox(restaurantId).valueOrNull?.let { box -> mutable.update { it.copy(box = box) } }
         }
@@ -103,7 +104,11 @@ fun LoyaltyRestaurantSection(
     // Ricarica a ogni ritorno sulla scheda (dopo il QR i timbri sono cambiati).
     LaunchedEffect(viewModel) { viewModel.reload() }
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    if (!state.box.available) return
+    if (!state.box.available) {
+        // Una segnalazione può sospendere la tessera: il riquadro sparisce, la conferma resta.
+        state.message?.let { MessageBanner(it, if (state.messageIsError) BannerKind.ERROR else BannerKind.SUCCESS) }
+        return
+    }
     val signedIn = userId != null
     LoyaltyRestaurantBoxContent(
         state = state,

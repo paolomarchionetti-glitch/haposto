@@ -1,7 +1,8 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-PR A (database), PR B (app del ristoratore) e PR C (app del cliente) realizzate.**
+tutte e cinque le PR realizzate (database, ristoratore, cliente, pannello admin, testi legali e
+guida di collaudo).**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -358,6 +359,14 @@ mai dati personali):
 - **Tessere** (scheda nuova): i numeri del §11, solo da leggere.
 - **Registro:** attivazioni, versioni, chiusure, sospensioni automatiche, annullamenti.
 
+Come è stato realizzato (PR D): la scheda **Tessere** mostra modalità, locali per stato, tessere
+dei clienti, ultimi 30 giorni, premi, tipi di premio, versioni, patti, segnalazioni, le sanzioni
+automatiche con **Ridai la tessera** (facoltativo) e l'elenco dei tester; la scheda del locale
+aggiunge regole attuali, versioni, tessere attive, segnalazioni, date di preavviso o sospensione
+e lo stesso **Ridai la tessera**. Le operazioni si trovano nel Registro cercando `LOYALTY`. La
+prova completa sul DEV è nella guida (Parte 11): per farla in mezz'ora si abbassano per poco
+`stamps_min` e le soglie delle segnalazioni, poi si rimettono.
+
 ---
 
 ## 14. Aspetti legali
@@ -376,6 +385,13 @@ previsti:
 Queste righe si fanno rileggere insieme agli altri documenti legali alla Tappa 5 della roadmap,
 senza costi in più. Nella stessa occasione si fa confermare il trattamento di sconti e buoni.
 La modalità **test** si può usare anche prima.
+
+Le righe pronte, con le domande per il professionista, sono in
+`docs/HAPOSTO_TESSERA_TESTI_LEGALI.md` (PR E). Non sono ancora nei documenti legali, che l'app
+mostra e il sito pubblica: inserirle ora renderebbe pubblica una funzione nascosta. Si inseriscono
+solo con la decisione di lancio, prima di `"mode": "ON"`. Durante le prove basta la schermata
+della privacy al primo uso (T59). Il collaudo completo sul DEV è in
+`docs/HAPOSTO_TESSERA_COLLAUDO.md`.
 
 ---
 
