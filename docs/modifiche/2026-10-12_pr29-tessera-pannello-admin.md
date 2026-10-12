@@ -2,7 +2,9 @@
 
 - **Data:** 12 ottobre 2026
 - **Branch:** `claude/amazing-pasteur-dull9l`
-- **PR:** [#29](https://github.com/paolomarchionetti-glitch/haposto/pull/29)
+- **PR:** [#29](https://github.com/paolomarchionetti-glitch/haposto/pull/29). La stessa PR contiene
+  anche la PR E (testi legali e guida di collaudo): vedi
+  `2026-10-12_pr29-tessera-testi-legali-collaudo.md`.
 - **Motivo:** quarto dei cinque passi della tessera fedeltà nascosta (specifiche v3, §11 e §13).
   Dopo database (#26), ristoratore (#27) e cliente (#28): la scheda **Tessere** del pannello admin
   (numeri, sanzioni, tester) e la **guida di prova completa sul DEV**, verificata passo per passo

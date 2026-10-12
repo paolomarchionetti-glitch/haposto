@@ -147,7 +147,7 @@ solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TE
   attuali e conteggi; **guida di prova completa sul DEV** verificata passo per passo sul database
   locale. Corretto anche il riquadro del cliente: se una segnalazione sospende la tessera, la
   conferma resta visibile. Solo app e documenti: nessuna migration nuova.
-- **PR E (#30), 12 ottobre 2026:** righe pronte per privacy, termini d'uso e condizioni per i
+- **PR E (nella #29), 12 ottobre 2026:** righe pronte per privacy, termini d'uso e condizioni per i
   ristoranti, con le domande per il professionista (`docs/HAPOSTO_TESSERA_TESTI_LEGALI.md`): **non**
   sono ancora nei documenti legali (l'app li mostra e il sito li pubblica), si inseriscono solo al
   lancio. **Guida di collaudo completa** (`docs/HAPOSTO_TESSERA_COLLAUDO.md`), verificata sul

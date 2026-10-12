@@ -2,7 +2,9 @@
 
 - **Data:** 12 ottobre 2026
 - **Branch:** `claude/amazing-pasteur-dull9l`
-- **PR:** [#30](https://github.com/paolomarchionetti-glitch/haposto/pull/30)
+- **PR:** [#29](https://github.com/paolomarchionetti-glitch/haposto/pull/29), insieme alla PR D
+  (`2026-10-12_pr29-tessera-pannello-admin.md`): la #29 era ancora aperta sullo stesso branch e
+  così resta una sola unione da fare.
 - **Motivo:** ultimo dei cinque passi della tessera fedeltà nascosta (specifiche §14), più la
   guida completa per il collaudo finale chiesta dal titolare: «faremo tutti i test alla fine di
   collaudo con istruzioni precise su tutto l'argomento tessere […] mi darai la guida completa
@@ -19,7 +21,7 @@
 | `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` | modificato |
 | `docs/HAPOSTO_STATO_CONFIGURAZIONE.md` | modificato |
 | `README.md` | modificato |
-| `docs/modifiche/2026-10-12_pr30-tessera-testi-legali-collaudo.md` | aggiunto (questo file) |
+| `docs/modifiche/2026-10-12_pr29-tessera-testi-legali-collaudo.md` | aggiunto (questo file) |
 
 Nessun file rinominato o eliminato. Nessuna modifica al codice, al database o alle Edge Function.
 
@@ -98,4 +100,5 @@ Nessuno.
   scritti nella guida due comportamenti: dopo «Annulla» la schermata dell'esito del cliente resta
   com'era (il dato vero è nel riquadro del locale); in preavviso il ristoratore legge «In chiusura
   fino al …».
-- Nessun file dell'app cambia: la CI deve restare verde come sulla PR #29.
+- Nessun file dell'app cambia rispetto alla PR D: la CI deve restare verde come sul primo commit
+  della PR #29.

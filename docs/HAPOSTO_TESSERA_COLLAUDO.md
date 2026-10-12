@@ -1,6 +1,6 @@
 # HAPOSTO — Tessera fedeltà: guida di collaudo completa (DEV)
 
-**12 ottobre 2026 · da usare dopo l'unione delle PR A–E della tessera (#26–#30).**
+**12 ottobre 2026 · da usare dopo l'unione delle PR della tessera (#26–#29).**
 
 Questa guida porta dal codice su GitHub a una tessera fedeltà provata in ogni parte sul **DEV**:
 Supabase, app del ristoratore, app del cliente, pannello admin. La tessera resta **nascosta**: in
@@ -240,4 +240,4 @@ poi `"mode": "ON"`.
 | App del ristoratore: attivazione, patto, Timbra, premi, statistiche | Gestisci il locale → Tessera fedeltà; dashboard → Timbra | #27 |
 | App del cliente: riquadro, QR, gruppo, Le mie tessere, segnalazioni, privacy | scheda del locale; Account → Le mie tessere | #28 |
 | Pannello admin: scheda Tessere, tester, «Ridai la tessera» | pannello → Tessere; Locali → il locale | #29 |
-| Righe per privacy e termini (da inserire al lancio), questa guida | `docs/HAPOSTO_TESSERA_TESTI_LEGALI.md`, `docs/HAPOSTO_TESSERA_COLLAUDO.md` | #30 |
+| Righe per privacy e termini (da inserire al lancio), questa guida | `docs/HAPOSTO_TESSERA_TESTI_LEGALI.md`, `docs/HAPOSTO_TESSERA_COLLAUDO.md` | #29 |
