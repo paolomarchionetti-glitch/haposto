@@ -131,6 +131,15 @@ object ErrorMessages {
         "REWARD_TABLE_LIMIT" to "Raggiunto il limite di premi per tavolo: gli altri restano validi per un'altra visita.",
         "INVALID_DISCOUNT" to "Sconto non valido: non può superare il tetto dello sconto o il valore del buono.",
         "TOO_MANY_CODES" to "Troppi QR in pochi minuti: attendi un momento.",
+        // Tessera fedeltà, lato cliente.
+        "INVALID_TOKEN" to "QR non valido: inquadra il QR del tavolo sul telefono di chi l'ha creato.",
+        "TOKEN_EXPIRED" to "QR scaduto: inquadra quello aggiornato, cambia ogni 60 secondi.",
+        "GROUP_FULL" to "Il tavolo è al completo.",
+        "GROUP_CLOSED" to "Il tavolo è chiuso: ci si unisce entro 10 minuti e prima della scansione alla cassa.",
+        "GROUP_NOT_FOUND" to "Tavolo non trovato: forse è stato chiuso.",
+        "INVALID_REPORT_KIND" to "Segnalazione non valida.",
+        "REPORT_NOT_ALLOWED" to "Puoi segnalare solo un locale dove hai avuto un timbro negli ultimi 60 giorni.",
+        "REPORT_TOO_SOON" to "Hai già segnalato questo locale di recente: una segnalazione ogni 90 giorni.",
         // Edge Function play-verify (acquisto HAPOSTO Plus).
         "PURCHASE_NOT_VALID" to "Google Play non riconosce questo acquisto.",
         "PURCHASE_OTHER_ACCOUNT" to "Questo abbonamento è legato a un altro account HAPOSTO.",

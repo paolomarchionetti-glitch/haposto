@@ -1,7 +1,7 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-PR A (database) e PR B (app del ristoratore) realizzate.**
+PR A (database), PR B (app del ristoratore) e PR C (app del cliente) realizzate.**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -452,6 +452,24 @@ annotato).
   - **Siamo in gruppo** (QR del tavolo) e **Unisciti a un tavolo** (scanner di Google);
   - Le mie tessere, segnalazioni, schermata della privacy al primo uso;
   - tutto nascosto senza accesso alla funzione.
+
+  Come è stato realizzato (PR C):
+  - il riquadro **🎫 Tessera fedeltà** sta nella scheda del locale, sotto gli orari, e compare solo
+    se `loyalty_restaurant_card` risponde `available: true`; **Mostra il mio QR**, **👥 Siamo in
+    gruppo** e **Unisciti a un tavolo** sono lì (e il primo anche in «Le mie tessere»);
+  - **Account → Tessere fedeltà → Le mie tessere** compare solo se `loyalty_access` risponde
+    `visible: true`;
+  - senza account i tasti portano ad Account per l'accesso con Google (**T61**);
+  - il QR si rinnova da solo 2 secondi prima della scadenza; il QR appena sostituito resta
+    controllato finché scade, perché lo staff può averlo scansionato all'ultimo secondo; l'esito
+    arriva controllando `visit_token_status` ogni secondo, solo con la schermata aperta;
+  - dopo 10 QR senza scansione (circa 10 minuti) il QR va in pausa, per non consumare batteria:
+    «Mostra di nuovo il QR»; lo stesso per il QR del tavolo (chi si è unito resta nel tavolo);
+  - la scadenza mostrata si calcola con l'orologio del telefono a partire dai secondi di validità,
+    così un orologio sbagliato non fa vedere un QR già scaduto;
+  - la schermata della privacy (**T59**) si accetta una volta per telefono;
+  - gli avvisi (preavviso di chiusura, fine della tessera, azzeramento) sono le notifiche di sistema
+    già inviate dal server (PR A).
 - **Ristoratore:**
   - Gestisci il locale → Tessera fedeltà: procedura guidata (timbri, condizione, giorno doppio,
     premio e regole di utilizzo, riepilogo e patto), nuova versione, chiusura;

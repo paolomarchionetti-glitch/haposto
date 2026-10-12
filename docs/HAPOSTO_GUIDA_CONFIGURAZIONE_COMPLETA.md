@@ -887,9 +887,26 @@ Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
   3. nella dashboard compare **📷 Timbra la tessera fedeltà**: apre lo scanner di Google, che non
      chiede il permesso della fotocamera (al primo uso Google può scaricare il modulo).
 
-  Il QR del cliente arriva con la PR C: fino ad allora lo scanner si apre, ma non c'è un QR da
-  timbrare. Statistiche, tessere attive e segnalazioni sono nella stessa scheda.
-- **Lato cliente**: con la PR C (fino ad allora il cliente non vede niente).
+  Statistiche, tessere attive e segnalazioni sono nella stessa scheda.
+- **Lato cliente** (app Dev, dalla PR C): con la modalità `"TEST"`, la tessera attiva nel locale
+  tester e un account cliente tester (il tuo va bene: gli admin sono sempre clienti tester; non
+  deve gestire quel locale, perché chi gestisce un locale non ne ha la tessera):
+  1. apri la scheda del locale tester: sotto gli orari c'è il riquadro **🎫 Tessera fedeltà** →
+     **Mostra il mio QR**; al primo uso leggi la schermata della privacy → **Accetto e continuo**.
+     Su questa schermata gli screenshot sono bloccati (è voluto);
+  2. sull'altro telefono (o sull'emulatore), con l'account del ristoratore di prova: **📷 Timbra la
+     tessera fedeltà** → inquadra il QR. Sul telefono del cliente compare **«✓ +1 timbro · 1 su
+     N»**. Con **Inserisci codice** si prova anche il codice di 6 caratteri sotto il QR;
+  3. **gruppo** (serve un secondo account cliente tester): il primo tocca **👥 Siamo in gruppo**;
+     l'altro apre il riquadro del locale (o Account → **Le mie tessere**) → **Unisciti a un
+     tavolo** e inquadra il QR del tavolo; il primo vede «Tavolo: 2 persone ✓». Lo staff scansiona
+     solo il QR del tavolo: ognuno vede il suo timbro;
+  4. **Account → Tessere fedeltà → Le mie tessere**: timbri, data dell'azzeramento, premi, regole,
+     **Segnala un problema** (solo dopo un timbro negli ultimi 60 giorni, una volta ogni 90) e
+     **Lascia questa tessera**.
+
+  Un secondo timbro allo stesso locale arriva solo dopo 4 ore («Hai già avuto un timbro qui…»):
+  per riprovare subito usa un altro account cliente tester.
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:

@@ -21,6 +21,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import com.haposto.data.auth.AuthRepository
 import com.haposto.data.auth.AuthState
 import com.haposto.data.auth.GoogleIdToken
 import com.haposto.data.auth.UserProfile
+import com.haposto.data.loyalty.CustomerLoyaltyRepository
 import com.haposto.platform.notifications.HaPostoNotifications
 import com.haposto.platform.notifications.PushMessaging
 import com.haposto.ui.components.BannerKind
@@ -179,9 +181,16 @@ fun AccountRoute(
     onOpenMfa: () -> Unit,
     onOpenPlus: () -> Unit,
     onOpenAdmin: () -> Unit,
+    customerLoyalty: CustomerLoyaltyRepository? = null,
+    onOpenLoyaltyCards: () -> Unit = {},
 ) {
     val viewModel: AccountViewModel = viewModel(factory = viewModelFactory { initializer { AccountViewModel(auth) } })
     val state = viewModel.uiState.collectAsStateWithLifecycle().value
+    // Tessera fedeltà (funzione nascosta): la voce compare solo se il server la rende visibile.
+    val userId = (state.auth as? AuthState.SignedIn)?.user?.id
+    val showLoyaltyCards by produceState(false, userId, customerLoyalty) {
+        value = userId != null && customerLoyalty?.access()?.valueOrNull?.visible == true
+    }
     AccountScreen(
         state = state,
         onGoogleResult = viewModel::onGoogleResult,
@@ -197,6 +206,8 @@ fun AccountRoute(
         onOpenMfa = onOpenMfa,
         onOpenPlus = onOpenPlus,
         onOpenAdmin = onOpenAdmin,
+        showLoyaltyCards = showLoyaltyCards,
+        onOpenLoyaltyCards = onOpenLoyaltyCards,
     )
 }
 
@@ -216,6 +227,8 @@ fun AccountScreen(
     onOpenMfa: () -> Unit,
     onOpenPlus: () -> Unit,
     onOpenAdmin: () -> Unit,
+    showLoyaltyCards: Boolean = false,
+    onOpenLoyaltyCards: () -> Unit = {},
 ) {
     SimpleScreen(title = "Account", onBack = null) {
         state.message?.let { MessageBanner(it, if (state.messageIsError) BannerKind.ERROR else BannerKind.SUCCESS) }
@@ -245,6 +258,8 @@ fun AccountScreen(
                 onOpenDocument = onOpenDocument,
                 onOpenMfa = onOpenMfa,
                 onOpenPlus = onOpenPlus,
+                showLoyaltyCards = showLoyaltyCards,
+                onOpenLoyaltyCards = onOpenLoyaltyCards,
             )
         }
 
@@ -290,6 +305,8 @@ private fun SignedInContent(
     onOpenDocument: (LegalDocument) -> Unit,
     onOpenMfa: () -> Unit,
     onOpenPlus: () -> Unit,
+    showLoyaltyCards: Boolean,
+    onOpenLoyaltyCards: () -> Unit,
 ) {
     val profile = state.profile
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -322,6 +339,12 @@ private fun SignedInContent(
         }
         OutlinedButton(onClick = onOpenPlus, modifier = Modifier.fillMaxWidth()) {
             Text(if (plus) "Gestisci HAPOSTO Plus" else "Scopri HAPOSTO Plus")
+        }
+    }
+
+    if (showLoyaltyCards) {
+        SectionCard(title = "Tessere fedeltà") {
+            OutlinedButton(onClick = onOpenLoyaltyCards, modifier = Modifier.fillMaxWidth()) { Text("🎫  Le mie tessere") }
         }
     }
 
