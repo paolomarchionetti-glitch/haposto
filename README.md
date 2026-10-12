@@ -245,7 +245,7 @@ Da dove partire (settembre 2026):
 - `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
 - `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` — **il percorso da seguire ora** (5 ottobre 2026): 12 tappe dalla prova sul campo al lancio e alla gestione, con chi fa cosa, costi e durate
 - `docs/HAPOSTO_TESSERA_SPECIFICHE.md` — **specifiche della tessera fedeltà** (funzione nascosta, accesa dal pannello admin): regole del patto, QR e antifrode, privacy, sanzioni, struttura tecnica, piano di lavoro
-- `docs/HAPOSTO_TESSERA_COLLAUDO.md` — **collaudo completo della tessera sul DEV** (Supabase, app, pannello) e come portarla in produzione senza accenderla
+- `docs/HAPOSTO_TESSERA_COLLAUDO.md` — **collaudo completo della tessera sul DEV con un solo telefono** (Supabase, app, pannello; appendice con l'emulatore) e come portarla in produzione senza accenderla
 - `docs/HAPOSTO_TESSERA_TESTI_LEGALI.md` — righe per privacy e termini della tessera, da inserire solo al lancio, con le domande per il professionista
 - `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md` — motivazioni della tessera fedeltà: pro e contro, confronto con il documento di partenza
 - `docs/HAPOSTO_ROADMAP_COMPLETA.md` — archivio delle scelte e dei dettagli (fasi, decisioni, scheda dei trattamenti per la privacy)

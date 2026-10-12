@@ -58,10 +58,10 @@ Si aggiorna alla fine di ogni parte completata (nella stessa PR della parte).
 - [ ] Decisioni D1–D3 della roadmap (forma giuridica, dominio, account Play) prima delle Parti 7–8.
 - [ ] Prova sul campo con 1–3 ristoratori amici (Tappa 1 della roadmap da qui al lancio): prima
       aggiungere la loro email Google ai *Test users* di Google Cloud.
-- [ ] **Collaudo finale della tessera sul DEV** (quando vuoi, circa 1 ora e mezza):
+- [ ] **Collaudo finale della tessera sul DEV, con un solo telefono** (quando vuoi, circa 2 ore):
       `docs/HAPOSTO_TESSERA_COLLAUDO.md`, dalla Parte A (migration `0018_loyalty_card.sql` e di
-      nuovo `scheduled_jobs.sql`; nessuna Edge Function) alla Parte N (valori di partenza e
-      `"mode": "OFF"`). Finché sul DEV manca la 0018, l'app nuova funziona come prima (la tessera
+      nuovo `scheduled_jobs.sql`; nessuna Edge Function) alla Parte P (valori di partenza e
+      `"mode": "OFF"`); l'appendice con l'emulatore è facoltativa. Finché sul DEV manca la 0018, l'app nuova funziona come prima (la tessera
       semplicemente non compare).
 
 Fatto il 3 ottobre 2026 sul DEV (PR #16, #17, #18): migration 0014, 0015, 0016; 7 Edge Function
@@ -152,6 +152,12 @@ solo con la decisione di lancio. Motivazioni: `docs/HAPOSTO_PROGETTO_VISITE_E_TE
   sono ancora nei documenti legali (l'app li mostra e il sito li pubblica), si inseriscono solo al
   lancio. **Guida di collaudo completa** (`docs/HAPOSTO_TESSERA_COLLAUDO.md`), verificata sul
   database locale; la guida generale (Parte 11) rimanda a quella.
+- **Guida di collaudo per un solo telefono (#30), 12 ottobre 2026:** su richiesta del titolare la
+  guida è rifatta per un telefono solo: si alternano due account e il ristoratore usa il codice di
+  riserva (valido 5 minuti durante la prova) al posto della fotocamera; le impostazioni della prova
+  si cambiano e si rimettono dal SQL Editor con comandi da copiare. Quattro prove richiedono un
+  secondo dispositivo (scansione con la fotocamera, esito in tempo reale, tavolo di gruppo,
+  notifiche all'altro account): appendice facoltativa con l'emulatore.
 - **La tessera è completa.** Prossimo passo: il collaudo finale sul DEV, quando vuoi.
 
 **Documenti privati del titolare** (5 ottobre 2026, **fuori dal repository**): *Accessi e chiavi*
