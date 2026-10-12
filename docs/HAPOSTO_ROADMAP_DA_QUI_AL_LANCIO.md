@@ -155,6 +155,9 @@ quadre ([NOME], [P.IVA], [DATA FINE BETA]…).
 2. 🤖 Inserimento dei dati reali nei file `app/src/main/assets/legal/` (gli stessi del sito).
 3. 🧑 Pannello admin → Impostazioni → `legal`: nuova versione (es. `2026-12`). Al prossimo avvio
    l'app chiede a tutti di riaccettare.
+4. ⚖️ 🧑 Tessera fedeltà: consegnare anche `HAPOSTO_TESSERA_TESTI_LEGALI.md` (righe pronte e
+   domande, fra cui sconti, buoni e manifestazioni a premio). Le righe entrano nei documenti solo
+   se si decide di lanciare la tessera (Tappa 8).
 
 ### Tappa 6 — Google Play e test chiuso
 
@@ -219,7 +222,11 @@ mano.
     provabile sul DEV in modalità test;
   - qui si decide se **accenderla** per tutti: soglie raggiunte, almeno metà dei ristoratori la
     vuole, righe su privacy e termini già rilette con gli altri documenti legali (specifiche §14);
-  - se sì, a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO.
+  - se sì, a fine beta ogni locale vedrà quanti clienti gli ha portato HAPOSTO;
+  - come accenderla: righe di `HAPOSTO_TESSERA_TESTI_LEGALI.md` nei documenti legali e nuova
+    versione `legal`, migration 0018 e `scheduled_jobs.sql` in produzione (se non già fatti,
+    `HAPOSTO_TESSERA_COLLAUDO.md`, Parte O), poi pannello → Impostazioni → `loyalty` → `"mode": "ON"`
+    (da quel momento non si torna più a `"OFF"`).
 
 ### Tappa 9 — Lancio pubblico
 

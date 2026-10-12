@@ -1,8 +1,8 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-PR A (database), PR B (app del ristoratore), PR C (app del cliente) e PR D (pannello admin e
-prova sul DEV) realizzate.**
+tutte e cinque le PR realizzate (database, ristoratore, cliente, pannello admin, testi legali e
+guida di collaudo).**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -385,6 +385,13 @@ previsti:
 Queste righe si fanno rileggere insieme agli altri documenti legali alla Tappa 5 della roadmap,
 senza costi in più. Nella stessa occasione si fa confermare il trattamento di sconti e buoni.
 La modalità **test** si può usare anche prima.
+
+Le righe pronte, con le domande per il professionista, sono in
+`docs/HAPOSTO_TESSERA_TESTI_LEGALI.md` (PR E). Non sono ancora nei documenti legali, che l'app
+mostra e il sito pubblica: inserirle ora renderebbe pubblica una funzione nascosta. Si inseriscono
+solo con la decisione di lancio, prima di `"mode": "ON"`. Durante le prove basta la schermata
+della privacy al primo uso (T59). Il collaudo completo sul DEV è in
+`docs/HAPOSTO_TESSERA_COLLAUDO.md`.
 
 ---
 

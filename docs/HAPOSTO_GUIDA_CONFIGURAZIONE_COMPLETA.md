@@ -915,65 +915,12 @@ Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
   locale) ci sono anche regole attuali, versioni, tessere attive, segnalazioni e, se la tessera è
   sospesa o tolta, **Ridai la tessera (facoltativo)**.
 
-**Tessera fedeltà: prova completa sul DEV** (circa 30 minuti, dalla PR D). Serve: la migration
-`0018` e `scheduled_jobs.sql` già eseguiti sul DEV, l'app **Dev** aggiornata, due telefoni (o un
-telefono e l'emulatore): uno con il tuo account (cliente), uno con il **ristoratore di prova**.
-Per non aspettare giorni si abbassano per poco alcuni numeri, e alla fine si rimettono.
-
-1. **Preparazione** — pannello → **Impostazioni** → `loyalty`; nel testo cambia solo:
-   - `"mode": "OFF"` → `"mode": "TEST"`;
-   - `"stamps_min": 5` → `"stamps_min": 2` (così basta un timbro doppio per il premio);
-   - `"report_warn": 3` → `"report_warn": 1`, `"report_suspend": 5` → `"report_suspend": 1` e
-     `"suspension_days": 90` → `"suspension_days": 1` (una segnalazione basta per la sospensione);
-
-   → **Salva**. Poi **Locali** → il locale del ristoratore di prova → **Tessera fedeltà
-   (nascosta)** → accendi «Locale tester della tessera». Tu sei già cliente tester (admin). Se hai
-   un secondo account cliente: **Utenti** → l'account → «Cliente tester della tessera».
-2. **Il ristoratore attiva la tessera** (telefono del ristoratore) — **Gestisci il locale →
-   Tessera fedeltà → Attiva la tessera**:
-   - timbri: **2**;
-   - condizione: una qualsiasi;
-   - giorno doppio: **Un giorno a settimana** → il giorno di **oggi** → **tutto il giorno**;
-   - premio: **🎁 Un omaggio dalla lista** → **Dolce**; da quando: **Subito, anche alla stessa
-     visita**; il resto come proposto;
-   - riepilogo: spunta **Accetto** → **Attiva la tessera**.
-3. **Primo QR e annullamento** — sul tuo telefono: scheda del locale → riquadro **🎫 Tessera
-   fedeltà** → **Mostra il mio QR** → schermata della privacy → **Accetto e continuo**. Il
-   ristoratore: dashboard → **📷 Timbra la tessera fedeltà** → inquadra il QR. Atteso: «✓ Cliente
-   XXXX · +2 timbri (giorno doppio) · 2 su 2 · 🎁 premio sbloccato». Il ristoratore tocca **Annulla**
-   (entro 2 minuti): «Scansione annullata».
-4. **Timbro e premio** — sul tuo telefono di nuovo **Mostra il mio QR** (quello di prima è già
-   usato); il ristoratore lo scansiona. Sul tuo telefono: «✓ +2 timbri, giorno doppio · 2 su 2 · 🎁
-   Premio sbloccato». Il ristoratore vede **🎁 Premi da consegnare**: prima di toccare
-   **Consegnato**, apri sul tuo telefono **Account → Tessere fedeltà → Le mie tessere**: c'è il
-   premio «🎁 Omaggio: dolce» con «Si usa anche oggi». Poi il ristoratore tocca **Consegnato**.
-   Riaprendo «Le mie tessere» l'elenco è vuoto: è giusto, la tessera completata si chiude e la
-   nuova parte alla prossima visita.
-5. **Gruppo** (facoltativo, serve il secondo account cliente tester): nel riquadro del locale tu
-   tocchi **👥 Siamo in gruppo**; sull'altro telefono, riquadro del locale → **Unisciti a un
-   tavolo** → inquadra il QR del tavolo. Tu vedi «Tavolo: 2 persone ✓». Il ristoratore scansiona il
-   QR del tavolo: «Tavolo di 2 · 1 timbrato (1 già timbrato oggi)». Sul secondo telefono «✓ +2
-   timbri, giorno doppio · 🎁 Premio sbloccato»; sul tuo «Hai già avuto un timbro qui nelle ultime
-   4 ore…» (giusto: un timbro ogni 4 ore). Il ristoratore **non** tocca «Consegnato»: il premio
-   del secondo account resta da usare (serve al passo 6).
-
-   Il **codice di riserva** si prova dopo 4 ore: **Mostra il mio QR** e il ristoratore usa
-   **Inserisci codice** con i 6 caratteri sotto il QR.
-6. **Segnalazione e sanzione** — sul tuo telefono: scheda del locale → riquadro → **Segnala un
-   problema** → «Non hanno voluto timbrare» → **Invia**. Con le soglie a 1 la tessera del locale si
-   **sospende da sola**: compare «✓ Segnalazione inviata» e il riquadro sparisce. Il ristoratore
-   riceve l'avviso «Tessera fedeltà sospesa» e nella sua scheda vede «Sospesa per le segnalazioni
-   dei clienti». Chi aveva ancora un premio da usare (il secondo account del passo 5) riceve
-   «Tessera fedeltà finita».
-7. **Pannello → Tessere** — controlla i numeri (scansioni, timbri, premi, 1 segnalazione) e il
-   locale fra le **sanzioni automatiche** → **Ridai la tessera** → scrivi un motivo → **Ridai la
-   tessera**. Il locale passa a «finita» e il ristoratore la può riattivare accettando di nuovo il
-   patto.
-8. **Fine della prova** — pannello → **Impostazioni** → `loyalty`: rimetti `"stamps_min": 5`,
-   `"report_warn": 3`, `"report_suspend": 5`, `"suspension_days": 90` e `"mode": "OFF"` →
-   **Salva**. La tessera torna invisibile a tutti; i dati della prova restano solo sul DEV.
-
-Se un passo non va come scritto, fermati e scrivimi cosa vedi: correggo guida o codice.
+**Tessera fedeltà: collaudo completo sul DEV** → `docs/HAPOSTO_TESSERA_COLLAUDO.md`: Supabase
+(migration 0018 e `scheduled_jobs.sql`; nessuna Edge Function da ripubblicare), app Dev, prova
+di ogni parte (ristoratore, QR, annullamento, premio, gruppo, codice, statistiche, nuove regole,
+segnalazione e sospensione, pannello e «Ridai la tessera», chiusura, modalità solo esistenti) e,
+alla fine, i valori di partenza con `"mode": "OFF"`. Lì c'è anche come portarla in produzione
+senza accenderla.
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:
