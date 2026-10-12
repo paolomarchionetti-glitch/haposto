@@ -915,12 +915,13 @@ Regole: `docs/HAPOSTO_TESSERA_SPECIFICHE.md`.
   locale) ci sono anche regole attuali, versioni, tessere attive, segnalazioni e, se la tessera è
   sospesa o tolta, **Ridai la tessera (facoltativo)**.
 
-**Tessera fedeltà: collaudo completo sul DEV** → `docs/HAPOSTO_TESSERA_COLLAUDO.md`: Supabase
-(migration 0018 e `scheduled_jobs.sql`; nessuna Edge Function da ripubblicare), app Dev, prova
-di ogni parte (ristoratore, QR, annullamento, premio, gruppo, codice, statistiche, nuove regole,
-segnalazione e sospensione, pannello e «Ridai la tessera», chiusura, modalità solo esistenti) e,
-alla fine, i valori di partenza con `"mode": "OFF"`. Lì c'è anche come portarla in produzione
-senza accenderla.
+**Tessera fedeltà: collaudo completo sul DEV, con un solo telefono** →
+`docs/HAPOSTO_TESSERA_COLLAUDO.md`: Supabase (migration 0018 e `scheduled_jobs.sql`; nessuna Edge
+Function da ripubblicare), app Dev, prova di ogni parte alternando sul telefono il tuo account e
+quello del ristoratore di prova (il ristoratore usa il codice di riserva al posto della
+fotocamera) e, alla fine, i valori di partenza con `"mode": "OFF"`. In appendice le quattro prove
+che richiedono un secondo dispositivo (emulatore) e, in fondo, come portarla in produzione senza
+accenderla.
 
 **Aggiornare il database (nuova migration).** Quando una PR aggiunge un file in
 `supabase/migrations/`:
