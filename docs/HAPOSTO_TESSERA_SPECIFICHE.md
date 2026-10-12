@@ -1,7 +1,8 @@
 # HAPOSTO — Tessera fedeltà: specifiche (funzione nascosta)
 
 **Versione 3 · 11 ottobre 2026 · valori confermati dal titolare · funzione spenta di default ·
-PR A (database), PR B (app del ristoratore) e PR C (app del cliente) realizzate.**
+PR A (database), PR B (app del ristoratore), PR C (app del cliente) e PR D (pannello admin e
+prova sul DEV) realizzate.**
 
 Decisione del titolare: la tessera si **realizza subito**, ma resta **spenta e invisibile**, con
 un interruttore nel pannello admin. Si può provare sul DEV in modalità test e si accende per tutti
@@ -357,6 +358,14 @@ mai dati personali):
 - **Utenti** → l'utente: «Tester tessera».
 - **Tessere** (scheda nuova): i numeri del §11, solo da leggere.
 - **Registro:** attivazioni, versioni, chiusure, sospensioni automatiche, annullamenti.
+
+Come è stato realizzato (PR D): la scheda **Tessere** mostra modalità, locali per stato, tessere
+dei clienti, ultimi 30 giorni, premi, tipi di premio, versioni, patti, segnalazioni, le sanzioni
+automatiche con **Ridai la tessera** (facoltativo) e l'elenco dei tester; la scheda del locale
+aggiunge regole attuali, versioni, tessere attive, segnalazioni, date di preavviso o sospensione
+e lo stesso **Ridai la tessera**. Le operazioni si trovano nel Registro cercando `LOYALTY`. La
+prova completa sul DEV è nella guida (Parte 11): per farla in mezz'ora si abbassano per poco
+`stamps_min` e le soglie delle segnalazioni, poi si rimettono.
 
 ---
 

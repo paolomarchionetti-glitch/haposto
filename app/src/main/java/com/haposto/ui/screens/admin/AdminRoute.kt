@@ -48,6 +48,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.haposto.data.admin.AdminClaim
 import com.haposto.data.admin.AdminExtrasRow
+import com.haposto.data.admin.AdminLoyaltyTexts
 import com.haposto.data.admin.AdminRepository
 import com.haposto.data.admin.AdminSubscriptionRow
 import com.haposto.data.auth.AuthRepository
@@ -218,6 +219,7 @@ private fun AdminHome(
                 AdminTab.USERS -> UsersTab(state, viewModel, onOpenUser)
                 AdminTab.SUBSCRIPTIONS -> SubscriptionsTab(state, viewModel)
                 AdminTab.PAYMENTS -> PaymentsTab(state)
+                AdminTab.LOYALTY -> LoyaltyTab(state, viewModel, onOpenRestaurant, onOpenUser)
                 AdminTab.LOG -> LogTab(state, viewModel)
                 AdminTab.SETTINGS -> SettingsTab(state, viewModel)
             }
@@ -246,7 +248,7 @@ private fun AdminHome(
 }
 
 @Composable
-private fun AdminList(content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit) {
+internal fun AdminList(content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
@@ -256,7 +258,7 @@ private fun AdminList(content: androidx.compose.foundation.lazy.LazyListScope.()
 }
 
 @Composable
-private fun RowCard(onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+internal fun RowCard(onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -641,15 +643,7 @@ internal fun planSourceLabel(source: String): String = when (source) {
 }
 
 /** Stato della tessera fedeltà del locale (migration 0018). */
-internal fun loyaltyStatusLabel(status: String?): String = when (status) {
-    null, "NONE" -> "non attivata"
-    "ACTIVE" -> "attiva"
-    "CLOSING" -> "in chiusura (preavviso)"
-    "SUSPENDED" -> "sospesa per segnalazioni"
-    "REMOVED" -> "tolta (solo l'admin la ridà)"
-    "ENDED" -> "finita"
-    else -> status.lowercase()
-}
+internal fun loyaltyStatusLabel(status: String?): String = AdminLoyaltyTexts.programStatus(status)
 
 internal val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 internal val DATE_TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")

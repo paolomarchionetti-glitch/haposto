@@ -6,12 +6,16 @@ import com.haposto.data.admin.AdminActivity
 import com.haposto.data.admin.AdminClaim
 import com.haposto.data.admin.AdminClaimSummary
 import com.haposto.data.admin.AdminExtrasRow
+import com.haposto.data.admin.AdminLoyaltyOverview
+import com.haposto.data.admin.AdminLoyaltyRestaurant
+import com.haposto.data.admin.AdminLoyaltyUser
 import com.haposto.data.admin.AdminMember
 import com.haposto.data.admin.AdminOverview
 import com.haposto.data.admin.AdminPaymentRow
 import com.haposto.data.admin.AdminPublish
 import com.haposto.data.admin.AdminRepository
 import com.haposto.data.admin.AdminRestaurantDetail
+import com.haposto.data.admin.AdminRestaurantLoyalty
 import com.haposto.data.admin.AdminRestaurantRow
 import com.haposto.data.admin.AdminStatus
 import com.haposto.data.admin.AdminSubscriptionRow
@@ -185,6 +189,18 @@ class SupabaseAdminRepository(private val client: SupabaseClient) : AdminReposit
         rpc("admin_set_restaurant_loyalty_tester", buildJsonObject {
             put("p_restaurant_id", restaurantId)
             put("p_tester", tester)
+        })
+        Unit
+    }
+
+    override suspend fun loyaltyOverview(): Outcome<AdminLoyaltyOverview> = outcomeOf {
+        decodeAdminLoyaltyOverview(rpc("admin_loyalty_overview"))
+    }
+
+    override suspend fun restoreLoyalty(restaurantId: String, note: String?): Outcome<Unit> = outcomeOf {
+        rpc("admin_loyalty_restore", buildJsonObject {
+            put("p_restaurant_id", restaurantId)
+            put("p_note", note)
         })
         Unit
     }
@@ -457,7 +473,76 @@ internal fun decodeAdminUserDetail(text: String): AdminUserDetail =
 private data class DetailLoyaltyDto(
     val tester: Boolean = false,
     val status: String = "NONE",
-)
+    val current: LoyaltyRulesDto? = null,
+    val versions: Int = 0,
+    @SerialName("active_cards") val activeCards: Int = 0,
+    @SerialName("reports_60_days") val reports60Days: Int = 0,
+    @SerialName("closing_until") val closingUntil: String? = null,
+    @SerialName("suspended_until") val suspendedUntil: String? = null,
+) {
+    fun toDomain() = AdminRestaurantLoyalty(
+        rules = current?.toDomain(),
+        versions = versions,
+        activeCards = activeCards,
+        reports60Days = reports60Days,
+        closingUntil = closingUntil?.let(::parseTimestamp),
+        suspendedUntil = suspendedUntil?.let(::parseTimestamp),
+    )
+}
+
+/** Scheda «Tessere» da admin_loyalty_overview (internal per i test). */
+internal fun decodeAdminLoyaltyOverview(text: String): AdminLoyaltyOverview =
+    detailJson.decodeFromString<AdminLoyaltyOverviewDto>(text).toDomain()
+
+@Serializable
+private data class AdminLoyaltyRestaurantDto(
+    @SerialName("restaurant_id") val restaurantId: String,
+    val name: String = "",
+    val city: String? = null,
+    val status: String? = null,
+    @SerialName("suspended_until") val suspendedUntil: String? = null,
+) {
+    fun toDomain() = AdminLoyaltyRestaurant(restaurantId, name, city, status, suspendedUntil?.let(::parseTimestamp))
+}
+
+@Serializable
+private data class AdminLoyaltyUserDto(@SerialName("user_id") val userId: String, val email: String? = null)
+
+@Serializable
+private data class AdminLoyaltyConfigDto(val launched: Boolean = false)
+
+@Serializable
+private data class AdminLoyaltyOverviewDto(
+    val mode: String = "OFF",
+    val config: AdminLoyaltyConfigDto? = null,
+    val programs: Map<String, Int> = emptyMap(),
+    val cards: Map<String, Int> = emptyMap(),
+    val rewards: Map<String, Int> = emptyMap(),
+    @SerialName("last_30_days") val last30Days: Map<String, Int> = emptyMap(),
+    @SerialName("reward_kinds") val rewardKinds: Map<String, Int> = emptyMap(),
+    val versions: Int = 0,
+    val pacts: Int = 0,
+    @SerialName("reports_60_days") val reports60Days: Int = 0,
+    @SerialName("tester_restaurants") val testerRestaurants: List<AdminLoyaltyRestaurantDto> = emptyList(),
+    @SerialName("tester_users") val testerUsers: List<AdminLoyaltyUserDto> = emptyList(),
+    val sanctioned: List<AdminLoyaltyRestaurantDto> = emptyList(),
+) {
+    fun toDomain() = AdminLoyaltyOverview(
+        mode = mode,
+        launched = config?.launched == true,
+        programs = programs,
+        cards = cards,
+        rewards = rewards,
+        last30Days = last30Days,
+        rewardKinds = rewardKinds,
+        versions = versions,
+        pacts = pacts,
+        reports60Days = reports60Days,
+        testerRestaurants = testerRestaurants.map { it.toDomain() },
+        testerUsers = testerUsers.map { AdminLoyaltyUser(it.userId, it.email.orEmpty()) },
+        sanctioned = sanctioned.map { it.toDomain() },
+    )
+}
 
 @Serializable
 private data class AdminRestaurantDetailDto(
@@ -500,6 +585,7 @@ private data class AdminRestaurantDetailDto(
         partnerSince = partnerSince?.let(::parseTimestamp),
         loyaltyTester = loyalty?.tester,
         loyaltyStatus = loyalty?.status,
+        loyalty = loyalty?.toDomain(),
     )
 }
 

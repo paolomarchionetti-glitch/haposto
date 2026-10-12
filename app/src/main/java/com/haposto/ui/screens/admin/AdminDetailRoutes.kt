@@ -33,8 +33,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.haposto.data.Outcome
+import com.haposto.data.admin.AdminLoyaltyTexts
 import com.haposto.data.admin.AdminRepository
 import com.haposto.data.admin.AdminRestaurantDetail
+import com.haposto.data.admin.AdminRestaurantLoyalty
 import com.haposto.data.admin.AdminUserDetail
 import com.haposto.data.admin.RestaurantEdit
 import com.haposto.ui.components.BannerKind
@@ -164,10 +166,40 @@ fun AdminRestaurantRoute(restaurantId: String, admin: AdminRepository, onBack: (
         detail.loyaltyTester?.let { tester ->
             SectionCard(title = "Tessera fedeltà (nascosta)", subtitle = "La modalità si cambia in Impostazioni → loyalty.") {
                 LabeledValue("Tessera del locale", loyaltyStatusLabel(detail.loyaltyStatus))
+                detail.loyalty?.let { loyalty ->
+                    AdminLoyaltyTexts.rules(loyalty)?.let { LabeledValue("Regole attuali", it) }
+                    Text(
+                        "Versioni: ${loyalty.versions} · tessere attive: ${loyalty.activeCards} · " +
+                            "segnalazioni (60 giorni): ${loyalty.reports60Days}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    loyalty.closingUntil?.let {
+                        Text("Preavviso di chiusura fino al ${DATE.format(it.atZone(ZoneId.systemDefault()))}", style = MaterialTheme.typography.bodySmall)
+                    }
+                    loyalty.suspendedUntil?.let {
+                        Text("Sospesa fino al ${DATE.format(it.atZone(ZoneId.systemDefault()))}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
                 LoyaltyTesterSwitch("Locale tester della tessera", tester, enabled = !state.busy) { checked ->
                     viewModel.act(if (checked) "✓ Locale tester della tessera." else "✓ Il locale non è più tester.") {
                         admin.setRestaurantLoyaltyTester(detail.restaurantId, checked)
                     }
+                }
+                if (AdminRestaurantLoyalty.canRestore(detail.loyaltyStatus)) {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.act("✓ Fatto: il locale può riattivare la tessera accettando di nuovo il patto.") {
+                                admin.restoreLoyalty(detail.restaurantId, note.ifBlank { null })
+                            }
+                        },
+                        enabled = !state.busy,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Ridai la tessera (facoltativo)") }
+                    Text(
+                        "Toglie la sospensione o ridà la tessera tolta: il locale la riattiva accettando di nuovo il patto. " +
+                            "Il motivo è la nota scritta in alto.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
                 Text(
                     "In modalità TEST la tessera la vedono solo i locali e i clienti tester (gli admin sempre).",
