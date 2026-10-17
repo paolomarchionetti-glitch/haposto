@@ -3,7 +3,7 @@ package com.haposto.data.loyalty
 import java.time.Instant
 
 /**
- * Tessera fedeltà (funzione nascosta, migration 0018; regole in docs/HAPOSTO_TESSERA_SPECIFICHE.md).
+ * Tessera fedeltà (funzione nascosta, migration 0018; regole nelle specifiche in docs/PR/PR22-30_tessera-fedelta/).
  * Il server decide sempre: queste classi descrivono solo quello che risponde.
  */
 enum class ConditionKind { SPEND, ONE_OF, TWO_OF }

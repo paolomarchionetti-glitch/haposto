@@ -1,4 +1,4 @@
--- HAPOSTO STEP 7 — V1 schema aligned with docs/V1_CONTRACT_FREEZE.md.
+-- HAPOSTO STEP 7 — V1 schema aligned with V1_CONTRACT_FREEZE in docs/progetto/.
 
 create type public.partnership_status as enum (
     'DIRECTORY_ONLY',

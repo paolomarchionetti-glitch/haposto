@@ -2,7 +2,7 @@
 --
 -- Esegui DOPO 0017. Rieseguibile.
 --
--- Regole: docs/HAPOSTO_TESSERA_SPECIFICHE.md (versione 3, regole T1–T61; qui citate fra parentesi).
+-- Regole: specifiche della tessera in docs/PR/PR22-30_tessera-fedelta/ (versione 3, regole T1–T61; qui citate fra parentesi).
 -- Con l'interruttore spento (app_config 'loyalty', modalità OFF) ogni funzione della tessera
 -- rifiuta con FEATURE_DISABLED (T9) e l'app non mostra nulla. Le modalità:
 --   OFF            spenta (iniziale);
@@ -105,7 +105,7 @@ $$;
 
 insert into public.app_config (key, value, description) values
     ('loyalty', public.loyalty_defaults(),
-     'Tessera fedeltà (funzione nascosta). mode: OFF (spenta), TEST (solo tester), ON (attiva), EXISTING_ONLY (solo tessere già iniziate). Dopo il primo ON si passa solo fra ON ed EXISTING_ONLY. Gli altri numeri sono limiti e soglie (vedi docs/HAPOSTO_TESSERA_SPECIFICHE.md).')
+     'Tessera fedeltà (funzione nascosta). mode: OFF (spenta), TEST (solo tester), ON (attiva), EXISTING_ONLY (solo tessere già iniziate). Dopo il primo ON si passa solo fra ON ed EXISTING_ONLY. Gli altri numeri sono limiti e soglie (vedi le specifiche della tessera in docs/PR/PR22-30_tessera-fedelta/).')
 on conflict (key) do nothing;
 
 -- Un numero dell'impostazione (valore dell'admin o valore di partenza).
