@@ -33,7 +33,7 @@ era quindi allineato al codice.
   interni di Supabase (che esistono già) e i comandi `\restrict` / `\unrestrict` di `pg_dump` 18,
   che l'SQL Editor rifiuta.
 - Per creare o aggiornare un progetto si usano **solo le migration**, nell'ordine della guida
-  (`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`, Parte 10.2 e Parte 11).
+  (`docs/configurazione/2026-10-12_HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`, Parte 10.2 e Parte 11).
 
 ## Come rifare il dump (quando serve)
 

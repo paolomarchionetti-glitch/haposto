@@ -90,7 +90,7 @@ object AppDependencies {
             !environment.usesBackend -> FakeRestaurantRepository()
             config.isAbsent -> ConfigurationErrorRestaurantRepository(
                 message = "Questa è la versione ${environment.name}: in local.properties mancano indirizzo e chiave " +
-                    "Supabase (vedi docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md).",
+                    "Supabase (vedi la guida di configurazione completa in docs/configurazione/).",
             )
             config.validationError() != null -> ConfigurationErrorRestaurantRepository(
                 message = config.validationError().orEmpty(),

@@ -14,15 +14,15 @@ HAPOSTO è una utility locale per capire rapidamente quali ristoranti dichiarano
 | Edge Function | `supabase/functions/` | push FCM, verifica Google Play, notifiche Play, checkout/portale/webhook Stripe, foto o PDF del menù |
 | Sito | `web/` | home, area ristoratori (Pro), pagina pubblica `/r/…` per i QR (con offerta e menù), pagine legali, cancellazione account |
 
-**A che punto è la configurazione:** `docs/HAPOSTO_STATO_CONFIGURAZIONE.md` (parti fatte, prossima
-parte, come riprendere). Registro delle modifiche: `docs/modifiche/`. Regole per chi lavora al
-codice (anche Claude): `CLAUDE.md`.
+**A che punto è la configurazione:** `docs/configurazione/2026-10-17_HAPOSTO_STATO_CONFIGURAZIONE.md` (parti fatte, prossima
+parte, come riprendere). Indice di tutti i documenti, divisi per tema: `docs/README.md`. Registro
+delle modifiche: `docs/modifiche/`. Regole per chi lavora al codice (anche Claude): `CLAUDE.md`.
 
 **Cosa manca:** l'app è completa e collaudata sul progetto DEV. Restano le cose "fuori dal codice":
 prova sul campo, decisioni (nome, zona), P.IVA e documenti legali, progetto di produzione, Google
 Play, pilot, lancio e pagamenti attivi. Il percorso in ordine, con costi e durate, è in
-**`docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`**; le operazioni di configurazione sono in
-`docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
+**`docs/roadmap/2026-10-12_HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md`**; le operazioni di configurazione sono in
+`docs/configurazione/2026-10-12_HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
 
 Build Variants in Android Studio: `demoDebug` (nessun server), `devDebug` (Supabase DEV),
 `prodDebug`/`prodRelease` (produzione). Comandi: `./gradlew testDemoDebugUnitTest`,
@@ -70,9 +70,9 @@ Se la configurazione è parziale/errata, mostra un errore invece di fare fallbac
 
 Leggi nell'ordine:
 
-1. `docs/STEP_7_SETUP_SUPABASE.md`
-2. `docs/STEP_7_BUILD_AND_TEST.md`
-3. `docs/STEP_7_TROUBLESHOOTING.md`
+1. `docs/step/STEP_7/2026-09-27_STEP_7_SETUP_SUPABASE.md`
+2. `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`
+3. `docs/step/STEP_7/2026-09-27_STEP_7_TROUBLESHOOTING.md`
 
 Il primo documento guida dalla creazione del progetto Supabase fino a `local.properties`.
 
@@ -228,36 +228,38 @@ dell'APK di test strumentali, lint, migration e controlli SQL, controllo delle E
 (Deno) e test su emulatore a ogni push/PR, senza nessuna credenziale. Il workflow `website.yml`
 costruisce il sito.
 
-Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
+Dettagli: `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`.
 
 ---
 
 # Documentazione principale
 
+Indice completo, con le cartelle a tema e la data dell'ultimo aggiornamento nel nome: `docs/README.md`.
+
 Da dove partire (settembre 2026):
 
-- `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` — **tutte le operazioni rimaste**, in ordine: migration 0012–0013, login Google e 2FA, chiavi, Edge Function, Google Play, Stripe, sito, produzione, test finali
-- `docs/HAPOSTO_GUIDA_APP_TUTORIAL.md` — come si usa l'app, per utenti e ristoratori
-- `docs/HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md` — provare l'app con 36 locali che cambiano da soli, anche con due telefoni
-- `docs/HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo (0012–0013: guida di configurazione, Parte 1)
-- `docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
-- `docs/HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Pro (prova, poi "Non collegato" senza abbonamento) e Gratis/Plus, registrazione, acquisti
-- `docs/HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
-- `docs/HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` — **il percorso da seguire ora** (5 ottobre 2026): 12 tappe dalla prova sul campo al lancio e alla gestione, con chi fa cosa, costi e durate
-- `docs/HAPOSTO_TESSERA_SPECIFICHE.md` — **specifiche della tessera fedeltà** (funzione nascosta, accesa dal pannello admin): regole del patto, QR e antifrode, privacy, sanzioni, struttura tecnica, piano di lavoro
-- `docs/HAPOSTO_TESSERA_COLLAUDO.md` — **collaudo completo della tessera sul DEV con un solo telefono** (Supabase, app, pannello; appendice con l'emulatore) e come portarla in produzione senza accenderla
-- `docs/HAPOSTO_TESSERA_TESTI_LEGALI.md` — righe per privacy e termini della tessera, da inserire solo al lancio, con le domande per il professionista
-- `docs/HAPOSTO_PROGETTO_VISITE_E_TESSERA.md` — motivazioni della tessera fedeltà: pro e contro, confronto con il documento di partenza
-- `docs/HAPOSTO_ROADMAP_COMPLETA.md` — archivio delle scelte e dei dettagli (fasi, decisioni, scheda dei trattamenti per la privacy)
-- `docs/HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa ha aggiunto lo Step 7.9
+- `docs/configurazione/2026-10-12_HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md` — **tutte le operazioni rimaste**, in ordine: migration 0012–0013, login Google e 2FA, chiavi, Edge Function, Google Play, Stripe, sito, produzione, test finali
+- `docs/guide/2026-10-03_HAPOSTO_GUIDA_APP_TUTORIAL.md` — come si usa l'app, per utenti e ristoratori
+- `docs/guide/2026-09-29_HAPOSTO_GUIDA_TEST_PSEUDOREALISTICO.md` — provare l'app con 36 locali che cambiano da soli, anche con due telefoni
+- `docs/configurazione/2026-09-29_HAPOSTO_GUIDA_AGGIORNAMENTO_DB.md` — aggiornare Supabase con le migration 0006–0011, passo per passo (0012–0013: guida di configurazione, Parte 1)
+- `docs/guide/2026-10-05_HAPOSTO_GUIDA_APP_E_DATI_REALI.md` — cosa è reale e cosa simulato, import dei locali da OpenStreetMap, prove sul campo, pilot
+- `docs/progetto/2026-10-03_HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md` — piani Pro (prova, poi "Non collegato" senza abbonamento) e Gratis/Plus, registrazione, acquisti
+- `docs/configurazione/2026-09-29_HAPOSTO_SQL_INTEGRATIVO.md` — tabelle, funzioni e permessi del database completo
+- `docs/roadmap/2026-10-12_HAPOSTO_ROADMAP_DA_QUI_AL_LANCIO.md` — **il percorso da seguire ora** (5 ottobre 2026): 12 tappe dalla prova sul campo al lancio e alla gestione, con chi fa cosa, costi e durate
+- `docs/PR/PR22-30_tessera-fedelta/2026-10-12_HAPOSTO_TESSERA_SPECIFICHE.md` — **specifiche della tessera fedeltà** (funzione nascosta, accesa dal pannello admin): regole del patto, QR e antifrode, privacy, sanzioni, struttura tecnica, piano di lavoro
+- `docs/PR/PR22-30_tessera-fedelta/2026-10-12_HAPOSTO_TESSERA_COLLAUDO.md` — **collaudo completo della tessera sul DEV con un solo telefono** (Supabase, app, pannello; appendice con l'emulatore) e come portarla in produzione senza accenderla
+- `docs/PR/PR22-30_tessera-fedelta/2026-10-12_HAPOSTO_TESSERA_TESTI_LEGALI.md` — righe per privacy e termini della tessera, da inserire solo al lancio, con le domande per il professionista
+- `docs/PR/PR22-30_tessera-fedelta/2026-10-11_HAPOSTO_PROGETTO_VISITE_E_TESSERA.md` — motivazioni della tessera fedeltà: pro e contro, confronto con il documento di partenza
+- `docs/roadmap/2026-10-05_HAPOSTO_ROADMAP_COMPLETA.md` — archivio delle scelte e dei dettagli (fasi, decisioni, scheda dei trattamenti per la privacy)
+- `docs/roadmap/2026-09-27_HAPOSTO_ROADMAP_INTEGRATIVA.md` — cosa ha aggiunto lo Step 7.9
 
 Riferimenti Step 7 e architettura:
 
-- `docs/STEP_7_SETUP_SUPABASE.md`
-- `docs/STEP_7_BUILD_AND_TEST.md`
-- `docs/STEP_7_TROUBLESHOOTING.md`
-- `docs/STEP_7_MODIFICA.md`
-- `docs/STEP_7_VALIDATION.md`
-- `docs/V1_CONTRACT_FREEZE.md`
-- `docs/ROADMAP.md`
-- `docs/ARCHITECTURE.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_SETUP_SUPABASE.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_TROUBLESHOOTING.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_MODIFICA.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_VALIDATION.md`
+- `docs/progetto/2026-09-27_V1_CONTRACT_FREEZE.md`
+- `docs/roadmap/2026-09-27_ROADMAP.md`
+- `docs/progetto/2026-09-27_ARCHITECTURE.md`

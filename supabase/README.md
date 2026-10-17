@@ -39,9 +39,9 @@ Se la configurazione è parziale/errata, mostra un errore invece di fare fallbac
 
 Leggi nell'ordine:
 
-1. `docs/STEP_7_SETUP_SUPABASE.md`
-2. `docs/STEP_7_BUILD_AND_TEST.md`
-3. `docs/STEP_7_TROUBLESHOOTING.md`
+1. `docs/step/STEP_7/2026-09-27_STEP_7_SETUP_SUPABASE.md`
+2. `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`
+3. `docs/step/STEP_7/2026-09-27_STEP_7_TROUBLESHOOTING.md`
 
 Il primo documento guida dalla creazione del progetto Supabase fino a `local.properties`.
 
@@ -186,19 +186,19 @@ Prima del primo build CLI/Sync affidabile, genera il wrapper standard una volta 
 gradle wrapper --gradle-version 9.5.0
 ```
 
-Dettagli: `docs/STEP_7_BUILD_AND_TEST.md`.
+Dettagli: `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`.
 
 ---
 
 # Documentazione principale
 
-- `docs/STEP_7_SETUP_SUPABASE.md`
-- `docs/STEP_7_BUILD_AND_TEST.md`
-- `docs/STEP_7_TROUBLESHOOTING.md`
-- `docs/STEP_7_MODIFICA.md`
-- `docs/STEP_7_VALIDATION.md`
-- `docs/V1_CONTRACT_FREEZE.md`
-- `docs/ROADMAP.md`
-- `docs/ARCHITECTURE.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_SETUP_SUPABASE.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_BUILD_AND_TEST.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_TROUBLESHOOTING.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_MODIFICA.md`
+- `docs/step/STEP_7/2026-09-27_STEP_7_VALIDATION.md`
+- `docs/progetto/2026-09-27_V1_CONTRACT_FREEZE.md`
+- `docs/roadmap/2026-09-27_ROADMAP.md`
+- `docs/progetto/2026-09-27_ARCHITECTURE.md`
 - `PROJECT_TREE.txt`
 - `FILE_MANIFEST_SHA256.txt`

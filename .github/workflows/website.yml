@@ -5,7 +5,7 @@ name: Website
 # Actions → Variables: HAPOSTO_DEPLOY_PAGES=true, HAPOSTO_SITE_URL, HAPOSTO_SUPABASE_URL,
 # HAPOSTO_SUPABASE_PUBLISHABLE_KEY (chiave PUBBLICA), HAPOSTO_PLAY_URL, HAPOSTO_CONTACT_EMAIL,
 # HAPOSTO_ANDROID_CERT_SHA256. In alternativa: Cloudflare Pages con comando "node web/build.mjs"
-# e cartella "web/dist" (vedi docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md).
+# e cartella "web/dist" (vedi la guida di configurazione completa in docs/configurazione/).
 
 on:
   push:

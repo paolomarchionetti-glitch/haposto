@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
  * Cosa dire al ristoratore sul suo piano, nella dashboard e in "Gestisci il locale".
  * Dopo la prova gratuita, senza abbonamento il locale appare "Non collegato" e non pubblica.
  * Solo informazioni: nell'app niente inviti né link al pagamento (regole di Google Play sui
- * pagamenti, vedi HAPOSTO_MODELLO_PREMIUM_E_ACCOUNT.md); Pro si attiva sul sito.
+ * pagamenti, vedi il modello premium e account in docs/progetto/); Pro si attiva sul sito.
  */
 object PlanNotices {
 

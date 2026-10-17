@@ -1,6 +1,6 @@
 # Copia questo file in `local.properties` (che NON viene versionato) e compila i valori.
 # NON toccare la riga sdk.dir: la gestisce Android Studio.
-# Guida passo passo: docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md
+# Guida passo passo: guida di configurazione completa in docs/configurazione/
 #
 # sdk.dir=C:\\Users\\TUO_NOME\\AppData\\Local\\Android\\Sdk   (Windows, esempio)
 #

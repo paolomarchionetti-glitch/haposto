@@ -1,5 +1,5 @@
 -- HAPOSTO — Verifica automatica della migration 0018: tessera fedeltà (funzione nascosta).
--- Le regole citate (T1–T61) sono in docs/HAPOSTO_TESSERA_SPECIFICHE.md.
+-- Le regole citate (T1–T61) sono nelle specifiche della tessera in docs/PR/PR22-30_tessera-fedelta/.
 --
 -- Tutto avviene in una transazione annullata alla fine: non lascia tracce.
 -- Prerequisiti: migration 0001–0018, seed 900 caricato (in locale gli utenti di prova si creano da sé).

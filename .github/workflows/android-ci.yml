@@ -243,6 +243,21 @@ jobs:
       - name: Unit tests (Stripe signature, Google Play states, helpers)
         run: deno test --allow-env
 
+  docs:
+    name: Documenti (nomi, riferimenti, indice)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      # Regole in CLAUDE.md: docs/ in cartelle a tema, nomi AAAA-MM-GG_NOME.md, indice docs/README.md.
+      - name: Check docs names, references, links and index
+        run: node .github/scripts/check_docs.mjs
+
   instrumented:
     name: Instrumented tests (emulator)
     needs: build

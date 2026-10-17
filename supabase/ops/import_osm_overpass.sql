@@ -1,5 +1,5 @@
 -- HAPOSTO — Import della directory reale da OpenStreetMap (Overpass Turbo).
--- Guida completa: docs/HAPOSTO_GUIDA_APP_E_DATI_REALI.md, capitolo 3.
+-- Guida completa: guida all'app e ai dati reali in docs/guide/, capitolo 3.
 --
 -- Cosa fa, in un solo Run:
 --   1. legge il JSON esportato da Overpass Turbo (lo incolli qui sotto al posto della riga segnaposto);

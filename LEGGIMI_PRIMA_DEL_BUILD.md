@@ -16,7 +16,7 @@ generarlo. Android Studio lo usa in automatico; da terminale usa `./gradlew`
 ## 3. Configura Supabase e scegli la versione
 
 Copia `local.properties.example` in `local.properties` e compila le chiavi (DEV, poi
-produzione, Google, Firebase): istruzioni in `docs/HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
+produzione, Google, Firebase): istruzioni in `docs/configurazione/2026-10-12_HAPOSTO_GUIDA_CONFIGURAZIONE_COMPLETA.md`.
 
 In Android Studio → *Build Variants* scegli `demoDebug` (nessun server, dati di prova nel
 telefono), `devDebug` (Supabase DEV con account veri) o `prodDebug`/`prodRelease` (produzione).
